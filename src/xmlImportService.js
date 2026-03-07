@@ -6,7 +6,7 @@ class XmlImportService {
         this.xmlUrl = 'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml';
     }
 
-    async importXmlData() {
+    async importXmlData(db) {
         try {
             console.log('Fetching XML data from:', this.xmlUrl);
             
@@ -33,7 +33,7 @@ class XmlImportService {
                     }
                     
                     console.log('XML parsed successfully, processing data...');
-                    this.processXmlData(result)
+                    this.processXmlData(result, db)
                         .then(resolve)
                         .catch(reject);
                 });
@@ -44,9 +44,9 @@ class XmlImportService {
         }
     }
 
-    async processXmlData(parsedData) {
+    async processXmlData(parsedData, db) {
         // Create tables for sections and cars
-        await this.createTables();
+        await this.createTables(db);
         
         let sectionsCount = 0;
         let carsCount = 0;
@@ -59,7 +59,7 @@ class XmlImportService {
                     ? parsedData.catalog.sections.section 
                     : [parsedData.catalog.sections.section];
                 
-                sectionsCount = await this.insertSections(sections);
+                sectionsCount = await this.insertSections(sections, db);
             }
             
             // Process cars
@@ -68,12 +68,12 @@ class XmlImportService {
                     ? parsedData.catalog.cars.car 
                     : [parsedData.catalog.cars.car];
                 
-                carsCount = await this.insertCars(cars);
+                carsCount = await this.insertCars(cars, db);
             }
         } else {
             // If catalog doesn't exist, try to find sections and cars anywhere in the structure
-            sectionsCount = await this.findAndProcessSections(parsedData);
-            carsCount = await this.findAndProcessCars(parsedData);
+            sectionsCount = await this.findAndProcessSections(parsedData, db);
+            carsCount = await this.findAndProcessCars(parsedData, db);
         }
         
         console.log(`Successfully imported ${sectionsCount} sections and ${carsCount} cars`);
@@ -84,9 +84,9 @@ class XmlImportService {
         };
     }
 
-    async createTables() {
+    async createTables(db) {
         // Create sections table with dynamic columns based on XML structure
-        await global.db.exec(`
+        await db.exec(`
             CREATE TABLE IF NOT EXISTS sections (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 data TEXT NOT NULL
@@ -94,7 +94,7 @@ class XmlImportService {
         `);
 
         // Create cars table with dynamic columns based on XML structure
-        await global.db.exec(`
+        await db.exec(`
             CREATE TABLE IF NOT EXISTS cars (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 data TEXT NOT NULL
@@ -104,7 +104,7 @@ class XmlImportService {
         console.log('Sections and cars tables created/verified');
     }
 
-    async insertSections(sections) {
+    async insertSections(sections, db) {
         let insertedCount = 0;
         
         for (const section of sections) {
@@ -113,13 +113,13 @@ class XmlImportService {
                 const sectionData = JSON.stringify(section);
                 
                 // Check if section already exists (using a hash of the data to prevent duplicates)
-                const existingSection = await global.db.get(
+                const existingSection = await db.get(
                     'SELECT id FROM sections WHERE data = ?', 
                     [sectionData]
                 );
                 
                 if (!existingSection) {
-                    await global.db.run(
+                    await db.run(
                         'INSERT INTO sections (data) VALUES (?)',
                         [sectionData]
                     );
@@ -136,7 +136,7 @@ class XmlImportService {
         return insertedCount;
     }
 
-    async insertCars(cars) {
+    async insertCars(cars, db) {
         let insertedCount = 0;
         
         for (const car of cars) {
@@ -145,13 +145,13 @@ class XmlImportService {
                 const carData = JSON.stringify(car);
                 
                 // Check if car already exists (using a hash of the data to prevent duplicates)
-                const existingCar = await global.db.get(
+                const existingCar = await db.get(
                     'SELECT id FROM cars WHERE data = ?', 
                     [carData]
                 );
                 
                 if (!existingCar) {
-                    await global.db.run(
+                    await db.run(
                         'INSERT INTO cars (data) VALUES (?)',
                         [carData]
                     );
@@ -179,7 +179,7 @@ class XmlImportService {
     }
 
     // Method to find and process sections in case they're not under catalog
-    async findAndProcessSections(data, path = '') {
+    async findAndProcessSections(data, db, path = '') {
         let count = 0;
         
         if (data && typeof data === 'object') {
@@ -188,13 +188,13 @@ class XmlImportService {
                 const sections = Array.isArray(data.sections.section) 
                     ? data.sections.section 
                     : [data.sections.section];
-                count += await this.insertSections(sections);
+                count += await this.insertSections(sections, db);
             }
             
             // Recursively search in nested objects
             for (const key in data) {
                 if (data[key] && typeof data[key] === 'object') {
-                    count += await this.findAndProcessSections(data[key], `${path}.${key}`);
+                    count += await this.findAndProcessSections(data[key], db, `${path}.${key}`);
                 }
             }
         }
@@ -203,7 +203,7 @@ class XmlImportService {
     }
 
     // Method to find and process cars in case they're not under catalog
-    async findAndProcessCars(data, path = '') {
+    async findAndProcessCars(data, db, path = '') {
         let count = 0;
         
         if (data && typeof data === 'object') {
@@ -212,13 +212,13 @@ class XmlImportService {
                 const cars = Array.isArray(data.cars.car) 
                     ? data.cars.car 
                     : [data.cars.car];
-                count += await this.insertCars(cars);
+                count += await this.insertCars(cars, db);
             }
             
             // Recursively search in nested objects
             for (const key in data) {
                 if (data[key] && typeof data[key] === 'object') {
-                    count += await this.findAndProcessCars(data[key], `${path}.${key}`);
+                    count += await this.findAndProcessCars(data[key], db, `${path}.${key}`);
                 }
             }
         }
