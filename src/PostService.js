@@ -1,4 +1,5 @@
 import Post from "./Post.js";
+import XmlImportService from "./xmlImportService.js";
 
 class PostService {
     async create(post, picture) {
@@ -8,6 +9,10 @@ class PostService {
 
     async getAll() {
         return await Post.find();
+    }
+
+    async importXML() {
+        return await XmlImportService.importXmlData();
     }
     
     async getOne(id) {

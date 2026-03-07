@@ -47,6 +47,15 @@ class PostController {
             res.status(500).json(e)
         }
     }
+
+    async importXML(req, res) {
+        try {
+            const posts = await PostService.importXML();
+            return res.json(posts);
+        } catch (e) {
+            res.status(500).json(e)
+        }
+    }
 }
 
 export default new PostController();
