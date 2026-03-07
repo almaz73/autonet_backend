@@ -24,6 +24,7 @@ async function startApp() {
         });
 
         // Create posts table if it doesn't exist
+        //language=SQLite
         await db.exec(`
             CREATE TABLE IF NOT EXISTS posts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
