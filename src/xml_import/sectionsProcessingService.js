@@ -1,4 +1,3 @@
-
 class SectionsProcessingService {
     async processSections(db) {
         try {
@@ -11,78 +10,31 @@ class SectionsProcessingService {
                 data: JSON.parse(section.data)
             }));
 
-            // Create a new table for processed sections
-            await db.exec(`                CREATE TABLE IF NOT EXISTS processed_sections (
+            console.log('999')
+
+            // Create a new table for sections with id, parentId, Brand, Model
+            // language=SQLite
+            await db.exec(`
+                CREATE TABLE IF NOT EXISTS sections_table (
                     id TEXT PRIMARY KEY,
                     parentId TEXT,
-                    brand TEXT,
-                    model TEXT
+                    Brand TEXT,
+                    Model TEXT
                 )
             `);
 
-            // Clear existing data in processed_sections table
-            await db.exec('DELETE FROM processed_sections');
+            // Clear existing data in sections_table
+            await db.exec('DELETE FROM sections_table');
 
-            // Process sections: separate brands (id="ap_probeg") from models
-            for (const section of parsedSections) {
-                const sectionData = section.data;
-
-                // If section data has an id attribute
-                if (sectionData.id) {
-                    if (sectionData.id === "ap_probeg") {
-                        // These are brands - process subsections as brands
-                        if (sectionData.subsection) {
-                            const subsections = Array.isArray(sectionData.subsection)
-                                ? sectionData.subsection
-                                : [sectionData.subsection];
-
-                            for (const subSection of subsections) {
-                                if (subSection) {
-                                    const id = this.getValue(subSection.id) || this.generateId();
-                                    const parentId = this.getValue(sectionData.id) || '';
-                                    const brand = this.getValue(subSection.name || subSection.title || subSection.label || subSection.value || '');
-
-                                    await db.run(
-                                        'INSERT OR REPLACE INTO processed_sections (id, parentId, brand, model) VALUES (?, ?, ?, ?)',
-                                        [id, parentId, brand, '']
-                                    );
-                                }
-                            }
-                        }
-                    } else if (sectionData.id !== "ap_probeg") {
-                        // These are models (excluding the special "ap_probeg" section)
-                        const id = this.getValue(sectionData.id) || this.generateId();
-                        const parentId = this.getValue(sectionData.parentId || sectionData.parent || sectionData.groupId || '') || '';
-                        const model = this.getValue(sectionData.name || sectionData.title || sectionData.label || sectionData.value || '');
-
-                        // Try to determine the brand from parent or context
-                        let brand = '';
-
-                        // If there's a reference to a parent brand section, get its name
-                        if (parentId) {
-                            const parentBrandRecord = await db.get(
-                                'SELECT brand FROM processed_sections WHERE id = ?',
-                                [parentId]
-                            );
-                            if (parentBrandRecord) {
-                                brand = parentBrandRecord.brand;
-                            }
-                        }
-
-                        await db.run(
-                            'INSERT OR REPLACE INTO processed_sections (id, parentId, brand, model) VALUES (?, ?, ?, ?)',
-                            [id, parentId, brand, model]
-                        );
-                    }
-                }
-            }
+            // Process sections and their potential subsections recursively
+            await this.processSectionRecursive(parsedSections, db, '');
 
             // Get the processed data
-            const processedData = await db.all('SELECT * FROM processed_sections');
+            const processedData = await db.all('SELECT * FROM sections_table');
 
             return {
                 success: true,
-                message: 'Sections processed successfully',
+                message: 'Sections processed successfully into sections_table',
                 count: processedData.length,
                 data: processedData
             };
@@ -92,15 +44,124 @@ class SectionsProcessingService {
         }
     }
 
-    getValue(value) {
+    async processSectionRecursive(sections, db, parentInfo) {
+        for (const section of sections) {
+            const sectionData = section.data;
+            
+            // Extract id from the section data
+            let id = '';
+            if (sectionData.$ && sectionData.$.id) {
+                id = this.extractValue(sectionData.$.id);
+            } else if (sectionData.id && typeof sectionData.id === 'object' && sectionData.id._) {
+                // Handle case where id is an object with a value
+                id = this.extractValue(sectionData.id._);
+            } else if (sectionData.id) {
+                id = this.extractValue(sectionData.id);
+            } else {
+                // Generate an ID if not available
+                id = this.generateId();
+            }
+            
+            // Skip if id equals 'ap_probeg'
+            if (id === 'ap_probeg') {
+                continue;
+            }
+            
+            // Extract parentId - check various possible locations
+            let parentId = parentInfo; // default to parentInfo passed from parent
+
+
+            
+            // Check if parentId is provided as an attribute
+            if (sectionData.$) {
+                if (sectionData.$.parent_id) {
+                    parentId = this.extractValue(sectionData.$.parent_id);
+                } else if (sectionData.$.parentId) {
+                    parentId = this.extractValue(sectionData.$.parentId);
+                } else if (sectionData.$.pid) {
+                    parentId = this.extractValue(sectionData.$.pid);
+                }
+            }
+
+            console.log(sectionData)
+            
+            // Check if parentId is provided as a child element
+            if (!parentId && sectionData.parentId) {
+                parentId = this.extractValue(sectionData.parentId);
+            } else if (!parentId && sectionData.parent_id) {
+                parentId = this.extractValue(sectionData.parent_id);
+            } else if (!parentId && sectionData.pid) {
+                parentId = this.extractValue(sectionData.pid);
+            }
+
+            console.log('id=',id,'parentId',parentId)
+            
+            // Extract Brand and Model from the section data
+            let Brand = '';
+            let Model = '';
+            
+            // Extract Brand - look for common fields that might contain brand information
+            if (sectionData.brand) {
+                Brand = this.extractValue(sectionData.brand);
+            } else if (sectionData.name) {
+                Brand = this.extractValue(sectionData.name);
+            } else if (sectionData.title) {
+                Brand = this.extractValue(sectionData.title);
+            } else if (sectionData.label) {
+                Brand = this.extractValue(sectionData.label);
+            } else if (sectionData.value) {
+                Brand = this.extractValue(sectionData.value);
+            }
+            
+            // Extract Model - look for common fields that might contain model information
+            if (sectionData.model) {
+                Model = this.extractValue(sectionData.model);
+            } else if (sectionData.description) {
+                Model = this.extractValue(sectionData.description);
+            } else if (sectionData.name && !Brand) { // If name wasn't used as brand, it might be model
+                Model = this.extractValue(sectionData.name);
+            } else if (sectionData.title && !Brand) { // If title wasn't used as brand, it might be model
+                Model = this.extractValue(sectionData.title);
+            }
+            
+            // Insert into the new table only if we have meaningful data
+            if (id && (Brand || Model)) {
+                await db.run(
+                    'INSERT OR REPLACE INTO sections_table (id, parentId, Brand, Model) VALUES (?, ?, ?, ?)',
+                    [id, parentId, Brand, Model]
+                );
+            }
+
+            // Process subsections if they exist
+            if (sectionData.section) {
+                const subsections = Array.isArray(sectionData.section) 
+                    ? sectionData.section 
+                    : [sectionData.section];
+                    
+                // Process each subsection recursively, passing current id as parent
+                for (const subsection of subsections) {
+                    // Create a temporary section-like object for the subsection
+                    const tempSection = { data: subsection };
+                    await this.processSectionRecursive([tempSection], db, id);
+                }
+            }
+        }
+    }
+
+    extractValue(value) {
+
         if (value && typeof value === 'object' && value._) {
+            console.log(111, value)
             // Handle XML element with attributes: { _: 'value', $: {...} }
             return value._.toString().trim();
+
         }
         if (value && typeof value === 'object') {
+            console.log(222, value)
             // If it's an object but not the attribute format, convert to string
             return JSON.stringify(value);
         }
+        console.log(333, value)
         return value ? value.toString().trim() : '';
     }
 
