@@ -1,8 +1,6 @@
-
 import Router from 'express'
-import PostController from "./PostController.js";
-import xmlImportService from './xmlImportService.js';
-import sectionsProcessingService from './sectionsProcessingService.js';
+import PostController from "./posts/PostController.js";
+import SectionController from "./sections_cars/SectionController.js";
 
 const router = new Router()
 
@@ -12,41 +10,13 @@ router.get('/posts/:id', PostController.getOne)
 router.put('/posts', PostController.update)
 router.delete('/posts/:id', PostController.delete)
 
-// Endpoint to import XML data
-router.get('/import-xml', async (req, res) => {
-    try {
-        console.log('Starting XML import process...');
-        const result = await xmlImportService.importXmlData(global.db);
-        res.json({
-            success: true,
-            message: 'XML data imported successfully',
-            imported: result
-        });
-    } catch (error) {
-        console.error('Error during XML import:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// Endpoint to process sections data according to requirements
-router.get('/process-sections', async (req, res) => {
-    try {
-        const result = await sectionsProcessingService.processSections(global.db);
-        res.json(result);
-    } catch (error) {
-        console.error('Error processing sections:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
+router.get('/import-xml', SectionController.importXML)
+router.get('/process-sections', SectionController.processSections)
+router.get('/sections', SectionController.sections)
+router.get('/cars', SectionController.cars)
 
 router.get('*', (req, res) => {
-    console.log(2222)
-    res.status(404).json({message: 'not found endpoint'})
+    console.log('404 404 404 404 404')
+    res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
 })
 export default router;
