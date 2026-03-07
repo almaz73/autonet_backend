@@ -1,43 +1,65 @@
 import axios from 'axios';
-import { parseString } from 'xml2js';
+import {parseString} from 'xml2js';
 
 class XmlImportService {
     constructor() {
-        this.xmlUrl = 'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml';
+        this.xmlUrls = [
+            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
+            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
+            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
+            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
+            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
+        ];
     }
 
     async importXmlData(db) {
         try {
-            console.log('Fetching XML data from:', this.xmlUrl);
-            
-            // Fetch the XML data from the remote URL
-            const response = await axios.get(this.xmlUrl, {
-                timeout: 30000, // 30 seconds timeout
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (compatible; AutoNetBot/1.0)'
-                }
-            });
+            let totalResult = {
+                sectionsImported: 0,
+                carsImported: 0,
+                total: 0
+            };
 
-            // Parse the XML data
-            const xmlData = response.data;
-            
-            return new Promise((resolve, reject) => {
-                parseString(xmlData, { 
-                    explicitArray: false,
-                    ignoreAttrs: false 
-                }, (err, result) => {
-                    if (err) {
-                        console.error('Error parsing XML:', err);
-                        reject(err);
-                        return;
+            for (const xmlUrl of this.xmlUrls) {
+                console.log('Fetching XML data from:', xmlUrl);
+
+                // Fetch the XML data from the remoteURL
+                const response = await axios.get(xmlUrl, {
+                    timeout: 30000, // 30 seconds timeout
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (compatible; AutoNetBot/1.0)'
                     }
-                    
-                    console.log('XML parsed successfully, processing data...');
-                    this.processXmlData(result, db)
-                        .then(resolve)
-                        .catch(reject);
                 });
-            });
+
+                // Parse the XMLdata
+                const xmlData = response.data;
+
+                const result = await new Promise((resolve, reject) => {
+                    parseString(xmlData, {
+                        explicitArray: false,
+                        ignoreAttrs: false
+                    }, (err, result) => {
+                        if (err) {
+                            console.error('Errorparsing XML:', err);
+                            reject(err);
+                            return;
+                        }
+
+                        console.log('XML parsed successfully, processing data...');
+                        this.processXmlData(result, db)
+                            .then(resolve)
+                            .catch(reject);
+                    });
+                });
+
+                // Accumulate results from each XML file
+                totalResult.sectionsImported += result.sectionsImported;
+                totalResult.carsImported += result.carsImported;
+                totalResult.total += result.total;
+            }
+
+            return totalResult;
         } catch (error) {
             console.error('Error fetching XML data:', error.message);
             throw error;
@@ -47,27 +69,27 @@ class XmlImportService {
     async processXmlData(parsedData, db) {
         // Create tables for sections and cars
         await this.createTables(db);
-        
+
         let sectionsCount = 0;
         let carsCount = 0;
-        
+
         // Process the XML data to find sections and cars
         if (parsedData.catalog) {
-            // Process sections
+// Process sections
             if (parsedData.catalog.sections && parsedData.catalog.sections.section) {
-                const sections = Array.isArray(parsedData.catalog.sections.section) 
-                    ? parsedData.catalog.sections.section 
+                const sections = Array.isArray(parsedData.catalog.sections.section)
+                    ? parsedData.catalog.sections.section
                     : [parsedData.catalog.sections.section];
-                
+
                 sectionsCount = await this.insertSections(sections, db);
             }
-            
+
             // Process cars
             if (parsedData.catalog.cars && parsedData.catalog.cars.car) {
-                const cars = Array.isArray(parsedData.catalog.cars.car) 
-                    ? parsedData.catalog.cars.car 
+                const cars = Array.isArray(parsedData.catalog.cars.car)
+                    ? parsedData.catalog.cars.car
                     : [parsedData.catalog.cars.car];
-                
+
                 carsCount = await this.insertCars(cars, db);
             }
         } else {
@@ -75,29 +97,45 @@ class XmlImportService {
             sectionsCount = await this.findAndProcessSections(parsedData, db);
             carsCount = await this.findAndProcessCars(parsedData, db);
         }
-        
+
         console.log(`Successfully imported ${sectionsCount} sections and ${carsCount} cars`);
-        return { 
-            sectionsImported: sectionsCount, 
+        return {
+            sectionsImported: sectionsCount,
             carsImported: carsCount,
-            total: sectionsCount + carsCount 
+            total: sectionsCount + carsCount
         };
     }
 
     async createTables(db) {
-        // Create sections table with dynamic columns based on XML structure
+        // Create sections table with dynamiccolumns based on XML structure
         await db.exec(`
-            CREATE TABLE IF NOT EXISTS sections (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                data TEXT NOT NULL
+            CREATE TABLE IF NOT EXISTS sections
+            (
+                id
+                INTEGER
+                PRIMARY
+                KEY
+                AUTOINCREMENT,
+                data
+                TEXT
+                NOT
+                NULL
             )
         `);
 
         // Create cars table with dynamic columns based on XML structure
         await db.exec(`
-            CREATE TABLE IF NOT EXISTS cars (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                data TEXT NOT NULL
+            CREATE TABLE IF NOT EXISTS cars
+            (
+                id
+                INTEGER
+                PRIMARY
+                KEY
+                AUTOINCREMENT,
+                data
+                TEXT
+                NOT
+                NULL
             )
         `);
 
@@ -106,18 +144,18 @@ class XmlImportService {
 
     async insertSections(sections, db) {
         let insertedCount = 0;
-        
+
         for (const section of sections) {
             try {
-                // Convert the section object to a JSON string to store all fields
+                //Convert the section object to a JSON string to store all fields
                 const sectionData = JSON.stringify(section);
-                
+
                 // Check if section already exists (using a hash of the data to prevent duplicates)
                 const existingSection = await db.get(
-                    'SELECT id FROM sections WHERE data = ?', 
+                    'SELECT id FROM sections WHERE data = ?',
                     [sectionData]
                 );
-                
+
                 if (!existingSection) {
                     await db.run(
                         'INSERT INTO sections (data) VALUES (?)',
@@ -132,24 +170,24 @@ class XmlImportService {
                 console.error('Error inserting section:', error.message, section);
             }
         }
-        
+
         return insertedCount;
     }
 
     async insertCars(cars, db) {
         let insertedCount = 0;
-        
+
         for (const car of cars) {
             try {
                 // Convert the car object to a JSON string to store all fields
                 const carData = JSON.stringify(car);
-                
+
                 // Check if car already exists (using a hash of the data to prevent duplicates)
                 const existingCar = await db.get(
-                    'SELECT id FROM cars WHERE data = ?', 
+                    'SELECT id FROM cars WHERE data = ?',
                     [carData]
                 );
-                
+
                 if (!existingCar) {
                     await db.run(
                         'INSERT INTO cars (data) VALUES (?)',
@@ -164,11 +202,11 @@ class XmlImportService {
                 console.error('Error inserting car:', error.message, car);
             }
         }
-        
+
         return insertedCount;
     }
 
-    // Helper method to get a name for logging purposes from a section
+    // Helper method to get a name for logging purposesfrom a section
     getSectionName(section) {
         return section.name || section.title || section.id || 'Unnamed Section';
     }
@@ -181,16 +219,16 @@ class XmlImportService {
     // Method to find and process sections in case they're not under catalog
     async findAndProcessSections(data, db, path = '') {
         let count = 0;
-        
+
         if (data && typeof data === 'object') {
             // Check if this object contains sections
             if (data.sections && data.sections.section) {
-                const sections = Array.isArray(data.sections.section) 
-                    ? data.sections.section 
+                const sections = Array.isArray(data.sections.section)
+                    ? data.sections.section
                     : [data.sections.section];
                 count += await this.insertSections(sections, db);
             }
-            
+
             // Recursively search in nested objects
             for (const key in data) {
                 if (data[key] && typeof data[key] === 'object') {
@@ -198,33 +236,32 @@ class XmlImportService {
                 }
             }
         }
-        
+
         return count;
     }
 
-    // Method to find and process cars in case they're not under catalog
-    async findAndProcessCars(data, db, path = '') {
-        let count = 0;
-        
-        if (data && typeof data === 'object') {
-            // Check if this object contains cars
-            if (data.cars && data.cars.car) {
-                const cars = Array.isArray(data.cars.car) 
-                    ? data.cars.car 
-                    : [data.cars.car];
-                count += await this.insertCars(cars, db);
-            }
-            
-            // Recursively search in nested objects
-            for (const key in data) {
-                if (data[key] && typeof data[key] === 'object') {
-                    count += await this.findAndProcessCars(data[key], db, `${path}.${key}`);
-                }
-            }
-        }
-        
-        return count;
-    }
+    // Method to find and process cars in case they're not under catalogasync findAndProcessCars(data, db, path = '') {
+    //     let count = 0;
+
+    // if (data && typeof data === 'object') {
+    //     // Check if this object contains cars
+    //     if (data.cars && data.cars.car) {
+    //         const cars = Array.isArray(data.cars.car)
+    //             ? data.cars.car
+    //             : [data.cars.car];
+    //         count += await this.insertCars(cars, db);
+    //     }
+    //
+    //     // Recursively search in nested objects
+    //     for (const key in data) {
+    //         if (data[key] && typeof data[key] === 'object') {
+    //             count += await this.findAndProcessCars(data[key], db, `${path}.${key}`);
+    //         }
+    //     }
+    // }
+
+    // return count;
+    // }
 }
 
 export default new XmlImportService();
