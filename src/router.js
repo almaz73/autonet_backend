@@ -1,6 +1,6 @@
 import Router from 'express'
 import PostController from "./posts/PostController.js";
-import SectionController from "./sections_cars/SectionController.js";
+import SectionController from "./xml_import/SectionController.js";
 
 const router = new Router()
 

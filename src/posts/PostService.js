@@ -1,5 +1,5 @@
 import Post from "./Post.js";
-import XmlImportService from "../xmlImportService.js";
+import XmlImportService from "../xml_import/xmlImportService.js";
 
 class PostService {
     async create(post, picture) {
@@ -46,7 +46,7 @@ class PostService {
 const postService = new PostService();
 
 // Import file service after creation to avoid circular dependency
-import fileService from "../fileService.js";
+import fileService from "../photo_files/fileService.js";
 postService.setFileService(fileService);
 
 export default postService;

@@ -1,5 +1,5 @@
-import xmlImportService from "../xmlImportService.js";
-import sectionsProcessingService from "../sectionsProcessingService.js";
+import xmlImportService from "./xmlImportService.js";
+import sectionsProcessingService from "./sectionsProcessingService.js";
 
 
 class SectionController {
