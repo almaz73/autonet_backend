@@ -2,6 +2,7 @@ class SectionsProcessingService {
     async processSections(db) {
         try {
             // Get all sections from the database
+            // language=SQLite
             const sections = await db.all('SELECT * FROM sections');
 
             // Parse the JSON data for each section
@@ -23,12 +24,14 @@ class SectionsProcessingService {
             `);
 
             // Clear existing data in sections_table
+            // language=SQLite
             await db.exec('DELETE FROM sections_table');
 
             // Process sections and their potential subsections recursively
             await this.processSectionRecursive(parsedSections, db, '');
 
             // Get the processed data
+            // language=SQLite
             const processedData = await db.all('SELECT * FROM sections_table');
 
             return {
@@ -78,6 +81,7 @@ class SectionsProcessingService {
 
             // Insert into the new table only if we have meaningful data
             if (id && (Brand || Model)) {
+                // language=SQLite
                 await db.run(
                     'INSERT OR REPLACE INTO sections_table (id, parentId, Brand, Model) VALUES (?, ?, ?, ?)',
                     [id, parentId, Brand, Model]

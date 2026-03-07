@@ -180,12 +180,14 @@ class XmlImportService {
                 const sectionData = JSON.stringify(section);
 
                 // Check if section already exists (using a hash of the data to prevent duplicates)
+                // language=SQLite
                 const existingSection = await db.get(
                     'SELECT id FROM sections WHERE data = ?',
                     [sectionData]
                 );
 
                 if (!existingSection) {
+                    // language=SQLite
                     await db.run(
                         'INSERT INTO sections (data) VALUES (?)',
                         [sectionData]
@@ -264,11 +266,13 @@ class XmlImportService {
                 const carData = JSON.stringify(car);
 
                 // Check if car already exists (using a hash of the data to prevent duplicates)
+                // language=SQLite
                 const existingCar = await db.get(
                     'SELECT id FROM cars WHERE data = ?', [carData]
                 );
 
                 if (!existingCar) {
+                    // language=SQLite
                     await db.run(
                         'INSERT INTO cars (data) VALUES (?)',
                         [carData]
