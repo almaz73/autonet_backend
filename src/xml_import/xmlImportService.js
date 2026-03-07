@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {parseString} from 'xml2js';
-import {insertIntoSectionTable, insertIntoCarsTable, findAndProcessCars} from './carsInfoService.js'
+import {insertIntoSectionTable, insertCars, findAndProcessCars} from './ServiceCars.js'
 
 class XmlImportService {
     constructor() {
@@ -109,7 +109,7 @@ async processXmlData(parsedData, db) {
                     ? parsedData.catalog.cars.car
                     : [parsedData.catalog.cars.car];
 
-                carsCount = await this.insertCars(cars, db);
+                carsCount = await insertCars(cars, db);
             }
         } else {
             // If catalog doesn't exist, try to find sections and cars anywhere in the structure
@@ -215,9 +215,9 @@ async processXmlData(parsedData, db) {
                     // Insert into the structured section_table as well
                     await insertIntoSectionTable(section, db);
                     insertedCount++;
-                    console.log(`Inserted section: ${this.getSectionName(section)}`);
+                    // console.log(`Inserted section: ${this.getSectionName(section)}`);
                 } else {
-                    console.log(`Skipped duplicate section: ${this.getSectionName(section)}`);
+                    // console.log(`Skipped duplicate section: ${this.getSectionName(section)}`);
                 }
             } catch (error) {
                 console.error('Error inserting section:', error.message, section);
@@ -226,48 +226,9 @@ async processXmlData(parsedData, db) {
         return insertedCount;
     }
 
-    // Helper method to generate a unique ID fora section if no ID is provided
-    generateSectionId(section) {
-        // Generate a unique ID based on section properties
-        const name = this.extractValue(section, ['name', 'title']) || '';
-        const address = this.extractValue(section, ['address']) || '';
-        return `${name}_${address}`.replace(/\s+/g, '_').substring(0, 100);
-    }
 
-    async insertCars(cars, db) {
-        let insertedCount = 0;
-        for (const car of cars) {
-            try {
-                // Convert the car object to a JSON string to store all fields
-                const carData = JSON.stringify(car);
 
-                // Check if car already exists (using a hash of the data to prevent duplicates)
-                // language=SQLite
-                const existingCar = await db.get(
-                    'SELECT id FROM cars WHERE data = ?', [carData]
-                );
 
-                if (!existingCar) {
-                    // language=SQLite
-                    await db.run(
-                        'INSERT INTO cars (data) VALUES (?)',
-                        [carData]
-                    );
-
-                    // Insert into thestructured cars_table as well
-                    await insertIntoCarsTable(car, db);
-                    insertedCount++;
-                    console.log(`Inserted car: ${this.getCarName(car)}`);
-                } else {
-                    console.log(`Skipped duplicate car: ${this.getCarName(car)}`);
-                }
-            } catch (error) {
-                console.error('Error inserting car:', error.message, car);
-            }
-        }
-
-        return insertedCount;
-    }
 
 
     // Helper method to extract a value from an object using multiple possible keys
@@ -281,10 +242,7 @@ async processXmlData(parsedData, db) {
     }
 
 
-    // Helper method to get a name for logging purposes froma car
-    getCarName(car) {
-        return car.name || car.title || car.model || car.id || 'Unnamed Car';
-    }
+
 
     // Method to find and process sections incase they're not under catalog
     async findAndProcessSections(data, db, path = '') {

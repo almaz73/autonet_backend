@@ -1,6 +1,6 @@
 import Router from 'express'
 import PostController from "./posts/PostController.js";
-import SectionController from "./xml_import/SectionController.js";
+import Controllers from "./xml_import/Controllers.js";
 
 const router = new Router()
 
@@ -10,10 +10,10 @@ router.get('/posts/:id', PostController.getOne)
 router.put('/posts', PostController.update)
 router.delete('/posts/:id', PostController.delete)
 
-router.get('/import-xml', SectionController.importXML)
-router.get('/process-sections', SectionController.processSections)
-router.get('/sections', SectionController.sections)
-router.get('/cars', SectionController.cars)
+router.get('/import-xml', Controllers.importXML)
+router.get('/process-sections', Controllers.processSections)
+router.get('/sections', Controllers.sections)
+router.get('/cars', Controllers.cars)
 
 router.get('*', (req, res) => {
     console.log('404 404 404 404 404')

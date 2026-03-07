@@ -1,4 +1,4 @@
-class SectionsProcessingService {
+class ServiceSections {
     async processSections(db) {
         try {
             // Get all sections from the database
@@ -25,7 +25,7 @@ class SectionsProcessingService {
 
             // Clear existing data in sections_table
             // language=SQLite
-            await db.exec('DELETE FROM sections_table');
+            // await db.exec('DELETE FROM sections_table');
 
             // Process sections and their potential subsections recursively
             await this.processSectionRecursive(parsedSections, db, '');
@@ -119,4 +119,4 @@ class SectionsProcessingService {
     }
 }
 
-export default new SectionsProcessingService();
+export default new ServiceSections();

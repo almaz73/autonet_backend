@@ -3,7 +3,7 @@ export async function insertIntoSectionTable(section, db) {
     console.log('::::section', section)
 
     // Extract values from the section object, handling nested properties
-    const id = extractValue(section, ['id', '_id']) || this.generateSectionId(section);
+    const id = extractValue(section, ['id', '_id']) || generateSectionId(section);
     const name = extractValue(section, ['name', 'title']);
     const title = extractValue(section, ['title', 'name']);
     const address = extractValue(section, ['address', 'addr']);
@@ -20,8 +20,8 @@ export async function insertIntoSectionTable(section, db) {
     const subtype = extractValue(section, ['subtype', 'sub_type']);
     const logo = extractValue(section, ['logo', 'logo_url']);
     const image = extractValue(section, ['image', 'img', 'picture']);
-    const rating = this.extractNumericValue(section, ['rating', 'score']);
-    const reviews_count = this.extractNumericValue(section, ['reviews_count', 'review_count']);
+    const rating = extractNumericValue(section, ['rating', 'score']);
+    const reviews_count = extractNumericValue(section, ['reviews_count', 'review_count']);
     const data = JSON.stringify(section);
 
     // Insert intothe structured section_table
@@ -123,7 +123,7 @@ export async function findAndProcessCars(data, db, path = '') {
             //Process arrays that might contain cars
             for (const item of data[key]) {
                 if (item && typeof item === 'object' && looksLikeCarObject(item)) {
-                    count += await this.insertCars([item], db);
+                    count += await insertCars([item], db);
                 }
             }
         }
@@ -172,8 +172,56 @@ function extractNumericValue(obj, possibleKeys) {
 // Helper method to generatea uniqueID for acar ifno ID is provided
 function generateCarId(car) {
     // Generate a unique ID based on car properties
-    const name = this.extractValue(car, ['name', 'title', 'model']) || '';
+    const name = extractValue(car, ['name', 'title', 'model']) || '';
     const year = extractNumericValue(car, ['prop_year', 'year']) || '';
-    const vin = this.extractValue(car, ['prop_VIN', 'VIN']) || '';
+    const vin = extractValue(car, ['prop_VIN', 'VIN']) || '';
     return `${name}_${year}_${vin}`.replace(/\s+/g, '_').substring(0, 100);
+}
+
+// Helper method to generate a unique ID fora section if no ID is provided
+function generateSectionId(section) {
+    // Generate a unique ID based on section properties
+    const name = extractValue(section, ['name', 'title']) || '';
+    const address = extractValue(section, ['address']) || '';
+    return `${name}_${address}`.replace(/\s+/g, '_').substring(0, 100);
+}
+
+// Helper method to get a name for logging purposes froma car
+function getCarName(car) {
+    return car.name || car.title || car.model || car.id || 'Unnamed Car';
+}
+
+export async function insertCars(cars, db) {
+    let insertedCount = 0;
+    for (const car of cars) {
+        try {
+            // Convert the car object to a JSON string to store all fields
+            const carData = JSON.stringify(car);
+
+            // Check if car already exists (using a hash of the data to prevent duplicates)
+            // language=SQLite
+            const existingCar = await db.get(
+                'SELECT id FROM cars WHERE data = ?', [carData]
+            );
+
+            if (!existingCar) {
+                // language=SQLite
+                await db.run(
+                    'INSERT INTO cars (data) VALUES (?)',
+                    [carData]
+                );
+
+                // Insert into thestructured cars_table as well
+                await insertIntoCarsTable(car, db);
+                insertedCount++;
+                console.log(`Inserted car: ${getCarName(car)}`);
+            } else {
+                console.log(`Skipped duplicate car: ${getCarName(car)}`);
+            }
+        } catch (error) {
+            console.error('Error inserting car:', error.message, car);
+        }
+    }
+
+    return insertedCount;
 }

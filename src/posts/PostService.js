@@ -11,10 +11,6 @@ class PostService {
         return await Post.find();
     }
 
-    async importXML() {
-        return await XmlImportService.importXmlData();
-    }
-    
     async getOne(id) {
         if (!id) {
             throw new Error('не указан ID')

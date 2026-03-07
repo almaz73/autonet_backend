@@ -1,8 +1,8 @@
 import xmlImportService from "./xmlImportService.js";
-import sectionsProcessingService from "./sectionsProcessingService.js";
+import ServiceSections from "./ServiceSections.js";
 
 
-class SectionController {
+class Controllers {
     async importXML(req, res) {
         try {
             console.log('Starting XML import process...');
@@ -24,7 +24,7 @@ class SectionController {
 
     async processSections(req, res) {
         try {
-            const result = await sectionsProcessingService.processSections(global.db);
+            const result = await ServiceSections.processSections(global.db);
             res.json(result);
         } catch (error) {
             console.error('Error processing sections:', error);
@@ -68,4 +68,4 @@ class SectionController {
 
 }
 
-export default new SectionController();
+export default new Controllers();
