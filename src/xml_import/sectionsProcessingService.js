@@ -4,8 +4,6 @@ class SectionsProcessingService {
             // Get all sections from the database
             const sections = await db.all('SELECT * FROM sections');
 
-            console.log('sections', sections)
-
             // Parse the JSON data for each section
             const parsedSections = sections.map(section => ({
                 ...section,
@@ -48,8 +46,6 @@ class SectionsProcessingService {
     async processSectionRecursive(sections, db, parentInfo) {
         for (const section of sections) {
             const sectionData = section.data;
-
-            console.log('sectionData', sectionData)
 
             // Extract id from the section data
             let id = '';
