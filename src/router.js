@@ -9,18 +9,7 @@ router.get('/posts', PostController.getAll)
 router.get('/posts/:id', PostController.getOne)
 router.put('/posts', PostController.update)
 router.delete('/posts/:id', PostController.delete)
-
-// New routes for sections and cars
-router.get('/sections', (req, res) => {
-    // This would typically be handled by a controller, but for now using inline handler
-    // Will be handled by express routes in index.js
-    res.status(200).json({message: 'Sections route'});
-});
-router.get('/cars', (req, res) => {
-    // This would typically be handled by a controller, but for now using inline handler
-    // Will be handled by express routes in index.js
-    res.status(200).json({message: 'Cars route'});
-});
+router.get('/import-xml', PostController.importXML)
 
 router.get('*', (req, res) => {
     console.log(2222)
