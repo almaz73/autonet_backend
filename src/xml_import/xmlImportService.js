@@ -16,6 +16,9 @@ class XmlImportService {
 
     async importXmlData(db) {
         try {
+            //Clear all tables before importing new data
+            await this.clearTables(db);
+            
             let totalResult = {
                 sectionsImported: 0,
                 carsImported: 0,
@@ -67,7 +70,22 @@ class XmlImportService {
         }
     }
 
-    async processXmlData(parsedData, db) {
+    async clearTables(db) {
+        try {
+            // Clear all the tables
+            await db.exec('DELETE FROM cars;');
+            await db.exec('DELETE FROM cars_table;');
+            await db.exec('DELETE FROM sections;');
+            await db.exec('DELETE FROM sections_table;');
+            
+            console.log('All tables cleared successfully');
+        } catch(error) {
+            console.error('Error clearing tables:', error.message);
+            throw error;
+        }
+    }
+
+async processXmlData(parsedData, db) {
         // Create tables for sections and cars
         await this.createTables(db);
 
