@@ -4,22 +4,23 @@ class SectionsProcessingService {
             // Get all sections from the database
             const sections = await db.all('SELECT * FROM sections');
 
+            console.log('sections', sections)
+
             // Parse the JSON data for each section
             const parsedSections = sections.map(section => ({
                 ...section,
                 data: JSON.parse(section.data)
             }));
 
-            console.log('999')
-
             // Create a new table for sections with id, parentId, Brand, Model
             // language=SQLite
             await db.exec(`
-                CREATE TABLE IF NOT EXISTS sections_table (
-                    id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS sections_table
+                (
+                    id       TEXT PRIMARY KEY,
                     parentId TEXT,
-                    Brand TEXT,
-                    Model TEXT
+                    Brand    TEXT,
+                    Model    TEXT
                 )
             `);
 
@@ -47,7 +48,9 @@ class SectionsProcessingService {
     async processSectionRecursive(sections, db, parentInfo) {
         for (const section of sections) {
             const sectionData = section.data;
-            
+
+            console.log('sectionData', sectionData)
+
             // Extract id from the section data
             let id = '';
             if (sectionData.$ && sectionData.$.id) {
@@ -57,73 +60,26 @@ class SectionsProcessingService {
                 id = this.extractValue(sectionData.id._);
             } else if (sectionData.id) {
                 id = this.extractValue(sectionData.id);
-            } else {
-                // Generate an ID if not available
-                id = this.generateId();
             }
-            
+
             // Skip if id equals 'ap_probeg'
-            if (id === 'ap_probeg') {
-                continue;
-            }
-            
+            if (id === 'ap_probeg' || !id) continue;
+
             // Extract parentId - check various possible locations
             let parentId = parentInfo; // default to parentInfo passed from parent
 
 
-            
-            // Check if parentId is provided as an attribute
-            if (sectionData.$) {
-                if (sectionData.$.parent_id) {
-                    parentId = this.extractValue(sectionData.$.parent_id);
-                } else if (sectionData.$.parentId) {
-                    parentId = this.extractValue(sectionData.$.parentId);
-                } else if (sectionData.$.pid) {
-                    parentId = this.extractValue(sectionData.$.pid);
-                }
-            }
+            parentId = sectionData.$.parentid || sectionData.$.parentId || sectionData.$.parent_id || parentId;
 
-            console.log(sectionData)
-            
-            // Check if parentId is provided as a child element
-            if (!parentId && sectionData.parentId) {
-                parentId = this.extractValue(sectionData.parentId);
-            } else if (!parentId && sectionData.parent_id) {
-                parentId = this.extractValue(sectionData.parent_id);
-            } else if (!parentId && sectionData.pid) {
-                parentId = this.extractValue(sectionData.pid);
-            }
 
-            console.log('id=',id,'parentId',parentId)
-            
             // Extract Brand and Model from the section data
             let Brand = '';
             let Model = '';
-            
-            // Extract Brand - look for common fields that might contain brand information
-            if (sectionData.brand) {
-                Brand = this.extractValue(sectionData.brand);
-            } else if (sectionData.name) {
-                Brand = this.extractValue(sectionData.name);
-            } else if (sectionData.title) {
-                Brand = this.extractValue(sectionData.title);
-            } else if (sectionData.label) {
-                Brand = this.extractValue(sectionData.label);
-            } else if (sectionData.value) {
-                Brand = this.extractValue(sectionData.value);
-            }
-            
-            // Extract Model - look for common fields that might contain model information
-            if (sectionData.model) {
-                Model = this.extractValue(sectionData.model);
-            } else if (sectionData.description) {
-                Model = this.extractValue(sectionData.description);
-            } else if (sectionData.name && !Brand) { // If name wasn't used as brand, it might be model
-                Model = this.extractValue(sectionData.name);
-            } else if (sectionData.title && !Brand) { // If title wasn't used as brand, it might be model
-                Model = this.extractValue(sectionData.title);
-            }
-            
+
+            if (parentId === 'ap_probeg') Model = sectionData['_']
+            else Brand = sectionData['_']
+
+
             // Insert into the new table only if we have meaningful data
             if (id && (Brand || Model)) {
                 await db.run(
@@ -134,14 +90,14 @@ class SectionsProcessingService {
 
             // Process subsections if they exist
             if (sectionData.section) {
-                const subsections = Array.isArray(sectionData.section) 
-                    ? sectionData.section 
+                const subsections = Array.isArray(sectionData.section)
+                    ? sectionData.section
                     : [sectionData.section];
-                    
+
                 // Process each subsection recursively, passing current id as parent
                 for (const subsection of subsections) {
                     // Create a temporary section-like object for the subsection
-                    const tempSection = { data: subsection };
+                    const tempSection = {data: subsection};
                     await this.processSectionRecursive([tempSection], db, id);
                 }
             }
@@ -151,17 +107,14 @@ class SectionsProcessingService {
     extractValue(value) {
 
         if (value && typeof value === 'object' && value._) {
-            console.log(111, value)
             // Handle XML element with attributes: { _: 'value', $: {...} }
             return value._.toString().trim();
 
         }
         if (value && typeof value === 'object') {
-            console.log(222, value)
             // If it's an object but not the attribute format, convert to string
             return JSON.stringify(value);
         }
-        console.log(333, value)
         return value ? value.toString().trim() : '';
     }
 
