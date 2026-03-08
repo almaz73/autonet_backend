@@ -13,9 +13,7 @@ class CityListService {
             `);
 
             // Extract just the city names from the results
-            const cities = cityResults.map(result => result.city);
-
-            return cities;
+            return cityResults.map(result => result.city);;
         } catch (error) {
             console.error('Error retrieving cities from a_car table:', error.message);
             throw error;
@@ -36,12 +34,10 @@ class CityListService {
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
-            const gearboxTypes = gearboxResults.map((result, index) => ({
+            return gearboxResults.map((result, index) => ({
                 value: index,
                 title: result.prop_transmission_type
             }));
-
-            return gearboxTypes;
         } catch (error) {
             console.error('Error retrieving gearbox types from a_car table:', error.message);
             throw error;
@@ -61,12 +57,10 @@ class CityListService {
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
-            const engineTypes = engineResults.map((result, index) => ({
+            return engineResults.map((result, index) => ({
                 value: index,
                 title: result.prop_engine_type
             }));
-
-            return engineTypes;
         } catch (error) {
             console.error('Error retrieving engine types from a_car table:', error.message);
             throw error;
@@ -86,12 +80,10 @@ class CityListService {
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
-            const engineTypes = engineResults.map((result, index) => ({
+            return engineResults.map((result, index) => ({
                 value: index,
                 title: result.prop_drive
             }));
-
-            return engineTypes;
         } catch (error) {
             console.error('Error retrieving engine types from a_car table:', error.message);
             throw error;
@@ -111,12 +103,10 @@ class CityListService {
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
-            const engineTypes = engineResults.map((result, index) => ({
+            return engineResults.map((result, index) => ({
                 value: index,
                 title: result.prop_steering_wheel
             }));
-
-            return engineTypes;
         } catch (error) {
             console.error('Error retrieving engine types from a_car table:', error.message);
             throw error;
