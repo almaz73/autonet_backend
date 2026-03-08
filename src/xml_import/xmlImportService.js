@@ -68,7 +68,13 @@ class XmlImportService {
             }
 
             console.log(`Total sections imported: ${totalResult.sectionsImported}`);
-            console.log(`::: EVERYTHING SUCCESS :::`);
+
+
+            // TODO когда все удачно, подменяю. Нужно тервожный сигнал себе отправлять, если неудачно
+            await this.copyToInfoTables(db);
+
+
+            console.log('::: EVERYTHING SUCCESS :::');
 
             return totalResult;
         } catch (error) {
@@ -78,14 +84,13 @@ class XmlImportService {
     }
 
 
-    // ... existing code ...
     async clearTables(db) {
         try {
             // Clear all the tables with conditional checks
             await this.deleteFromTableIfExists(db, 'cars');
             await this.deleteFromTableIfExists(db, 'cars_table');
             await this.deleteFromTableIfExists(db, 'sections');
-            await this.deleteFromTableIfExists(db, 'section_table');
+            await this.deleteFromTableIfExists(db, 'sections_table');
 
             console.log('All tables cleared successfully');
         } catch (error) {
@@ -155,6 +160,107 @@ class XmlImportService {
             carsImported: carsCount,
             total: sectionsCount + carsCount
         };
+    }
+
+
+
+    async copyToInfoTables(db) {
+        try {
+            // Create a_car table if it doesn't exist (matching cars_table structure)
+            // language=SQLite
+            await db.exec(`
+                CREATE TABLE IF NOT EXISTS a_car (
+                    id TEXT PRIMARY KEY,
+                    name TEXT,
+                    section TEXT,
+                    price REAL,
+                    prop_milleage INTEGER,
+                    prop_year INTEGER,
+                    prop_color TEXT,
+                    prop_engine_capacity REAL,
+                    prop_engine_type TEXT,
+                    prop_power INTEGER,
+                    prop_transmission_type TEXT,
+                    prop_drive TEXT,
+                    prop_body_type TEXT,
+                    prop_steering_wheel TEXT,
+                    prop_address TEXT,
+                    prop_options TEXT,
+                    prop_guarantee TEXT,
+                    prop_city TEXT,
+                    prop_brand TEXT,
+                    prop_model TEXT,
+                    prop_VIN TEXT,
+                    images TEXT
+                )
+            `);
+
+            // Create a_section table if it doesn't exist (matching sections_table structure)
+            // language=SQLite
+            await db.exec(`
+                CREATE TABLE IF NOT EXISTS a_section
+                (
+                    id       TEXT PRIMARY KEY,
+                    parentId TEXT,
+                    Brand    TEXT,
+                    Model    TEXT
+                )
+            `);
+
+            // Clear existing data in a_car and a_section tables
+            await this.deleteFromTableIfExists(db, 'a_car');
+            await this.deleteFromTableIfExists(db, 'a_section');
+
+            // Copy data from cars_table to a_car
+            await this.copyTableData(db, 'cars_table', 'a_car');
+
+            // Copy data from sections_table to a_section
+            await this.copyTableData(db, 'sections_table', 'a_section');
+
+            console.log('Data copied to a_car and a_section tables successfully');
+        } catch (error) {
+            console.error('Error copying data to info tables:', error.message);
+            throw error;
+        }
+    }
+
+    async copyTableData(db, sourceTable, targetTable) {
+        try {
+            // Check if source table exists
+            const sourceExists = await db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${sourceTable}'`);
+
+            if (!sourceExists) {
+                console.log(`Source table ${sourceTable} does not exist, skipping copy to ${targetTable}`);
+                return;
+            }
+
+            // Get all data from source table
+            const sourceData = await db.all(`SELECT * FROM ${sourceTable}`);
+
+            if (sourceData.length > 0) {
+                // Build the column list dynamically
+                const columns = Object.keys(sourceData[0]).join(', ');
+
+                // Prepare placeholders for the INSERT statement
+                const placeholders = Array(Object.keys(sourceData[0]).length).fill('?').join(', ');
+
+                // Create INSERT statement
+                const insertSql = `INSERT INTO ${targetTable} (${columns}) VALUES (${placeholders})`;
+
+                // Insert all rows
+                for (const row of sourceData) {
+                    const values = Object.values(row);
+                    await db.run(insertSql, values);
+                }
+
+                console.log(`Copied ${sourceData.length} rows from ${sourceTable} to ${targetTable}`);
+            } else {
+                console.log(`No data to copy from ${sourceTable} to ${targetTable}`);
+            }
+        } catch (error) {
+            console.error(`Error copying data from ${sourceTable} to ${targetTable}:`, error.message);
+            // Don't throw the error, just log it to allow the process to continue
+        }
     }
 
     async createTables(db) {
