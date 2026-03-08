@@ -1,46 +1,3 @@
-export async function insertIntoSectionTable(section, db) {
-
-    console.log('::::section', section)
-
-    // Extract values from the section object, handling nested properties
-    const id = extractValue(section, ['id', '_id']) || generateSectionId(section);
-    const name = extractValue(section, ['name', 'title']);
-    const title = extractValue(section, ['title', 'name']);
-    const address = extractValue(section, ['address', 'addr']);
-    const phones = extractValue(section, ['phones', 'phone', 'telephone']);
-    const schedule = extractValue(section, ['schedule', 'work_time', 'opening_hours']);
-    const services = extractValue(section, ['services', 'service_list']);
-    const coordinates = extractValue(section, ['coordinates', 'coords', 'location']);
-    const work_time = extractValue(section, ['work_time', 'working_hours', 'schedule']);
-    const city = extractValue(section, ['city', 'location_city']);
-    const region = extractValue(section, ['region', 'location_region']);
-    const district = extractValue(section, ['district', 'location_district']);
-    const brand = extractValue(section, ['brand', 'brand_name']);
-    const type = extractValue(section, ['type', 'section_type']);
-    const subtype = extractValue(section, ['subtype', 'sub_type']);
-    const logo = extractValue(section, ['logo', 'logo_url']);
-    const image = extractValue(section, ['image', 'img', 'picture']);
-    const rating = extractNumericValue(section, ['rating', 'score']);
-    const reviews_count = extractNumericValue(section, ['reviews_count', 'review_count']);
-    const data = JSON.stringify(section);
-
-    // Insert intothe structured section_table
-    // language=SQLite
-    await db.run(`
-        INSERT
-            OR
-        REPLACE
-        INTO section_table (id, name, title, address, phones, schedule, services, coordinates,
-                            work_time, city, region, district, brand, type, subtype, logo,
-                            image, rating, reviews_count, data)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-        id, name, title, address, phones, schedule, services, coordinates,
-        work_time, city, region, district, brand, type, subtype, logo,
-        image, rating, reviews_count, data
-    ]);
-}
-
 export async function insertIntoCarsTable(car, db) {
     // Extract values from the car object, handling nested properties
     const id = extractValue(car, ['id', '_id']) || generateCarId(car);
@@ -157,6 +114,8 @@ function extractValue(obj, possibleKeys) {
 
 // Helper method to extract a numeric value from an object using multiple possiblekeys
 function extractNumericValue(obj, possibleKeys) {
+    // console.log('obj, possibleKeys', obj, possibleKeys)
+
     for (const key of possibleKeys) {
         if (obj && obj[key] !== undefined && obj[key] !== null) {
             const value = parseFloat(obj[key]);

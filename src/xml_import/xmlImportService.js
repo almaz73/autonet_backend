@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {parseString} from 'xml2js';
-import {insertIntoSectionTable, insertCars, findAndProcessCars} from './ServiceCars.js'
+import {insertCars, findAndProcessCars} from './ServiceCars.js'
 
 class XmlImportService {
     constructor() {
@@ -71,17 +71,14 @@ class XmlImportService {
     }
 
 
+    // ... existing code ...
     async clearTables(db) {
         try {
-            // Clear all the tables
-            // language=SQLite
-            await db.exec('DELETE FROM cars;');
-            // language=SQLite
-            await db.exec('DELETE FROM cars_table;');
-            // language=SQLite
-            await db.exec('DELETE FROM sections;');
-            // language=SQLite
-            await db.exec('DELETE FROM sections_table;');
+            // Clear all the tables with conditional checks
+            await this.deleteFromTableIfExists(db, 'cars');
+            await this.deleteFromTableIfExists(db, 'cars_table');
+            await this.deleteFromTableIfExists(db, 'sections');
+            await this.deleteFromTableIfExists(db, 'section_table');
 
             console.log('All tables cleared successfully');
         } catch (error) {
@@ -89,6 +86,30 @@ class XmlImportService {
             throw error;
         }
     }
+
+    async deleteFromTableIfExists(db, tableName) {
+        try {
+            // Check if the table exists
+            const result = await db.get(`SELECT name
+                                         FROM sqlite_master
+                                         WHERE type = 'table'
+                                           AND name = '${tableName}'`);
+
+            if (result) {
+                // Table exists, proceed with deletion
+                await db.exec(`DELETE
+                               FROM ${tableName};`);
+            } else {
+                // Table doesn't exist, log and continue
+                console.log(`Table ${tableName} does not exist, skipping...`);
+            }
+        } catch (error) {
+            console.warn(`Warning: Could not clear table ${tableName}:`, error.message);
+        }
+    }
+
+// ... existing code ...
+
 
     async processXmlData(parsedData, db) {
         // Create tables for sections and cars
@@ -217,8 +238,6 @@ class XmlImportService {
                         [sectionData]
                     );
 
-                    // Insert into the structured sections_table as well
-                    await insertIntoSectionTable(section, db);
                     insertedCount++;
                     // console.log(`Inserted section: ${this.getSectionName(section)}`);
                 } else {
