@@ -23,10 +23,6 @@ class ServiceSections {
                 )
             `);
 
-            // Clear existing data in sections_table
-            // language=SQLite
-            // await db.exec('DELETE FROM sections_table');
-
             // Process sections and their potential subsections recursively
             await this.processSectionRecursive(parsedSections, db, '');
 
@@ -105,7 +101,6 @@ class ServiceSections {
     }
 
     extractValue(value) {
-
         if (value && typeof value === 'object' && value._) {
             // Handle XML element with attributes: { _: 'value', $: {...} }
             return value._.toString().trim();

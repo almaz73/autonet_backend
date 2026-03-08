@@ -130,9 +130,6 @@ export async function findAndProcessCars(data, db, path = '') {
     }
 }
 
-// return count;
-// }
-
 // Helper method to determine if an object looks like a car object
 function looksLikeCarObject(obj) {
     // Check forcommon car properties

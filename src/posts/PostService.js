@@ -1,10 +1,9 @@
 import Post from "./Post.js";
-import XmlImportService from "../xml_import/xmlImportService.js";
 
 class PostService {
     async create(post, picture) {
         const fileName = picture ? this.fileService.saveFile(picture) : null;
-        return await Post.create({...post, picture: fileName});;
+        return await Post.create({...post, picture: fileName});
     }
 
     async getAll() {

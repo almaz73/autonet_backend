@@ -18,7 +18,7 @@ class XmlImportService {
         try {
             //Clear all tables before importing new data
             await this.clearTables(db);
-            
+
             let totalResult = {
                 sectionsImported: 0,
                 carsImported: 0,
@@ -70,22 +70,27 @@ class XmlImportService {
         }
     }
 
+
     async clearTables(db) {
         try {
             // Clear all the tables
+            // language=SQLite
             await db.exec('DELETE FROM cars;');
+            // language=SQLite
             await db.exec('DELETE FROM cars_table;');
+            // language=SQLite
             await db.exec('DELETE FROM sections;');
+            // language=SQLite
             await db.exec('DELETE FROM sections_table;');
-            
+
             console.log('All tables cleared successfully');
-        } catch(error) {
+        } catch (error) {
             console.error('Error clearing tables:', error.message);
             throw error;
         }
     }
 
-async processXmlData(parsedData, db) {
+    async processXmlData(parsedData, db) {
         // Create tables for sections and cars
         await this.createTables(db);
 
@@ -94,7 +99,7 @@ async processXmlData(parsedData, db) {
 
         // Process the XML data to find sections and cars
         if (parsedData.catalog) {
-// Process sections
+            // Process sections
             if (parsedData.catalog.sections && parsedData.catalog.sections.section) {
                 const sections = Array.isArray(parsedData.catalog.sections.section)
                     ? parsedData.catalog.sections.section
@@ -212,7 +217,7 @@ async processXmlData(parsedData, db) {
                         [sectionData]
                     );
 
-                    // Insert into the structured section_table as well
+                    // Insert into the structured sections_table as well
                     await insertIntoSectionTable(section, db);
                     insertedCount++;
                     // console.log(`Inserted section: ${this.getSectionName(section)}`);
@@ -225,23 +230,6 @@ async processXmlData(parsedData, db) {
         }
         return insertedCount;
     }
-
-
-
-
-
-
-    // Helper method to extract a value from an object using multiple possible keys
-    extractValue(obj, possibleKeys) {
-        for (const key of possibleKeys) {
-            if (obj && obj[key] !== undefined && obj[key] !== null) {
-                return String(obj[key]);
-            }
-        }
-        return null;
-    }
-
-
 
 
     // Method to find and process sections incase they're not under catalog
@@ -262,7 +250,7 @@ async processXmlData(parsedData, db) {
                 if (key.toLowerCase() === 'section' && Array.isArray(data[key])) {
                     count += await this.insertSections(data[key], db);
                 } else if (data[key] && typeof data[key] === 'object' && !Array.isArray(data[key])) {
-// Look for individual sectionobjects
+                    // Look for individual sectionobjects
                     if (this.looksLikeSectionObject(data[key])) {
                         // This looks like a section object
                         count += await this.insertSections([data[key]], db);

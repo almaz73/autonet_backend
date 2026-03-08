@@ -37,6 +37,7 @@ class Controllers {
 
     async sections(req, res) {
         try {
+            // language=SQLite
             const sections = await global.db.all('SELECT * FROM sections');
             // Parse the JSON data for each section
             const sectionsWithParsedData = sections.map(section => ({
@@ -52,6 +53,7 @@ class Controllers {
 
     async cars(req, res) {
         try {
+            // language=SQLite
             const cars = await global.db.all('SELECT * FROM cars');
             // Parse the JSON data for each car
             const carsWithParsedData = cars.map(car => ({
