@@ -71,7 +71,6 @@ class Controllers {
 
     async getBrandLidt(req, res) {
         try {
-            // language=SQLite
             const list = await A_section.getBrandList()
             res.json(list);
         } catch (error) {
@@ -82,7 +81,6 @@ class Controllers {
 
     async getCities(req, res) {
         try {
-            // language=SQLite
             const list = await A_car.getCitiesFromACar()
             res.json(list);
         } catch (error) {
@@ -93,7 +91,6 @@ class Controllers {
 
     async getGearboxTypes(req, res) {
         try {
-            // language=SQLite
             const list = await A_car.getGearboxTypes()
             res.json(list);
         } catch (error) {
@@ -104,7 +101,6 @@ class Controllers {
 
     async getEngineTypes(req, res) {
         try {
-            // language=SQLite
             const list = await A_car.getEngineTypes()
             res.json(list);
         } catch (error) {
@@ -115,8 +111,17 @@ class Controllers {
 
     async getDriveTypes(req, res) {
         try {
-            // language=SQLite
             const list = await A_car.getDriveTypes()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async getWheelTypes(req, res) {
+        try {
+            const list = await A_car.getWheelTypes()
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);

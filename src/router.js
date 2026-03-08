@@ -21,6 +21,7 @@ router.get('/getCities', Controllers.getCities)
 router.get('/getGearboxTypes', Controllers.getGearboxTypes)
 router.get('/getEngineTypes', Controllers.getEngineTypes)
 router.get('/getDriveTypes', Controllers.getDriveTypes)
+router.get('/getWheelTypes', Controllers.getWheelTypes)
 
 
 router.get('*', (req, res) => {

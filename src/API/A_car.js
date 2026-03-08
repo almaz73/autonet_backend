@@ -97,6 +97,31 @@ class CityListService {
             throw error;
         }
     }
+
+    async getWheelTypes() {
+        const db = global.db
+        try {
+            // Query the a_car table for distinct engine types
+            // language=SQLite
+            const engineResults = await db.all(`                SELECT DISTINCT prop_steering_wheel
+                FROM a_car
+                WHERE prop_steering_wheel IS NOT NULL 
+                AND prop_steering_wheel != ''
+                ORDER BY prop_steering_wheel ASC
+            `);
+
+            // Format the results as {value, title} where value is the index and title is the content
+            const engineTypes = engineResults.map((result, index) => ({
+                value: index,
+                title: result.prop_steering_wheel
+            }));
+
+            return engineTypes;
+        } catch (error) {
+            console.error('Error retrieving engine types from a_car table:', error.message);
+            throw error;
+        }
+    }
 }
 
 export default new CityListService();
