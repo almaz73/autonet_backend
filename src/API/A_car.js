@@ -257,11 +257,11 @@ class CityListService {
                 FROM a_car
                 WHERE prop_city IS NOT NULL
                   AND prop_city != ''
-                ORDER BY prop_city ASC
+--                 ORDER BY prop_city ASC
             `);
 
             // Extract just the city names from the results
-            return cityResults.map(result => result.city);;
+            return cityResults.map(result => result.city);
         } catch (error) {
             console.error('Error retrieving cities from a_car table:', error.message);
             throw error;
@@ -278,7 +278,7 @@ class CityListService {
                 FROM a_car
                 WHERE prop_transmission_type IS NOT NULL
                   AND prop_transmission_type != ''
-                ORDER BY prop_transmission_type ASC
+--                 ORDER BY prop_transmission_type ASC
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
@@ -302,7 +302,7 @@ class CityListService {
                 FROM a_car
                 WHERE prop_engine_type IS NOT NULL 
                 AND prop_engine_type != ''
-                ORDER BY prop_engine_type ASC
+--                 ORDER BY prop_engine_type ASC
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
@@ -326,7 +326,7 @@ class CityListService {
                 FROM a_car
                 WHERE prop_drive IS NOT NULL 
                 AND prop_drive != ''
-                ORDER BY prop_drive ASC
+--                 ORDER BY prop_drive ASC
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
@@ -350,7 +350,7 @@ class CityListService {
                 FROM a_car
                 WHERE prop_steering_wheel IS NOT NULL 
                 AND prop_steering_wheel != ''
-                ORDER BY prop_steering_wheel ASC
+--                 ORDER BY prop_steering_wheel ASC
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
@@ -374,7 +374,7 @@ class CityListService {
                 FROM a_car
                 WHERE prop_body_type IS NOT NULL 
                 AND prop_body_type != ''
-                ORDER BY prop_body_type ASC
+--                 ORDER BY prop_body_type ASC
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
@@ -398,7 +398,7 @@ class CityListService {
                 FROM a_car
                 WHERE prop_color IS NOT NULL 
                 AND prop_color != ''
-                ORDER BY prop_color ASC
+--                 ORDER BY prop_color ASC
             `);
 
             // Format the results as {value, title} where value is the index and title is the content
