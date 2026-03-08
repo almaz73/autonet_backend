@@ -1,4 +1,3 @@
-import PostController from '../posts/PostController.js'
 import PhotoSaver from '../photo_normalizer/PhotoSaver.js'
 
 class PhotoPrepareService {
@@ -10,8 +9,6 @@ class PhotoPrepareService {
             // language=SQLite
             const cars = await db.all('SELECT images FROM a_car WHERE images IS NOT NULL AND images != ""');
 
-            const allImageUrls = [];
-
             for (const car of cars) {
                 if (car.images) {
                     let imageArray = [];
@@ -19,14 +16,13 @@ class PhotoPrepareService {
 
                     console.log('?? imageArray', imageArray)
 
-                    imageArray.forEach(url => {
+                    for (const url of imageArray) {
                         count++
                         console.log('?? url', url)
-                        let zz = PhotoSaver.savePhotoToServer(url);
+                        let zz = await PhotoSaver.savePhotoToServer(url);
 
                         console.log('?? zz', zz)
-                    })
-
+                    }
                 }
             }
 
