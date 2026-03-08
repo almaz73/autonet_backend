@@ -113,6 +113,17 @@ class Controllers {
         }
     }
 
+    async getDriveTypes(req, res) {
+        try {
+            // language=SQLite
+            const list = await A_car.getDriveTypes()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
 
 }
 
