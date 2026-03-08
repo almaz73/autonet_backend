@@ -1,4 +1,3 @@
-// src/xml_import/cityListService.js
 class CityListService {
     async getCitiesFromACar() {
         const db = global.db
@@ -19,6 +18,32 @@ class CityListService {
             return cities;
         } catch (error) {
             console.error('Error retrieving cities from a_car table:', error.message);
+            throw error;
+        }
+    }
+
+    async getGearboxTypes() {
+        const db = global.db
+        try {
+            // Query the a_car table for distinct transmission types
+            // language=SQLite
+            const gearboxResults = await db.all(`
+                SELECT DISTINCT prop_transmission_type
+                FROM a_car
+                WHERE prop_transmission_type IS NOT NULL
+                  AND prop_transmission_type != ''
+                ORDER BY prop_transmission_type ASC
+            `);
+
+            // Format the results as {value, title} where value is the index and title is the content
+            const gearboxTypes = gearboxResults.map((result, index) => ({
+                value: index,
+                title: result.prop_transmission_type
+            }));
+
+            return gearboxTypes;
+        } catch (error) {
+            console.error('Error retrieving gearbox types from a_car table:', error.message);
             throw error;
         }
     }
