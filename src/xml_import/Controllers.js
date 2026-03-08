@@ -2,6 +2,7 @@ import xmlImportService from "./xmlImportService.js";
 import ServiceSections from "./ServiceSections.js";
 import A_section from "../API/A_section.js";
 import A_car from "../API/A_car.js";
+import GetListService from "../API/GetListService.js";
 
 
 class Controllers {
@@ -55,15 +56,17 @@ class Controllers {
 
 
 
-    // async getList(req, res) {
-    //     try {
-    //         const list = await A_car.getList()
-    //         res.json(list);
-    //     } catch (error) {
-    //         console.error('Error getting cars:', error);
-    //         res.status(500).json({ error: error.message });
-    //     }
-    // }
+    async getList(req, res) {
+        console.log('req.query=', req.query)
+
+        try {
+            const list = await GetListService.getList(req.query)
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
 
     async cars(req, res) {
         try {

@@ -297,7 +297,8 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                SELECT DISTINCT prop_engine_type
+            const engineResults = await db.all(`                
+                SELECT DISTINCT prop_engine_type
                 FROM a_car
                 WHERE prop_engine_type IS NOT NULL 
                 AND prop_engine_type != ''
@@ -320,7 +321,8 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                SELECT DISTINCT prop_drive
+            const engineResults = await db.all(`                
+                SELECT DISTINCT prop_drive
                 FROM a_car
                 WHERE prop_drive IS NOT NULL 
                 AND prop_drive != ''
@@ -343,7 +345,8 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                SELECT DISTINCT prop_steering_wheel
+            const engineResults = await db.all(`                
+                SELECT DISTINCT prop_steering_wheel
                 FROM a_car
                 WHERE prop_steering_wheel IS NOT NULL 
                 AND prop_steering_wheel != ''
@@ -366,7 +369,8 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                SELECT DISTINCT prop_body_type
+            const engineResults = await db.all(`                
+                SELECT DISTINCT prop_body_type
                 FROM a_car
                 WHERE prop_body_type IS NOT NULL 
                 AND prop_body_type != ''
@@ -389,7 +393,8 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                SELECT DISTINCT prop_color
+            const engineResults = await db.all(`                
+                SELECT DISTINCT prop_color
                 FROM a_car
                 WHERE prop_color IS NOT NULL 
                 AND prop_color != ''
