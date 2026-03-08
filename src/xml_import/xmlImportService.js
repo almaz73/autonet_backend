@@ -205,7 +205,6 @@ class XmlImportService {
                 prop_steering_wheel    TEXT,
                 prop_address           TEXT,
                 prop_options           TEXT,
-                prop_guarantee         TEXT,
                 prop_city              TEXT,
                 prop_brand             TEXT,
                 prop_model             TEXT,

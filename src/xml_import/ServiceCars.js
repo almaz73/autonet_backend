@@ -1,36 +1,32 @@
 export async function insertIntoCarsTable(car, db) {
     // Extract values from the car object, handling nested properties
-    const id = extractValue(car, ['id', '_id']) || generateCarId(car);
-    const name = extractValue(car, ['name', 'title', 'model']);
+    const id = extractValue(car, ['id', 'Id', '_id']) || generateCarId(car);
+    const name = extractValue(car, ['Наименование', 'name', 'title', 'model']);
     const section = extractValue(car, ['section', 'section_id']);
     const price = extractNumericValue(car, ['price', 'cost']);
-    const prop_milleage = extractNumericValue(car, ['prop_milleage', 'mileage', 'mileage_value']);
-    const prop_year = extractNumericValue(car, ['prop_year', 'year', 'production_year']);
-    const prop_color = extractValue(car, ['prop_color', 'color', 'colour']);
-    const prop_engine_capacity = extractNumericValue(car, ['prop_engine_capacity', 'engine_capacity', 'engine_size']);
-    const prop_engine_type = extractValue(car, ['prop_engine_type', 'engine_type', 'fuel_type']);
-    const prop_power = extractNumericValue(car, ['prop_power', 'power', 'horsepower']);
-    const prop_transmission_type = extractValue(car, ['prop_transmission_type', 'transmission_type', 'gearbox']);
-    const prop_drive = extractValue(car, ['prop_drive', 'drive', 'drive_type']);
-    const prop_body_type = extractValue(car, ['prop_body_type', 'body_type', 'car_body']);
-    const prop_steering_wheel = extractValue(car, ['prop_steering_wheel', 'steering_wheel', 'wheel_position']);
-    const prop_address = extractValue(car, ['prop_address', 'address', 'location']);
-    const prop_options = extractValue(car, ['prop_options', 'options', 'complectation']);
-    const prop_guarantee = extractValue(car, ['prop_guarantee', 'guarantee', 'warranty']);
-    const prop_city = extractValue(car, ['prop_city', 'city', 'location_city']);
-    const prop_brand = extractValue(car, ['prop_brand', 'brand', 'make']);
-    const prop_model = extractValue(car, ['prop_model', 'model', 'car_model']);
-    const prop_VIN = extractValue(car, ['prop_VIN', 'VIN', 'vin']);
+    const prop_milleage = extractNumericValue(car, ['Пробег', 'prop_milleage', 'mileage', 'mileage_value']);
+    const prop_year = extractNumericValue(car, ['ГодВыпуска', 'year', 'production_year']);
+    const prop_color = extractValue(car, ['Цвет', 'color', 'colour']);
+    const prop_engine_capacity = extractNumericValue(car, ['ОбъемДвигателя', 'engine_capacity']);
+    const prop_engine_type = extractValue(car, ['ТипДвигателя', 'engine_type', 'fuel_type']);
+    const prop_power = extractNumericValue(car, ['Мощность', 'power']);
+    const prop_transmission_type = extractValue(car, ['ТипКПП', 'transmission_type', 'gearbox']);
+    const prop_drive = extractValue(car, ['Привод', 'drive', 'drive_type']);
+    const prop_body_type = extractValue(car, ['ТипКузова', 'body_type', 'car_body']);
+    const prop_steering_wheel = extractValue(car, ['Руль', 'steering_wheel', 'wheel_position']);
+    const prop_address = extractValue(car, ['Адрес', 'address', 'location']);
+    const prop_options = extractValue(car, ['Опции', 'options', 'complectation']);
+    const prop_city = extractValue(car, ['Город', 'city', 'location_city']);
+    const prop_brand = extractValue(car, ['Марка', 'brand', 'make']);
+    const prop_model = extractValue(car, ['Модель', 'model', 'car_model']);
+    const prop_VIN = extractValue(car, ['VIN', 'vin']);
 
-    // Handle images -convert array to JSON string if it exists
     let images = null;
-    if (car.images && car.images.image) {
-        const imageArray = Array.isArray(car.images.image) ? car.images.image : [car.images.image];
-        images = JSON.stringify(imageArray);
-    } else if (Array.isArray(car.images)) {
-        images = JSON.stringify(car.images);
-    } else if (typeof car.images === 'string') {
-        images = JSON.stringify([car.images]);
+    let imgArr = []
+
+    if(car && car.Images && car.Images.Image) {
+        car.Images.Image.forEach((img, index) => imgArr.push(img.$.url))
+        if (imgArr) images = imgArr.join(', ')
     }
 
     // Insert into the structured cars_table
@@ -42,13 +38,13 @@ export async function insertIntoCarsTable(car, db) {
         INTO cars_table (id, name, section, price, prop_milleage, prop_year, prop_color,
                          prop_engine_capacity, prop_engine_type, prop_power, prop_transmission_type,
                          prop_drive, prop_body_type, prop_steering_wheel, prop_address, prop_options,
-                         prop_guarantee, prop_city, prop_brand, prop_model, prop_VIN, images)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         prop_city, prop_brand, prop_model, prop_VIN, images)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
         id, name, section, price, prop_milleage, prop_year, prop_color,
         prop_engine_capacity, prop_engine_type, prop_power, prop_transmission_type,
         prop_drive, prop_body_type, prop_steering_wheel, prop_address, prop_options,
-        prop_guarantee, prop_city, prop_brand, prop_model, prop_VIN, images
+        prop_city, prop_brand, prop_model, prop_VIN, images
     ]);
 }
 
@@ -105,6 +101,10 @@ function looksLikeCarObject(obj) {
 // Helper method to extract a value from an object using multiple possible keys
 function extractValue(obj, possibleKeys) {
     for (const key of possibleKeys) {
+        if (obj && obj.properties && obj.properties[key] !== undefined && obj.properties[key] !== null) {
+            return String(obj.properties[key])
+        }
+
         if (obj && obj[key] !== undefined && obj[key] !== null) {
             return String(obj[key]);
         }
@@ -114,9 +114,12 @@ function extractValue(obj, possibleKeys) {
 
 // Helper method to extract a numeric value from an object using multiple possiblekeys
 function extractNumericValue(obj, possibleKeys) {
-    // console.log('obj, possibleKeys', obj, possibleKeys)
-
     for (const key of possibleKeys) {
+        if (obj && obj.properties && obj.properties[key] !== undefined && obj.properties[key] !== null) {
+            const value = parseFloat(obj.properties[key]);
+            return isNaN(value) ? null : value;
+        }
+
         if (obj && obj[key] !== undefined && obj[key] !== null) {
             const value = parseFloat(obj[key]);
             return isNaN(value) ? null : value;
@@ -128,19 +131,12 @@ function extractNumericValue(obj, possibleKeys) {
 // Helper method to generatea uniqueID for acar ifno ID is provided
 function generateCarId(car) {
     // Generate a unique ID based on car properties
-    const name = extractValue(car, ['name', 'title', 'model']) || '';
-    const year = extractNumericValue(car, ['prop_year', 'year']) || '';
-    const vin = extractValue(car, ['prop_VIN', 'VIN']) || '';
+    const name = extractValue(car, ['Наименование', 'name', 'Name']) || '';
+    const year = extractNumericValue(car, ['ГодВыпуска', 'Year', 'year']) || '';
+    const vin = extractValue(car, ['VIN', 'vin', 'Vin']) || '';
     return `${name}_${year}_${vin}`.replace(/\s+/g, '_').substring(0, 100);
 }
 
-// Helper method to generate a unique ID fora section if no ID is provided
-function generateSectionId(section) {
-    // Generate a unique ID based on section properties
-    const name = extractValue(section, ['name', 'title']) || '';
-    const address = extractValue(section, ['address']) || '';
-    return `${name}_${address}`.replace(/\s+/g, '_').substring(0, 100);
-}
 
 // Helper method to get a name for logging purposes froma car
 function getCarName(car) {
@@ -170,7 +166,7 @@ export async function insertCars(cars, db) {
                 // Insert into thestructured cars_table as well
                 await insertIntoCarsTable(car, db);
                 insertedCount++;
-                console.log(`Inserted car: ${getCarName(car)}`);
+                // console.log(`Inserted car: ${getCarName(car)}`);
             } else {
                 console.log(`Skipped duplicate car: ${getCarName(car)}`);
             }
