@@ -139,6 +139,16 @@ class Controllers {
         }
     }
 
+    async getColorList(req, res) {
+        try {
+            const list = await A_car.getColorList()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
 
 }
 

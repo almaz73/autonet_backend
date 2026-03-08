@@ -135,6 +135,29 @@ class CityListService {
             throw error;
         }
     }
+
+    async getColorList() {
+        const db = global.db
+        try {
+            // Query the a_car table for distinct engine types
+            // language=SQLite
+            const engineResults = await db.all(`                SELECT DISTINCT prop_color
+                FROM a_car
+                WHERE prop_color IS NOT NULL 
+                AND prop_color != ''
+                ORDER BY prop_color ASC
+            `);
+
+            // Format the results as {value, title} where value is the index and title is the content
+            return engineResults.map((result, index) => ({
+                value: index,
+                title: result.prop_color
+            }));
+        } catch (error) {
+            console.error('Error retrieving engine types from a_car table:', error.message);
+            throw error;
+        }
+    }
 }
 
 export default new CityListService();
