@@ -129,6 +129,16 @@ class Controllers {
         }
     }
 
+    async getBodyTypes(req, res) {
+        try {
+            const list = await A_car.getBodyTypes()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
 
 }
 
