@@ -1,5 +1,6 @@
 import xmlImportService from "./xmlImportService.js";
 import ServiceSections from "./ServiceSections.js";
+import GetBrandList from "../API/GetBrandList.js";
 
 
 class Controllers {
@@ -61,6 +62,19 @@ class Controllers {
                 data: JSON.parse(car.data)
             }));
             res.json(carsWithParsedData);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async getBrandLidt(req, res) {
+        try {
+            // language=SQLite
+            const list = await GetBrandList.getSectionsWithBrand()
+            console.log(list)
+
+            res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
             res.status(500).json({ error: error.message });

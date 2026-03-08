@@ -15,6 +15,9 @@ router.get('/process-sections', Controllers.processSections)
 router.get('/sections', Controllers.sections)
 router.get('/cars', Controllers.cars)
 
+
+router.get('/getBrandList', Controllers.getBrandLidt)
+
 router.get('*', (req, res) => {
     console.log('404 404 404 404 404')
     res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
