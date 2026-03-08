@@ -1,4 +1,39 @@
-export async function insertIntoCarsTable(car, db) {
+export async function insertCars(cars, db) {
+    let insertedCount = 0;
+    for (const car of cars) {
+        try {
+            // Convert the car object to a JSON string to store all fields
+            const carData = JSON.stringify(car);
+
+            // Check if car already exists (using a hash of the data to prevent duplicates)
+            // language=SQLite
+            const existingCar = await db.get(
+                'SELECT id FROM cars WHERE data = ?', [carData]
+            );
+
+            if (!existingCar) {
+                // language=SQLite
+                await db.run(
+                    'INSERT INTO cars (data) VALUES (?)',
+                    [carData]
+                );
+
+                // Insert into thestructured cars_table as well
+                await insertIntoCarsTable(car, db);
+                insertedCount++;
+                // console.log(`Inserted car: ${getCarName(car)}`);
+            } else {
+                console.log(`Skipped duplicate car: ${getCarName(car)}`);
+            }
+        } catch (error) {
+            console.error('Error inserting car:', error.message, car);
+        }
+    }
+
+    return insertedCount;
+}
+
+async function insertIntoCarsTable(car, db) {
     // Extract values from the car object, handling nested properties
     const id = extractValue(car, ['id', 'Id', '_id']) || generateCarId(car);
     const name = extractValue(car, ['Наименование', 'name', 'title', 'model']);
@@ -25,7 +60,7 @@ export async function insertIntoCarsTable(car, db) {
     let imgArr = []
 
     if(car && car.Images && car.Images.Image) {
-        car.Images.Image.forEach((img, index) => imgArr.push(img.$.url))
+        car.Images.Image.forEach((img) => imgArr.push(img.$.url))
         if (imgArr) images = imgArr.join(', ')
     }
 
@@ -143,37 +178,3 @@ function getCarName(car) {
     return car.name || car.title || car.model || car.id || 'Unnamed Car';
 }
 
-export async function insertCars(cars, db) {
-    let insertedCount = 0;
-    for (const car of cars) {
-        try {
-            // Convert the car object to a JSON string to store all fields
-            const carData = JSON.stringify(car);
-
-            // Check if car already exists (using a hash of the data to prevent duplicates)
-            // language=SQLite
-            const existingCar = await db.get(
-                'SELECT id FROM cars WHERE data = ?', [carData]
-            );
-
-            if (!existingCar) {
-                // language=SQLite
-                await db.run(
-                    'INSERT INTO cars (data) VALUES (?)',
-                    [carData]
-                );
-
-                // Insert into thestructured cars_table as well
-                await insertIntoCarsTable(car, db);
-                insertedCount++;
-                // console.log(`Inserted car: ${getCarName(car)}`);
-            } else {
-                console.log(`Skipped duplicate car: ${getCarName(car)}`);
-            }
-        } catch (error) {
-            console.error('Error inserting car:', error.message, car);
-        }
-    }
-
-    return insertedCount;
-}

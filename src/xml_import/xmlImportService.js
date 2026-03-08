@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {parseString} from 'xml2js';
 import {insertCars, findAndProcessCars} from './ServiceCars.js'
+import ServiceSections from "./ServiceSections.js";
 
 class XmlImportService {
     constructor() {
@@ -18,6 +19,9 @@ class XmlImportService {
         try {
             //Clear all tables before importing new data
             await this.clearTables(db);
+
+            // create new tables
+            await this.createTables(db);
 
             let totalResult = {
                 sectionsImported: 0,
@@ -62,6 +66,9 @@ class XmlImportService {
                 totalResult.carsImported += result.carsImported;
                 totalResult.total += result.total;
             }
+
+            console.log(`Total sections imported: ${totalResult.sectionsImported}`);
+            console.log(`::: EVERYTHING SUCCESS :::`);
 
             return totalResult;
         } catch (error) {
@@ -112,9 +119,6 @@ class XmlImportService {
 
 
     async processXmlData(parsedData, db) {
-        // Create tables for sections and cars
-        await this.createTables(db);
-
         let sectionsCount = 0;
         let carsCount = 0;
 
@@ -136,6 +140,8 @@ class XmlImportService {
                     : [parsedData.catalog.cars.car];
 
                 carsCount = await insertCars(cars, db);
+
+                await ServiceSections.processSections(global.db);
             }
         } else {
             // If catalog doesn't exist, try to find sections and cars anywhere in the structure
@@ -213,7 +219,7 @@ class XmlImportService {
             )
         `);
 
-        console.log('???? Sections, section_table, cars and cars_table tables created/verified');
+        console.log('sections, cars and cars_table tables created/verified');
     }
 
     async insertSections(sections, db) {
