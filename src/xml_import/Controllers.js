@@ -53,6 +53,18 @@ class Controllers {
         }
     }
 
+
+
+    // async getList(req, res) {
+    //     try {
+    //         const list = await A_car.getList()
+    //         res.json(list);
+    //     } catch (error) {
+    //         console.error('Error getting cars:', error);
+    //         res.status(500).json({ error: error.message });
+    //     }
+    // }
+
     async cars(req, res) {
         try {
             // language=SQLite
