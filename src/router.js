@@ -19,6 +19,7 @@ router.get('/import-xml', Controllers.importXML)
 router.get('/getBrandList', Controllers.getBrandLidt)
 router.get('/getCities', Controllers.getCities)
 router.get('/getGearboxTypes', Controllers.getGearboxTypes)
+router.get('/getEngineTypes', Controllers.getEngineTypes)
 
 router.get('*', (req, res) => {
     console.log('404 404 404 404 404')

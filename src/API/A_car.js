@@ -47,6 +47,31 @@ class CityListService {
             throw error;
         }
     }
+
+    async getEngineTypes() {
+        const db = global.db
+        try {
+            // Query the a_car table for distinct engine types
+            // language=SQLite
+            const engineResults = await db.all(`                SELECT DISTINCT prop_engine_type
+                FROM a_car
+                WHERE prop_engine_type IS NOT NULL 
+                AND prop_engine_type != ''
+                ORDER BY prop_engine_type ASC
+            `);
+
+            // Format the results as {value, title} where value is the index and title is the content
+            const engineTypes = engineResults.map((result, index) => ({
+                value: index,
+                title: result.prop_engine_type
+            }));
+
+            return engineTypes;
+        } catch (error) {
+            console.error('Error retrieving engine types from a_car table:', error.message);
+            throw error;
+        }
+    }
 }
 
 export default new CityListService();
