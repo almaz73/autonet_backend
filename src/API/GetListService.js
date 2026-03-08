@@ -10,13 +10,15 @@ class GetListService {
             // language=SQLite
             const query = `
                 SELECT ac.id,
+                       ac.prop_brand            as brand,
+                       ac.prop_model            as model,
                        ac.prop_year              as yearReleased,
                        ac.price,
                        ac.prop_milleage          as milleage,
                        ac.prop_color             as color,
                        ac.prop_engine_capacity   as engineCapacity,
                        ac.prop_engine_type       as engineType,
-                       ac.prop_power             as engineCapacity,
+                       ac.prop_power             as enginePower,
                        ac.prop_transmission_type as gearboxType,
                        ac.prop_drive             as driveType,
                        ac.prop_body_type         as bodyType,
