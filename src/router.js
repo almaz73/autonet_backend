@@ -11,12 +11,13 @@ router.put('/posts', PostController.update)
 router.delete('/posts/:id', PostController.delete)
 
 router.get('/import-xml', Controllers.importXML)
-router.get('/process-sections', Controllers.processSections)
-router.get('/sections', Controllers.sections)
-router.get('/cars', Controllers.cars)
+// router.get('/process-sections', Controllers.processSections)
+// router.get('/sections', Controllers.sections)
+// router.get('/cars', Controllers.cars)
 
 
 router.get('/getBrandList', Controllers.getBrandLidt)
+router.get('/getCities', Controllers.getCities)
 
 router.get('*', (req, res) => {
     console.log('404 404 404 404 404')

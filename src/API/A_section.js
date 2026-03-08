@@ -1,6 +1,6 @@
 // src/xml_import/sectionBrandService.js
 class SectionBrandService {
-    async getSectionsWithBrand() {
+    async getBrandList() {
         const db = global.db
 
         try {
