@@ -4,6 +4,8 @@ import A_section from "../API/A_section.js";
 import A_car from "../API/A_car.js";
 import GetListService from "../API/GetListService.js";
 
+import PhotoPrepareService from './PhotoPrepareService.js';
+
 
 class Controllers {
     async importXML(req, res) {
@@ -163,6 +165,18 @@ class Controllers {
             res.status(500).json({ error: error.message });
         }
     }
+
+    async preparePhoto(req, res) {
+        console.log(2222)
+        try {
+            const list = await PhotoPrepareService.getImagesFromACar()
+            res.json('list');
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
 
 
 }

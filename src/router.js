@@ -25,6 +25,8 @@ router.get('/getDriveTypes', Controllers.getDriveTypes)
 router.get('/getWheelTypes', Controllers.getWheelTypes)
 router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
+router.get('/prepare', Controllers.preparePhoto)
+
 
 
 router.get('*', (req, res) => {

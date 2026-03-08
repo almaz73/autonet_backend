@@ -2,6 +2,7 @@ import axios from 'axios';
 import {parseString} from 'xml2js';
 import {insertCars, findAndProcessCars} from './ServiceCars.js'
 import ServiceSections from "./ServiceSections.js";
+// import PhotoPrepareServis from "./PhotoPrepareService.js";
 
 class XmlImportService {
     constructor() {
@@ -75,6 +76,8 @@ class XmlImportService {
 
 
             console.log('::: EVERYTHING SUCCESS :::');
+
+            // PhotoPrepareServis.getImagesFromACar() // todo потом включу, когда будет готово
 
             return totalResult;
         } catch (error) {
