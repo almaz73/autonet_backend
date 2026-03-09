@@ -44,12 +44,13 @@ class CityListService {
             // Query the a_section table joined with a_car to get brand counts
             // language=SQLite
             const results = await db.all(`
-                SELECT sec.id as brandId,
+                SELECT sec.id       as brandId,
                        COUNT(ac.id) as count,
-                       sec.brand as name
+                       sec.brand    as name
                 FROM a_section sec
-                LEFT JOIN a_car ac ON sec.brand = ac.prop_brand
-                WHERE sec.brand IS NOT NULL AND sec.brand != ''
+                         LEFT JOIN a_car ac ON sec.brand = ac.prop_brand
+                WHERE sec.brand IS NOT NULL
+                  AND sec.brand != ''
                 GROUP BY sec.id, sec.brand
                 ORDER BY sec.brand
             `);
@@ -158,11 +159,11 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                
+            const engineResults = await db.all(`
                 SELECT DISTINCT prop_engine_type
                 FROM a_car
-                WHERE prop_engine_type IS NOT NULL 
-                AND prop_engine_type != ''
+                WHERE prop_engine_type IS NOT NULL
+                  AND prop_engine_type != ''
 --                 ORDER BY prop_engine_type ASC
             `);
 
@@ -182,11 +183,11 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                
+            const engineResults = await db.all(`
                 SELECT DISTINCT prop_drive
                 FROM a_car
-                WHERE prop_drive IS NOT NULL 
-                AND prop_drive != ''
+                WHERE prop_drive IS NOT NULL
+                  AND prop_drive != ''
 --                 ORDER BY prop_drive ASC
             `);
 
@@ -206,11 +207,11 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                
+            const engineResults = await db.all(`
                 SELECT DISTINCT prop_steering_wheel
                 FROM a_car
-                WHERE prop_steering_wheel IS NOT NULL 
-                AND prop_steering_wheel != ''
+                WHERE prop_steering_wheel IS NOT NULL
+                  AND prop_steering_wheel != ''
 --                 ORDER BY prop_steering_wheel ASC
             `);
 
@@ -230,11 +231,11 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                
+            const engineResults = await db.all(`
                 SELECT DISTINCT prop_body_type
                 FROM a_car
-                WHERE prop_body_type IS NOT NULL 
-                AND prop_body_type != ''
+                WHERE prop_body_type IS NOT NULL
+                  AND prop_body_type != ''
 --                 ORDER BY prop_body_type ASC
             `);
 
@@ -254,11 +255,11 @@ class CityListService {
         try {
             // Query the a_car table for distinct engine types
             // language=SQLite
-            const engineResults = await db.all(`                
+            const engineResults = await db.all(`
                 SELECT DISTINCT prop_color
                 FROM a_car
-                WHERE prop_color IS NOT NULL 
-                AND prop_color != ''
+                WHERE prop_color IS NOT NULL
+                  AND prop_color != ''
 --                 ORDER BY prop_color ASC
             `);
 
@@ -272,6 +273,33 @@ class CityListService {
             throw error;
         }
     }
+
+    // ... existing code ...
+    async getYearGap() {
+        const db = global.db
+        try {
+            // Query the a_car table for min and max years
+            // language=SQLite
+            const result = await db.get(`
+                SELECT MIN(prop_year) as fromYear,
+                       MAX(prop_year) as toYear
+                FROM a_car
+                WHERE prop_year IS NOT NULL
+            `);
+
+            if (!result) return {from: "2000", to: "2026"};
+
+
+            // Return the result in the requested format
+            return {from: result.fromYear, to:  result.toYear}
+        } catch (error) {
+            console.error('Error retrieving year gap from a_car table:', error.message);
+            throw error;
+        }
+    }
+
+// ... existing code ...
+
 }
 
 export default new CityListService();

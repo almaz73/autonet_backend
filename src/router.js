@@ -30,14 +30,12 @@ router.get('/getWheelTypes', Controllers.getWheelTypes)
 router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
 router.get('/prepare', Controllers.preparePhoto) // Это будет сам запускать сервер. средство разработки для подготовки фоток.
+router.get('/getYearGap', Controllers.getYearGap)
 
 
 /*
  // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
     router.get('/getSpecials', Controllers.getSpecials)
-
- // Интервал выпуска автомобилей, от минимального к максимальному
-    router.get('/getYearGap', Controllers.getYearGap)
 
  // Интервал цен
     router.get('/getPriceGap', Controllers.getPriceGap)

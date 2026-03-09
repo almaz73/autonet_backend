@@ -204,6 +204,17 @@ class Controllers {
         }
     }
 
+    async getYearGap(req, res) {
+        try {
+            const list = await A_car.getYearGap()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
+
     async preparePhoto(req, res) {
         console.log('Начинаем процесс подготовки фоток...')
         try {
