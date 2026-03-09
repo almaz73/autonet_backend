@@ -59,7 +59,7 @@ class Controllers {
 
 
     async getList(req, res) {
-        console.log('req.query=', req.query)
+        console.log('Фильтр =', req.query)
 
         try {
             const list = await GetListService.getList(req.query)

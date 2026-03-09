@@ -34,6 +34,16 @@ class GetListService {
             // Execute the query with the provided limit and offset
             const items = await db.all(query, [limit, offset]);
 
+            items.map(el => {
+                try {
+                    el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
+                    el.images.length = 5
+                } catch (error) {
+                    console.error('Error parsing images for car ID ' + el.id + ':', error.message);
+                    el.images = [];
+                }
+            });
+
             // Get the total count for the pagination
             // language=SQLite
             const countResult = await db.get('SELECT COUNT(*) as totalCount FROM a_car ac LEFT JOIN a_section ast ON ac.section = ast.id');

@@ -14,7 +14,7 @@ class PhotoPrepareService {
             // language=SQLite
             const cars = await db.all('SELECT images FROM a_car WHERE images IS NOT NULL AND images != ""');
 
-            console.time('Общее время создания фоток')
+            console.time('!!!!!!! Общее время создания фоток')
             for (const car of cars) {
                 if (car.images) {
                     let imageArray = [];
@@ -25,7 +25,7 @@ class PhotoPrepareService {
                         count++
                         placeInLine++
                         let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, folderName);
-                        console.log(':::', zz);
+                        console.log(':::', zz, '(',count,')');
                     }
 
                     // if (count > 10) break;
@@ -35,7 +35,7 @@ class PhotoPrepareService {
                 }
             }
 
-            console.timeEnd('Общее время создания фоток')
+            console.timeEnd('!!!!!!! Общее время создания фоток')
             console.log('!!!!!!! Общее количество созданных фоток:', count)
             // return allImageUrls;
         } catch (error) {
