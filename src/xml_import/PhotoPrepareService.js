@@ -1,11 +1,7 @@
 import PhotoSaver from './PhotoSaver.js'
-const folderName = 'public/foto'
+const folderName = 'public/foto_dev'
 
 class PhotoPrepareService {
-    async getImagesFromACar() {
-        PhotoSaver.deleteFolder(folderName)            // Удаляем все старые фотки, и создаем новый
-            .then(()=>this.savePhotos())
-    }
     async savePhotos() {
         const db = global.db;
         let count = 0

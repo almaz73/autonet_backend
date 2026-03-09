@@ -228,7 +228,7 @@ class Controllers {
     async preparePhoto(req, res) {
         console.log('Начинаем процесс подготовки фоток...')
         try {
-            await PhotoPrepareService.getImagesFromACar()
+            await PhotoPrepareService.savePhotos()
             res.json('Фотки скопипрованы с оптимизацией');
         } catch (error) {
             console.error('Error getting cars:', error);

@@ -10,21 +10,21 @@ const __dirname = path.dirname(__filename);
 
 class PhotoSaver {
 
-    deleteFolder(directory) {
-        return new Promise((resolve, reject) => {
-            fs.rm(directory, {recursive: true, force: true}, (err) => {
-                if (err) reject('!!! НЕ ПОЛУЧИЛОСЬ УДАЛИТЬ ПАПКУ ' + err)
-                else {
-                    console.log(`Папка с фотками ${directory} успешно удалена`)
-
-                    const uploadDir = path.join(__dirname, '../..', directory);
-                    fs.mkdirSync(uploadDir, {recursive: true});
-                    console.log(`Папка для фоток ${directory} создана`)
-                    resolve()
-                }
-            });
-        })
-    }
+    // deleteFolder(directory) {
+    //     return new Promise((resolve, reject) => {
+    //         fs.rm(directory, {recursive: true, force: true}, (err) => {
+    //             if (err) reject('!!! НЕ ПОЛУЧИЛОСЬ УДАЛИТЬ ПАПКУ ' + err)
+    //             else {
+    //                 console.log(`Папка с фотками ${directory} успешно удалена`)
+    //
+    //                 const uploadDir = path.join(__dirname, '../..', directory);
+    //                 fs.mkdirSync(uploadDir, {recursive: true});
+    //                 console.log(`Папка для фоток ${directory} создана`)
+    //                 resolve()
+    //             }
+    //         });
+    //     })
+    // }
 
     async savePhotoToServer(imageUrl, placeInLine, directory) {
         try {
