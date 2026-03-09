@@ -57,7 +57,6 @@ class Controllers {
     }
 
 
-
     async getList(req, res) {
         console.log('Фильтр =', req.query)
 
@@ -66,7 +65,18 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
+        }
+    }
+
+
+    async getFullAutoInfo(req, res) {
+        try {
+            const list = await A_car.getFullAutoInfo(req.query.guid)
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -82,7 +92,7 @@ class Controllers {
             res.json(carsWithParsedData);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -92,7 +102,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -102,7 +112,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -112,7 +122,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -122,7 +132,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -132,7 +142,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -142,7 +152,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -152,7 +162,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -162,7 +172,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -172,7 +182,7 @@ class Controllers {
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
 
@@ -183,10 +193,9 @@ class Controllers {
             res.json('Фотки скопипрованы с оптимизацией');
         } catch (error) {
             console.error('Error getting cars:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({error: error.message});
         }
     }
-
 
 
 }
