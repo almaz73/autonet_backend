@@ -86,9 +86,19 @@ class Controllers {
         }
     }
 
-    async getBrandLidt(req, res) {
+    async getBrandList(req, res) {
         try {
             const list = await A_section.getBrandList()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async getModelList(req, res) {
+        try {
+            const list = await A_section.getModelList(req.query.id)
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
@@ -167,10 +177,10 @@ class Controllers {
     }
 
     async preparePhoto(req, res) {
-        console.log(2222)
+        console.log('Начинаем процесс подготовки фоток...')
         try {
-            const list = await PhotoPrepareService.getImagesFromACar()
-            res.json('list');
+            await PhotoPrepareService.getImagesFromACar()
+            res.json('Фотки скопипрованы с оптимизацией');
         } catch (error) {
             console.error('Error getting cars:', error);
             res.status(500).json({ error: error.message });

@@ -71,7 +71,7 @@ class ServiceSections {
             let Brand = '';
             let Model = '';
 
-            if (parentId === 'ap_probeg') Model = sectionData['_']
+            if (parentId !== 'ap_probeg') Model = sectionData['_']
             else Brand = sectionData['_']
 
 

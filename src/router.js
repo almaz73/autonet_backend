@@ -17,7 +17,8 @@ router.get('/import-xml', Controllers.importXML)
 
 
 router.get('/getList', Controllers.getList)
-router.get('/getBrandList', Controllers.getBrandLidt)
+router.get('/getBrandList', Controllers.getBrandList)
+router.get('/getModelList', Controllers.getModelList)
 router.get('/getCities', Controllers.getCities)
 router.get('/getGearboxTypes', Controllers.getGearboxTypes)
 router.get('/getEngineTypes', Controllers.getEngineTypes)
@@ -25,9 +26,34 @@ router.get('/getDriveTypes', Controllers.getDriveTypes)
 router.get('/getWheelTypes', Controllers.getWheelTypes)
 router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
-router.get('/prepare', Controllers.preparePhoto)
+router.get('/prepare', Controllers.preparePhoto) // Это будет сам запускать сервер. средство разработки для подготовки фоток.
 
 
+/*
+ // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
+    router.get('/getSpecials', Controllers.getSpecials)
+
+ // Данные автомобиля по id. (для страницы с подробной информацией об автомобиле)
+    router.get('/getFullAutoInfo', Controllers.getFullAutoInfo)
+
+ // (Иконки) Получение кол-во автомобилей разбитых по бренду. Отсортированно от большего к меньшему
+    router.get('/getCarCount', Controllers.getCarCount)
+
+ // Интервал выпуска автомобилей, от минимального к максимальному
+    router.get('/getYearGap', Controllers.getYearGap)
+
+ // Интервал цен
+    router.get('/getPriceGap', Controllers.getPriceGap)
+
+ // Получение максимального объема двигателей из всех автомобилей
+    router.get('/getMaxEngineCapacity', Controllers.getMaxEngineCapacity)
+
+ // Почта
+    router.post('/email/postEmail', Controllers.postEmail)
+
+ // Почта с прикрепленным файлом
+    router.post('/email/postEmailWithAttachement', Controllers.postEmailWithAttachement)
+*/
 
 router.get('*', (req, res) => {
     console.log('404 404 404 404 404')
