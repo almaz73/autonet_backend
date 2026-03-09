@@ -7,7 +7,6 @@ class CityListService {
             const result = await db.get(`
                 SELECT ac.id,
                        ac.price,
-                       ac.section,
                        sec.id                    as brandId,
                        ac.prop_milleage          as milleage,
                        ac.prop_color             as color,
@@ -38,6 +37,35 @@ class CityListService {
             throw error;
         }
     }
+
+
+// ... existing code ...
+    async getCarCount() {
+        const db = global.db
+        try {
+            // Query the a_section table joined with a_car to get brand counts
+            // language=SQLite
+            const results = await db.all(`
+                SELECT sec.id as brandId,
+                       COUNT(ac.id) as count,
+                       sec.brand as name
+                FROM a_section sec
+                LEFT JOIN a_car ac ON sec.brand = ac.prop_brand
+                WHERE sec.brand IS NOT NULL AND sec.brand != ''
+                GROUP BY sec.id, sec.brand
+                ORDER BY sec.brand
+            `);
+
+            return results;
+        } catch (error) {
+            console.error('Error retrieving car count by brand from a_car and a_section tables:', error.message);
+            throw error;
+        }
+    }
+
+// ... existing code ...
+
+
 
     async getCitiesFromACar() {
         const db = global.db

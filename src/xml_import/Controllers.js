@@ -80,6 +80,16 @@ class Controllers {
         }
     }
 
+    async getCarCount(req, res) {
+        try {
+            const list = await A_car.getCarCount()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
     async cars(req, res) {
         try {
             // language=SQLite

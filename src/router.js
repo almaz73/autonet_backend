@@ -18,6 +18,7 @@ router.get('/import-xml', Controllers.importXML)
 
 router.get('/getList', Controllers.getList)
 router.get('/getFullAutoInfo', Controllers.getFullAutoInfo)
+router.get('/getCarCount', Controllers.getCarCount)
 router.get('/getBrandList', Controllers.getBrandList)
 router.get('/getModelList', Controllers.getModelList)
 router.get('/getCities', Controllers.getCities)
@@ -33,10 +34,6 @@ router.get('/prepare', Controllers.preparePhoto) // Это будет сам з�
 /*
  // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
     router.get('/getSpecials', Controllers.getSpecials)
-
-
- // (Иконки) Получение кол-во автомобилей разбитых по бренду. Отсортированно от большего к меньшему
-    router.get('/getCarCount', Controllers.getCarCount)
 
  // Интервал выпуска автомобилей, от минимального к максимальному
     router.get('/getYearGap', Controllers.getYearGap)
