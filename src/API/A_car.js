@@ -329,7 +329,7 @@ class CityListService {
             console.log('Общее количество прикрепленных фоток: ', totalLinks);
             console.log('Автомобилей с фотками: ', results.length);
 
-            return 'Всего ссылок на фотки: '+ totalLinks;
+            return `Всего ссылок на фотo: ${totalLinks}  /  Автомобилей с фотками: ${results.length}`;
         } catch (error) {
             console.error('Error counting image links in a_car table:', error.message);
             throw error;

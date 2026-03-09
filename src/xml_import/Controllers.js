@@ -1,5 +1,4 @@
 import xmlImportService from "./xmlImportService.js";
-import ServiceSections from "./ServiceSections.js";
 import A_section from "../API/A_section.js";
 import A_car from "../API/A_car.js";
 import GetListService from "../API/GetListService.js";
