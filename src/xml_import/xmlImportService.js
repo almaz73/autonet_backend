@@ -2,7 +2,6 @@ import axios from 'axios';
 import {parseString} from 'xml2js';
 import {insertCars, findAndProcessCars} from './ServiceCars.js'
 import ServiceSections from "./ServiceSections.js";
-import PhotoPrepareService from "./PhotoPrepareService.js";
 
 class XmlImportService {
     constructor() {

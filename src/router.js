@@ -26,6 +26,7 @@ router.get('/prepare', Controllers.preparePhoto) // Это будет сам з�
 router.get('/getYearGap', Controllers.getYearGap)
 
 router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
+router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
 
 
 /*

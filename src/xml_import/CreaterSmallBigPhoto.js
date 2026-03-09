@@ -8,7 +8,7 @@ import sharp from "sharp";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-class PhotoSaver {
+class CreaterSmallBigPhoto {
 
     // deleteFolder(directory) {
     //     return new Promise((resolve, reject) => {
@@ -85,4 +85,4 @@ async function createBigPhoto(baseName, uploadDir, imageUrl) {
     console.log('::: big')
 }
 
-export default new PhotoSaver();
+export default new CreaterSmallBigPhoto();

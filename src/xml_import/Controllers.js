@@ -3,7 +3,7 @@ import A_section from "../API/A_section.js";
 import A_car from "../API/A_car.js";
 import GetListService from "../API/GetListService.js";
 
-import PhotoPrepareService from './PhotoPrepareService.js';
+import PhotoPrepareService from './XMLandPhotoPrepareService.js';
 
 
 class Controllers {
@@ -230,6 +230,17 @@ class Controllers {
         try {
             await PhotoPrepareService.savePhotos()
             res.json('Фотки скопипрованы с оптимизацией');
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
+    async checkDuplicateVINs(req, res) {
+        console.log('Есть ли дубликаты VIN...')
+        try {
+            let list= await A_car.checkDuplicateVINs()
+            res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
             res.status(500).json({error: error.message});
