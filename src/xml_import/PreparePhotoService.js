@@ -1,7 +1,7 @@
 import PhotoSaver from './CreaterSmallBigPhoto.js'
 const folderName = 'public/foto_dev'
 
-class XMLandPhotoPrepareService {
+class PreparePhotoService {
     async savePhotos() {
         const db = global.db;
         let count = 0
@@ -41,4 +41,4 @@ class XMLandPhotoPrepareService {
     }
 }
 
-export default new XMLandPhotoPrepareService();
+export default new PreparePhotoService();

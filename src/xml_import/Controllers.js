@@ -3,7 +3,8 @@ import A_section from "../API/A_section.js";
 import A_car from "../API/A_car.js";
 import GetListService from "../API/GetListService.js";
 
-import PhotoPrepareService from './XMLandPhotoPrepareService.js';
+import PhotoPrepareService from './PreparePhotoService.js';
+import PrepareXMLService from "./PrepareXMLService.js";
 
 
 class Controllers {
@@ -246,6 +247,18 @@ class Controllers {
             res.status(500).json({error: error.message});
         }
     }
+
+    async saveXmlFilesToPublic(req, res) {
+        console.log('Сохраним XML к себе ...')
+        try {
+            let list= await PrepareXMLService.saveXmlFilesToPublic()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
 
 }
 
