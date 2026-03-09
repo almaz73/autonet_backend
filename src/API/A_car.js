@@ -43,7 +43,7 @@ class CityListService {
         try {
             // Query the a_section table joined with a_car to get brand counts
             // language=SQLite
-            const results = await db.all(`
+            let results = await db.all(`
                 SELECT sec.id       as brandId,
                        COUNT(ac.id) as count,
                        sec.brand    as name
@@ -55,6 +55,9 @@ class CityListService {
                 ORDER BY sec.brand
             `);
 
+            results = results.sort((a, b) => b.count - a.count)
+
+            if (results.length > 20) results.length = 20
             return results;
         } catch (error) {
             console.error('Error retrieving car count by brand from a_car and a_section tables:', error.message);
@@ -291,7 +294,7 @@ class CityListService {
 
 
             // Return the result in the requested format
-            return {from: result.fromYear, to:  result.toYear}
+            return {from: result.fromYear, to: result.toYear}
         } catch (error) {
             console.error('Error retrieving year gap from a_car table:', error.message);
             throw error;
