@@ -1,16 +1,14 @@
 class CityListService {
     async getFullAutoInfo(guid) {
-        console.log('333 guid', guid)
         const db = global.db
         try {
-            // Query the a_car table for the car with the specified guid
+            // Query the a_car table and join with a_section to get the brandId
             // language=SQLite
             const result = await db.get(`
                 SELECT ac.id,
-                       ac.prop_brand            as brand,
-                       ac.prop_model            as model,
-                       ac.prop_year              as yearReleased,
                        ac.price,
+                       ac.section,
+                       sec.id                    as brandId,
                        ac.prop_milleage          as milleage,
                        ac.prop_color             as color,
                        ac.prop_engine_capacity   as engineCapacity,
@@ -23,8 +21,10 @@ class CityListService {
                        ac.prop_address           as fullAddress,
                        ac.prop_options           as сonfiguration,
                        ac.images
+
                 FROM a_car ac
-                WHERE id = ?
+                         LEFT JOIN a_section sec ON ac.prop_brand = sec.brand
+                WHERE ac.id = ?
             `, [guid]);
 
             if (!result) {
@@ -32,7 +32,6 @@ class CityListService {
                 return null; // Return null if no car is found with the given guid
             }
 
-            // Return only the requested fields: id, price, section
             return result;
         } catch (error) {
             console.error('Error retrieving car info from a_car table:', error.message);
