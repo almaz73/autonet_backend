@@ -277,7 +277,6 @@ class CityListService {
         }
     }
 
-    // ... existing code ...
     async getYearGap() {
         const db = global.db
         try {
@@ -301,7 +300,43 @@ class CityListService {
         }
     }
 
-// ... existing code ...
+    async getImageLinksCount() {
+        const db = global.db
+        try {
+            // Query the a_car table to get all non-null images
+            // language=SQLite
+            const results = await db.all(`
+                SELECT images
+                FROM a_car
+                WHERE images IS NOT NULL
+                  AND images != ''
+            `);
+
+            let totalLinks = 0;
+            let group = ''
+
+            results.forEach(row => {
+                if (row.images && typeof row.images === 'string') {
+                    // Split the images string by whitespace and count non-empty links
+                    const links = row.images.split(/\s+/).filter(link => link.trim() !== '');
+                    // console.log('links', links.length)
+                    group += links.length+', '
+                    totalLinks += links.length;
+                }
+            });
+
+            console.log('group', group)
+            console.log('Общее количество прикрепленных фоток: ', totalLinks);
+            console.log('Автомобилей с фотками: ', results.length);
+
+            return 'Всего ссылок на фотки: '+ totalLinks;
+        } catch (error) {
+            console.error('Error counting image links in a_car table:', error.message);
+            throw error;
+        }
+    }
+
+
 
 }
 

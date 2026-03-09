@@ -9,8 +9,8 @@ import PhotoPrepareService from './PhotoPrepareService.js';
 
 class Controllers {
     async importXML(req, res) {
+        console.log('Starting XML import process...');
         try {
-            console.log('Starting XML import process...');
             const result = await xmlImportService.importXmlData(global.db);
             res.json({
                 success: true,
@@ -27,34 +27,50 @@ class Controllers {
     }
 
 
-    async processSections(req, res) {
-        try {
-            const result = await ServiceSections.processSections(global.db);
-            res.json(result);
-        } catch (error) {
-            console.error('Error processing sections:', error);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
-        }
-    }
+    // async processSections(req, res) {
+    //     try {
+    //         const result = await ServiceSections.processSections(global.db);
+    //         res.json(result);
+    //     } catch (error) {
+    //         console.error('Error processing sections:', error);
+    //         res.status(500).json({
+    //             success: false,
+    //             error: error.message
+    //         });
+    //     }
+    // }
 
-    async sections(req, res) {
-        try {
-            // language=SQLite
-            const sections = await global.db.all('SELECT * FROM sections');
-            // Parse the JSON data for each section
-            const sectionsWithParsedData = sections.map(section => ({
-                ...section,
-                data: JSON.parse(section.data)
-            }));
-            res.json(sectionsWithParsedData);
-        } catch (error) {
-            console.error('Error getting sections:', error);
-            res.status(500).json({error: error.message});
-        }
-    }
+    // async sections(req, res) {
+    //     try {
+    //         // language=SQLite
+    //         const sections = await global.db.all('SELECT * FROM sections');
+    //         // Parse the JSON data for each section
+    //         const sectionsWithParsedData = sections.map(section => ({
+    //             ...section,
+    //             data: JSON.parse(section.data)
+    //         }));
+    //         res.json(sectionsWithParsedData);
+    //     } catch (error) {
+    //         console.error('Error getting sections:', error);
+    //         res.status(500).json({error: error.message});
+    //     }
+    // }
+
+    // async cars(req, res) {
+    //     try {
+    //         // language=SQLite
+    //         const cars = await global.db.all('SELECT * FROM cars');
+    //         // Parse the JSON data for each car
+    //         const carsWithParsedData = cars.map(car => ({
+    //             ...car,
+    //             data: JSON.parse(car.data)
+    //         }));
+    //         res.json(carsWithParsedData);
+    //     } catch (error) {
+    //         console.error('Error getting cars:', error);
+    //         res.status(500).json({error: error.message});
+    //     }
+    // }
 
 
     async getList(req, res) {
@@ -98,21 +114,6 @@ class Controllers {
         }
     }
 
-    async cars(req, res) {
-        try {
-            // language=SQLite
-            const cars = await global.db.all('SELECT * FROM cars');
-            // Parse the JSON data for each car
-            const carsWithParsedData = cars.map(car => ({
-                ...car,
-                data: JSON.parse(car.data)
-            }));
-            res.json(carsWithParsedData);
-        } catch (error) {
-            console.error('Error getting cars:', error);
-            res.status(500).json({error: error.message});
-        }
-    }
 
     async getBrandList(req, res) {
         try {
@@ -214,6 +215,16 @@ class Controllers {
         }
     }
 
+    async getImageLinksCount(req, res) {
+        console.log('Сосчитаем общее количество фоток')
+        try {
+            const list = await A_car.getImageLinksCount()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
 
     async preparePhoto(req, res) {
         console.log('Начинаем процесс подготовки фоток...')
@@ -225,7 +236,6 @@ class Controllers {
             res.status(500).json({error: error.message});
         }
     }
-
 
 }
 

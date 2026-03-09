@@ -1,4 +1,4 @@
-import PhotoSaver from '../photo_normalizer/PhotoSaver.js'
+import PhotoSaver from './PhotoSaver.js'
 const folderName = 'public/foto'
 
 class PhotoPrepareService {

@@ -2,16 +2,16 @@ import axios from 'axios';
 import {parseString} from 'xml2js';
 import {insertCars, findAndProcessCars} from './ServiceCars.js'
 import ServiceSections from "./ServiceSections.js";
-// import PhotoPrepareServis from "./PhotoPrepareService.js";
+import PhotoPrepareService from "./PhotoPrepareService.js";
 
 class XmlImportService {
     constructor() {
         this.xmlUrls = [
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
             'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
         ];
     }
@@ -20,9 +20,10 @@ class XmlImportService {
         try {
             //Clear all tables before importing new data
             await this.clearTables(db);
-
             // create new tables
             await this.createTables(db);
+
+            console.time('Время импорта')
 
             let totalResult = {
                 sectionsImported: 0,
@@ -77,7 +78,9 @@ class XmlImportService {
 
             console.log('::: EVERYTHING SUCCESS :::');
 
-            // PhotoPrepareServis.getImagesFromACar() // todo потом включу, когда будет готово
+            PhotoPrepareService.getImagesFromACar()
+
+            console.timeEnd('Время импорта')
 
             return totalResult;
         } catch (error) {

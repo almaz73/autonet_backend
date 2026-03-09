@@ -17,7 +17,7 @@ router.get('/import-xml', Controllers.importXML)
 
 
 router.get('/getList', Controllers.getList)
-router.get('/getSpecials', Controllers.getSpecials)
+router.get('/getSpecials', Controllers.getSpecials) // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
 router.get('/getFullAutoInfo', Controllers.getFullAutoInfo)
 router.get('/getCarCount', Controllers.getCarCount)
 router.get('/getBrandList', Controllers.getBrandList)
@@ -32,11 +32,10 @@ router.get('/getColorList', Controllers.getColorList)
 router.get('/prepare', Controllers.preparePhoto) // Это будет сам запускать сервер. средство разработки для подготовки фоток.
 router.get('/getYearGap', Controllers.getYearGap)
 
+router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
+
 
 /*
- // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
-    router.get('/getSpecials', Controllers.getSpecials)
-
  // Интервал цен
     router.get('/getPriceGap', Controllers.getPriceGap)
 
