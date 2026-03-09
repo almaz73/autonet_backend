@@ -123,8 +123,6 @@ class XmlImportService {
         }
     }
 
-// ... existing code ...
-
 
     async processXmlData(parsedData, db) {
         let sectionsCount = 0;

@@ -24,7 +24,6 @@ class SectionBrandService {
         }
     }
 
-    // ... existing code ...
     async getModelList(id) {
         const db = global.db
 

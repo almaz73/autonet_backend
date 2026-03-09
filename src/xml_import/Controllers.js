@@ -58,10 +58,18 @@ class Controllers {
 
 
     async getList(req, res) {
-        console.log('Фильтр =', req.query)
-
         try {
             const list = await GetListService.getList(req.query)
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
+    async getSpecials(req, res) {
+        try {
+            const list = await A_car.getSpecials(req.query.city)
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);

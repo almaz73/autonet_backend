@@ -38,8 +38,6 @@ class CityListService {
         }
     }
 
-
-// ... existing code ...
     async getCarCount() {
         const db = global.db
         try {
@@ -63,8 +61,51 @@ class CityListService {
         }
     }
 
-// ... existing code ...
+    async getSpecials(city) {
+        const db = global.db
+        try {
+            // Query the a_car table for cars matching the criteria
+            // language=SQLite
+            const results = await db.all(`
+                SELECT ac.id,
+                       ac.prop_brand             as brand,
+                       ac.prop_model             as model,
+                       ac.prop_year              as yearReleased,
+                       ac.price,
+                       ac.prop_milleage          as milleage,
+                       ac.prop_power             as enginePower,
+                       ac.prop_engine_capacity   as engineCapacity,
+                       ac.prop_transmission_type as gearboxType,
+                       ac.prop_body_type         as bodyType,
+                       ac.prop_engine_type       as engineType,
+                       ac.prop_drive             as driveType,
+                       ac.prop_address           as fullAddress,
+                       ac.prop_color             as color,
+                       ac.prop_steering_wheel    as wheelType,
+                       ac.images
+                FROM a_car ac
+                WHERE prop_city = ?
+                  AND price > 400000
+                  AND price < 800000
+                LIMIT 5
+            `, [city]);
 
+            results.map(el => {
+                try {
+                    el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
+                    el.images.length = 5
+                } catch (error) {
+                    console.error('Error parsing images for car ID ' + el.id + ':', error.message);
+                    el.images = [];
+                }
+            });
+
+            return results;
+        } catch (error) {
+            console.error('Error retrieving special cars from a_car table:', error.message);
+            throw error;
+        }
+    }
 
 
     async getCitiesFromACar() {

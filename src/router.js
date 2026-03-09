@@ -17,6 +17,7 @@ router.get('/import-xml', Controllers.importXML)
 
 
 router.get('/getList', Controllers.getList)
+router.get('/getSpecials', Controllers.getSpecials)
 router.get('/getFullAutoInfo', Controllers.getFullAutoInfo)
 router.get('/getCarCount', Controllers.getCarCount)
 router.get('/getBrandList', Controllers.getBrandList)
