@@ -1,7 +1,12 @@
 import PhotoSaver from '../photo_normalizer/PhotoSaver.js'
+const folderName = 'public/foto'
 
 class PhotoPrepareService {
     async getImagesFromACar() {
+        PhotoSaver.deleteFolder(folderName)            // Удаляем все старые фотки, и создаем новый
+            .then(()=>this.savePhotos())
+    }
+    async savePhotos() {
         const db = global.db;
         let count = 0
         try {
@@ -9,24 +14,29 @@ class PhotoPrepareService {
             // language=SQLite
             const cars = await db.all('SELECT images FROM a_car WHERE images IS NOT NULL AND images != ""');
 
+            console.time('Общее время создания фоток')
             for (const car of cars) {
                 if (car.images) {
                     let imageArray = [];
                     imageArray = car.images.split(',').map(url => url.trim());
 
-                    console.log('?? imageArray', imageArray)
-
+                    let placeInLine = 0
                     for (const url of imageArray) {
                         count++
-                        console.log('?? url', url)
-                        let zz = await PhotoSaver.savePhotoToServer(url);
-
-                        console.log('?? zz', zz)
+                        placeInLine++
+                        let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, folderName);
+                        console.log(':::', zz);
                     }
+
+                    // if (count > 10) break;
+
+                    // count++
+                    // await PhotoSaver.savePhotoToServer(imageArray[0], 1);
                 }
             }
 
-            console.log('!!!! Total images processed:', count)
+            console.timeEnd('Общее время создания фоток')
+            console.log('!!!!!!! Общее количество созданных фоток:', count)
             // return allImageUrls;
         } catch (error) {
             console.error('Error retrieving images from a_car table:', error.message);

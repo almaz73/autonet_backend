@@ -2,66 +2,87 @@ import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'url';
 import axios from 'axios';
+import sharp from "sharp";
 
 // Get the current directory name since __dirname is not available in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 class PhotoSaver {
-    async savePhotoToServer(imageUrl) {
+
+    deleteFolder(directory) {
+        return new Promise((resolve, reject) => {
+            fs.rm(directory, {recursive: true, force: true}, (err) => {
+                if (err) reject('!!! НЕ ПОЛУЧИЛОСЬ УДАЛИТЬ ПАПКУ ' + err)
+                else {
+                    console.log(`Папка с фотками ${directory} успешно удалена`)
+
+                    const uploadDir = path.join(__dirname, '../..', directory);
+                    fs.mkdirSync(uploadDir, {recursive: true});
+                    console.log(`Папка для фоток ${directory} создана`)
+                    resolve()
+                }
+            });
+        })
+    }
+
+    async savePhotoToServer(imageUrl, placeInLine, directory) {
         try {
-            let folderName = 'photos'
             if (!imageUrl) return {error: 'Image URL is required'};
 
-            // Create the target folder if it doesn't exist
-            const uploadDir = path.join(__dirname, '../..', folderName);
+            const uploadDir = path.join(__dirname, '../..', directory);
 
-            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, {recursive: true});
-
-
-            // Extract filename from URL or generate a unique name
             const urlObj = new URL(imageUrl);
-            const filename = path.basename(urlObj.pathname) || `photo_${Date.now()}.jpg`;
-            const filePath = path.join(uploadDir, filename);
+            let originalFilename = path.basename(urlObj.pathname);
+            const baseName = path.parse(originalFilename).name;
 
-            console.log('>> filename', filename)
-            // console.log('>> filePath', filePath)
+            if (placeInLine < 6) await createSmallPhoto(baseName, uploadDir, imageUrl);
+            await createBigPhoto(baseName, uploadDir, imageUrl)
 
-            // Download the image
-            const response = await axios({
-                method: 'GET',
-                url: imageUrl,
-                responseType: 'stream'
-            });
-
-            console.log('>> response status', response.status)
-
-            // Save the image to the server
-            const writer = fs.createWriteStream(filePath);
-
-
-            response.data.pipe(writer);
-
-            // Wait for the stream to finish
-            await new Promise((resolve, reject) => {
-                writer.on('finish', resolve);
-                writer.on('error', reject);
-            });
-
-            return({
-                success: true,
-                message: 'Photo saved successfully',
-                filename: filename,
-                path: filePath
-            });
+            return 'Скопирована фоткa №' + placeInLine;
         } catch (error) {
-            console.error('Error saving photo to server:', error.message);
-            return({
-                success: false,
-                message: error.message,
-            });
+            return {error: error.message};
         }
     }
+}
+
+async function createSmallPhoto(baseName, uploadDir, imageUrl) {
+    const filename = `${baseName + '_small'}.webp`;
+    const filePath = path.join(uploadDir, filename);
+
+    const response = await axios({
+        method: 'GET',
+        url: imageUrl,
+        responseType: 'arraybuffer' // Get raw image data
+    });
+
+    // Process the image using Sharp and convert to WebP
+    const processedBuffer = await sharp(response.data)
+        .webp({quality: 73})
+        .resize(600, 400, {fit: 'cover', withoutEnlargement: true})
+        .toBuffer();
+
+    await fs.promises.writeFile(filePath, processedBuffer);
+    console.log('::: small')
+}
+
+async function createBigPhoto(baseName, uploadDir, imageUrl) {
+    const filename = `${baseName + '_big'}.webp`;
+    const filePath = path.join(uploadDir, filename);
+
+    const response = await axios({
+        method: 'GET',
+        url: imageUrl,
+        responseType: 'arraybuffer'
+    });
+
+    const processedBuffer = await sharp(response.data)
+        .webp({quality: 90})
+        .resize(1200, 800, {fit: 'cover', withoutEnlargement: true})
+        .toBuffer();
+
+    await fs.promises.writeFile(filePath, processedBuffer);
+    console.log('::: big')
 }
 
 export default new PhotoSaver();
