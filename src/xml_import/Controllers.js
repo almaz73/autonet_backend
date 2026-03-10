@@ -9,7 +9,7 @@ import PrepareXMLService from "./PrepareXMLService.js";
 
 class Controllers {
     async importXML(req, res) {
-        console.log('⚡ Начинаем импорт из XML ...');
+        console.log('⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡ Начинаем импорт из XML ...');
         try {
             const result = await ImportService.importXmlData(global.db);
             res.json({

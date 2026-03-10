@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {parseString} from 'xml2js';
 import {insertCars, findAndProcessCars} from './ServiceCars.js'
 import PreliminaryTables from "./PreliminaryTables.js";
@@ -8,11 +7,11 @@ import A_car from "../API/A_car.js";
 class importService {
     constructor() {
         this.xmlNames = [
-            // 'AVTO_NIGNEKAMSK.xml',
-            // 'AlfaAvto5_AMK.xml',
-            // 'AlfaAvto5_Astrahan.xml',
-            // 'AlfaAvto5_Tver.xml',
-            // 'alfa5_gktm.xml',
+            'AVTO_NIGNEKAMSK.xml',
+            'AlfaAvto5_AMK.xml',
+            'AlfaAvto5_Astrahan.xml',
+            'AlfaAvto5_Tver.xml',
+            'alfa5_gktm.xml',
             'alfa-trade.xml'
         ];
     }
@@ -21,12 +20,12 @@ class importService {
     // Сперва скачиваем xml к себе, это обеспечит отсутствие некоторых xml, и чтобы не потерять данные
     // Потом по скачанным xml создаем предварительные таблицы, заранее очистив их
     // Из предварительных таблиц, создаем черновичные таблицы, которые потом станут таблицами для работы сайта
-
     // Проверяем дубликаты на VIN, если есть сообщаем
     // Сосчитаем общее количество ссылок на фото
     // Создаем список ссылок на фото на "старой" базе, из опубликованной рабочей базы
     // Создаем список ссылок из "новой" базы, только что слитой из XML
-    // находим новые ссылки на фото, добавляем,
+
+    // Находим новые ссылки на фото, добавляем,
     // Опубликуем новую базу
     // Устаревшие фотки удаляем
     // Проверяем устаревшие больше чем на 2 месяца фотки, создаем список, если они еще активны, если нет удаляем
@@ -83,6 +82,14 @@ class importService {
             let oldLinks = await A_car.getOldLinks()
             console.log('⚡ oldLinks',oldLinks.length)
 
+            // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
+            const staleLinks = oldLinks.filter(link => !newLinks.includes(link));
+            console.log('⚡ устаревшие ссылки', staleLinks.length)
+
+            const addLinks = newLinks.filter(link => !oldLinks.includes(link));
+            console.log('⚡ добавляемые ссылки', addLinks.length)
+
+// ... existing code ...
 
 
             // TODO когда все удачно, подменяю. Нужно тервожный сигнал себе отправлять, если неудачно
