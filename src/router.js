@@ -28,7 +28,7 @@ router.get('/getYearGap', Controllers.getYearGap)
 router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
 router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
 router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
-
+router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
 /*
  // Интервал цен
     router.get('/getPriceGap', Controllers.getPriceGap)

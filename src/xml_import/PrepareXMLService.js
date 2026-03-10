@@ -1,7 +1,7 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 
 // Resolve __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -38,13 +38,13 @@ class PrepareXMLService {
         }
     }
 
-    async getXMLContent(xmlName){
+    async getXMLContent(xmlName) {
         console.log('файл:', xmlName)
         const xmlFolderPath = path.join(process.cwd(), 'public', 'xml');
         let xmlData = '';
-            const filePath = path.join(xmlFolderPath, xmlName);
-            const fileContent = fs.readFileSync(filePath, 'utf8');
-            xmlData += fileContent; // Combine all XML files content
+        const filePath = path.join(xmlFolderPath, xmlName);
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        xmlData += fileContent; // Combine all XML files content
         return xmlData;
     }
 
@@ -53,7 +53,7 @@ class PrepareXMLService {
             // Create public/xml directory if it doesn't exist
             const xmlDir = path.join(__dirname, '..', '..', 'public', 'xml');
             if (!fs.existsSync(xmlDir)) {
-                fs.mkdirSync(xmlDir, { recursive: true });
+                fs.mkdirSync(xmlDir, {recursive: true});
                 console.log(`Created directory: ${xmlDir}`);
             }
 
@@ -95,7 +95,6 @@ class PrepareXMLService {
             console.log(`Successfully saved ${savedFiles.length} XML files to public/xml`);
 
 
-
             return this.getXmlFileDates();
         } catch (error) {
             console.error('Error in saveXmlFilesToPublic:', error.message);
@@ -103,7 +102,7 @@ class PrepareXMLService {
         }
     }
 
-    // Method to get the modification dates of XML files in public/xml folder
+    // deprecated Method to get the modification dates of XML files in public/xml folder
     async getXmlFileDates() {
         console.log('getXmlFileDates ...........')
         try {
@@ -147,6 +146,53 @@ class PrepareXMLService {
             throw error;
         }
     }
+
+
+    async getOldPhotoToDelete() {
+        try {
+            const fotoDir = path.join(__dirname, '..', '..', 'public', 'foto');
+
+            // Check if directory exists
+            if (!fs.existsSync(fotoDir)) {
+                console.log(`Directory does not exist: ${fotoDir}`);
+                return [];
+            }
+
+            const files = fs.readdirSync(fotoDir);
+            const currentTime = new Date();
+            const hoar = 15; // часы отсечения
+            const timeAgo = new Date(currentTime.getTime() - 60 * 60 * 1000 * hoar); // hoar часов назад
+
+            const recentFiles = [];
+
+            for (const file of files) {
+                if (recentFiles.length >= 2) break;
+
+                const filePath = path.join(fotoDir, file);
+
+                try {
+                    const stats = fs.statSync(filePath);
+
+                    if (stats.birthtime < timeAgo) { // старше
+                        recentFiles.push({
+                            fileName: file,
+                            createdDate: stats.birthtime // Creation time
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error getting stats for file ${filePath}:`, error.message);
+                }
+            }
+
+            console.log(' @@@ ', recentFiles);
+            return recentFiles;
+        } catch (error) {
+            console.error('Error in getOldPhotoToDelete:', error.message);
+            throw error;
+        }
+    }
+
+
 }
 
 export default new PrepareXMLService();

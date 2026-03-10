@@ -260,6 +260,18 @@ class Controllers {
         }
     }
 
+    async getOldPhotoToDelete(req, res) {
+        try {
+            let list= await PrepareXMLService.getOldPhotoToDelete()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getting cars:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
+
+
 
 }
 
