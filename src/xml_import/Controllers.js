@@ -9,18 +9,11 @@ import PrepareXMLService from "./PrepareXMLService.js";
 
 class Controllers {
     async importXML(req, res) {
-        console.log('  ');
-        console.log('⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡');
-        console.log('⚡ Начинаем импорт из XML ...');
         try {
             const result = await ImportService.importXmlData(global.db);
-            res.json({
-                success: true,
-                message: 'XML data imported successfully',
-                imported: result
-            });
+            res.json(' БАЗА ОБНОВЛЕНА '+result);
         } catch (error) {
-            console.error('Error during XML import:', error);
+            console.error('Ошибка импорта XML:', error);
             res.status(500).json({
                 success: false,
                 error: error.message
@@ -80,7 +73,7 @@ class Controllers {
             const list = await GetListService.getList(req.query)
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getList:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -90,7 +83,7 @@ class Controllers {
             const list = await A_car.getSpecials(req.query.city)
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getSpecials:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -101,7 +94,7 @@ class Controllers {
             const list = await A_car.getFullAutoInfo(req.query.guid)
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getFullAutoInfo:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -111,7 +104,7 @@ class Controllers {
             const list = await A_car.getCarCount()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getCarCount:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -122,7 +115,7 @@ class Controllers {
             const list = await A_section.getBrandList()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getBrandList:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -132,7 +125,7 @@ class Controllers {
             const list = await A_section.getModelList(req.query.id)
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getModelList:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -142,7 +135,7 @@ class Controllers {
             const list = await A_car.getCitiesFromACar()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getCities:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -152,7 +145,7 @@ class Controllers {
             const list = await A_car.getGearboxTypes()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getGearboxTypes:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -172,7 +165,7 @@ class Controllers {
             const list = await A_car.getDriveTypes()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getDriveTypes:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -182,7 +175,7 @@ class Controllers {
             const list = await A_car.getWheelTypes()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error ggetWheelTypes:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -192,7 +185,7 @@ class Controllers {
             const list = await A_car.getBodyTypes()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getBodyTypes:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -202,7 +195,7 @@ class Controllers {
             const list = await A_car.getColorList()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getColorList:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -212,7 +205,7 @@ class Controllers {
             const list = await A_car.getYearGap()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getYearGap:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -223,18 +216,18 @@ class Controllers {
             const list = await A_car.getImageLinksCount()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getImageLinksCount:', error);
             res.status(500).json({error: error.message});
         }
     }
 
-    async preparePhoto(req, res) {
-        console.log('⚡ Начинаем процесс подготовки фоток...')
+    async uploadAllPhotos(req, res) {
+        console.log('🐾🐾🐾 Дозаполнение фоток... ☄☄☄ Этот метод переносит все существующие ссылки в фотки ☄☄☄')
         try {
-            await PhotoPrepareService.savePhotos()
+            await PhotoPrepareService.uploadAllPhotos()
             res.json('Фотки скопипрованы с оптимизацией');
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error uploadAllPhotos:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -246,7 +239,7 @@ class Controllers {
             console.log('⚡ '+list)
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error checkDuplicateVINs:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -257,7 +250,7 @@ class Controllers {
             let list= await PrepareXMLService.saveXmlFilesToPublic()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error saveXmlFilesToPublic:', error);
             res.status(500).json({error: error.message});
         }
     }
@@ -267,10 +260,21 @@ class Controllers {
             let list= await PrepareXMLService.getOldPhotoToDelete()
             res.json(list);
         } catch (error) {
-            console.error('Error getting cars:', error);
+            console.error('Error getOldPhotoToDelete:', error);
             res.status(500).json({error: error.message});
         }
     }
+
+    async getListExistPhoto(req, res) {
+        try {
+            let list= await PrepareXMLService.getListExistPhoto()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getListExistPhoto:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
 
 
 

@@ -326,7 +326,7 @@ class CityListService {
                 `, results[0].prop_VIN);
             }
 
-            console.log('Дубликатов VIN:', results.length?results:'НЕТ');
+            console.log('Дубликатов VIN:', results.length ? results : 'НЕТ');
             if (results2) console.log('results2', results2)
             return results.length ? results2 : 'Нет дубликатов VIN';
         } catch (error) {
@@ -335,7 +335,7 @@ class CityListService {
         }
     }
 
-    async getImageLinksCount() {
+    async getImageLinksCount(withoutComments) {
         const db = global.db
         try {
             // Query the a_car table to get all non-null images
@@ -360,9 +360,11 @@ class CityListService {
                 }
             });
 
-            console.log('group', group)
-            console.log('Общее количество прикрепленных фоток: ', totalLinks);
-            console.log('Автомобилей с фотками: ', results.length);
+            if (!withoutComments) {
+                console.log('group', group)
+                console.log('Общее количество прикрепленных фоток: ', totalLinks);
+                console.log('Автомобилей с фотками: ', results.length);
+            } else  return results.length
 
             return `Всего ссылок на фотo: ${totalLinks}  /  Автомобилей с фотками: ${results.length}`;
         } catch (error) {
@@ -426,7 +428,47 @@ class CityListService {
     }
 
 
-
+    // тупиковая идея
+    /*
+    async getNotExistLinks(listExistPhoto) {
+        const db = global.db
+        try {
+            // Query the a_car table to get all non-null images
+            // language=SQLite
+            const results = await db.all(`
+                SELECT images
+                FROM cars_table
+                WHERE images IS NOT NULL
+                  AND images != ''
+            `);
+            let totalLinks = [];
+            results.forEach(row => {
+                if (row.images && typeof row.images === 'string') {
+                    const links = row.images.split(/, /).filter(link => link.trim() !== '');
+                    totalLinks.push(...links)
+                }
+            });
+            let tableLinks = []
+            totalLinks.forEach(link => {
+                const urlParts = link.split('/');
+                let fileName = urlParts[urlParts.length - 1];
+                fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+                tableLinks.push(fileName)
+            })
+            // 1. Создаем Set для быстрого поиска
+            const removeSet = new Set(listExistPhoto);
+            // 2. Фильтруем и убираем дубликаты
+            const result = [...new Set(tableLinks.filter(item => !removeSet.has(item)))];
+            // console.log(result); // ["apple", "orange"]
+            //
+            // console.log('>>>> >>>> result', result)
+            return result
+        } catch (error) {
+            console.error('Error counting image links in a_car table:', error.message);
+            throw error;
+        }
+    }
+     */
 
 
 }

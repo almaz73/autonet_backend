@@ -160,7 +160,7 @@ class PrepareXMLService {
 
             const files = fs.readdirSync(fotoDir);
             const currentTime = new Date();
-            const hoar = 15//24*3; // часы отсечения
+            const hoar = 24*10//24*3; // часы отсечения
             const timeAgo = new Date(currentTime.getTime() - 60 * 60 * 1000 * hoar); // hoar часов назад
 
             const recentFiles = [];
@@ -174,15 +174,41 @@ class PrepareXMLService {
                     const stats = fs.statSync(filePath);
 
                     if (stats.birthtime < timeAgo) { // старше
-                        recentFiles.push(file +' : '+ stats.birthtime.toLocaleDateString('ru-RU'));
+                        recentFiles.push(file + ' : ' + stats.birthtime.toLocaleDateString('ru-RU'));
                     }
                 } catch (error) {
                     console.error(`Error getting stats for file ${filePath}:`, error.message);
                 }
             }
 
-            console.log(`⚡ ⚡ ⚡ список файлов созданных давно (${hoar} часа назад)`, recentFiles);
+            console.log(`⚡ ⚡ ⚡ список файлов созданных давно (${hoar} часа(ов) назад)`, recentFiles);
             return recentFiles;
+        } catch (error) {
+            console.error('Error in getOldPhotoToDelete:', error.message);
+            throw error;
+        }
+    }
+
+    async getListExistPhoto() {
+        try {
+            const fotoDir = path.join(__dirname, '..', '..', 'public', 'foto');
+
+            // Check if directory exists
+            if (!fs.existsSync(fotoDir)) {
+                console.log(`Directory does not exist: ${fotoDir}`);
+                return [];
+            }
+
+            const files = fs.readdirSync(fotoDir);
+            let links = {}
+
+            files.forEach(el => {
+                el = el.replace('_big.webp', '')
+                el = el.replace('_small.webp', '')
+                links[el] = 1
+            })
+
+            return Object.keys(links);
         } catch (error) {
             console.error('Error in getOldPhotoToDelete:', error.message);
             throw error;

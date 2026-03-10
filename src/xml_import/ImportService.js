@@ -142,9 +142,13 @@ class importService {
             await PrepareXMLService.getOldPhotoToDelete()
 
 
-            // PhotoPrepareService.savePhotos() // todo тут записывание обработанных фоток к себе в первый раз
 
             console.timeEnd('⚡ Общее время обновления')
+
+            console.log(' ')
+            console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
+
+            PreparePhotoService.uploadAllPhotos() // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
 
             return totalResult;
         } catch (error) {

@@ -22,13 +22,16 @@ router.get('/getDriveTypes', Controllers.getDriveTypes)
 router.get('/getWheelTypes', Controllers.getWheelTypes)
 router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
-router.get('/prepare', Controllers.preparePhoto) // Это будет сам запускать сервер. средство разработки для подготовки фоток.
+router.get('/upload', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
 router.get('/getYearGap', Controllers.getYearGap)
 
 router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
 router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
 router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
 router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
+router.get('/getListExistPhoto', Controllers.getListExistPhoto) // чтобы найти старые фотки
+
+
 /*
  // Интервал цен
     router.get('/getPriceGap', Controllers.getPriceGap)
