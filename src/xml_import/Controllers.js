@@ -1,4 +1,4 @@
-import xmlImportService from "./xmlImportService.js";
+import ImportService from "./ImportService.js";
 import A_section from "../API/A_section.js";
 import A_car from "../API/A_car.js";
 import GetListService from "../API/GetListService.js";
@@ -9,9 +9,9 @@ import PrepareXMLService from "./PrepareXMLService.js";
 
 class Controllers {
     async importXML(req, res) {
-        console.log('Starting XML import process...');
+        console.log('⚡ Начинаем импорт из XML ...');
         try {
-            const result = await xmlImportService.importXmlData(global.db);
+            const result = await ImportService.importXmlData(global.db);
             res.json({
                 success: true,
                 message: 'XML data imported successfully',
@@ -216,7 +216,7 @@ class Controllers {
     }
 
     async getImageLinksCount(req, res) {
-        console.log('Сосчитаем общее количество фоток')
+        console.log('⚡ Сосчитаем общее количество фоток')
         try {
             const list = await A_car.getImageLinksCount()
             res.json(list);
@@ -227,7 +227,7 @@ class Controllers {
     }
 
     async preparePhoto(req, res) {
-        console.log('Начинаем процесс подготовки фоток...')
+        console.log('⚡ Начинаем процесс подготовки фоток...')
         try {
             await PhotoPrepareService.savePhotos()
             res.json('Фотки скопипрованы с оптимизацией');
@@ -238,9 +238,10 @@ class Controllers {
     }
 
     async checkDuplicateVINs(req, res) {
-        console.log('Есть ли дубликаты VIN...')
+        console.log('⚡ Есть ли дубликаты VIN ?...')
         try {
             let list= await A_car.checkDuplicateVINs()
+            console.log('⚡ '+list)
             res.json(list);
         } catch (error) {
             console.error('Error getting cars:', error);
@@ -249,7 +250,7 @@ class Controllers {
     }
 
     async saveXmlFilesToPublic(req, res) {
-        console.log('Сохраним XML к себе ...')
+        console.log('⚡ Сохраним XML к себе ...')
         try {
             let list= await PrepareXMLService.saveXmlFilesToPublic()
             res.json(list);

@@ -17,6 +17,35 @@ class PrepareXMLService {
             // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
             'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
         ];
+
+        this.xmlUrlsFromPublic = [];
+        this.loadXmlUrlsFromPublic();
+    }
+
+    loadXmlUrlsFromPublic() {
+        try {
+            const xmlDir = path.join(__dirname, '..', '..', 'public', 'xml');
+            if (fs.existsSync(xmlDir)) {
+                const files = fs.readdirSync(xmlDir);
+                files.forEach(file => {
+                    if (path.extname(file).toLowerCase() === '.xml') {
+                        this.xmlUrlsFromPublic.push(path.join(xmlDir, file));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error loading XML URLs from public folder:', error.message);
+        }
+    }
+
+    async getXMLContent(xmlName){
+        console.log('файл:', xmlName)
+        const xmlFolderPath = path.join(process.cwd(), 'public', 'xml');
+        let xmlData = '';
+            const filePath = path.join(xmlFolderPath, xmlName);
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            xmlData += fileContent; // Combine all XML files content
+        return xmlData;
     }
 
     async saveXmlFilesToPublic() {

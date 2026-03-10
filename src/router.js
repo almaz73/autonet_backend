@@ -25,9 +25,9 @@ router.get('/getColorList', Controllers.getColorList)
 router.get('/prepare', Controllers.preparePhoto) // Это будет сам запускать сервер. средство разработки для подготовки фоток.
 router.get('/getYearGap', Controllers.getYearGap)
 
-router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
+router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
 router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
-router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // нет ли повторяющихся VIN
+router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
 
 /*
  // Интервал цен

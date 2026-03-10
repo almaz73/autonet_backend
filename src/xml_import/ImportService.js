@@ -2,27 +2,43 @@ import axios from 'axios';
 import {parseString} from 'xml2js';
 import {insertCars, findAndProcessCars} from './ServiceCars.js'
 import ServiceSections from "./ServiceSections.js";
+import PrepareXMLService from "./PrepareXMLService.js"
 
-class XmlImportService {
+class importService {
     constructor() {
-        this.xmlUrls = [
-            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
-            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
-            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
-            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
-            'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
-            'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
+        this.xmlNames = [
+            'AVTO_NIGNEKAMSK.xml',
+            'AlfaAvto5_AMK.xml',
+            'AlfaAvto5_Astrahan.xml',
+            'AlfaAvto5_Tver.xml',
+            'alfa5_gktm.xml',
+            'alfa-trade.xml'
         ];
     }
 
+    // по команде api/import-xml запускается этот метод
+    // Сперва скачиваем xml к себе, это обеспечит отсутствие некоторых xml, и чтобы не потерять данные
+    // Потом по скачанным xml создаем предварительные таблицы, заранее очистив их
+    // Из предварительных таблиц, создаем черновичные таблицы, которые потом станут таблицами для работы сайта
+    // Проверяем дубликаты на VIN, если есть сообщаем
+    // Сосчитаем общее количество ссылок на фото
+    // Создаем список ссылок на фото на "старой" базе, из опубликованной рабочей базы
+    // Создаем список ссылок из "новой" базы, только что слитой из XML
+    // находим новые ссылки на фото, добавляем,
+    // Опубликуем новую базу
+    // Устаревшие фотки удаляем
+    // Проверяем устаревшие больше чем на 2 месяца фотки, создаем список, если они еще активны, если нет удаляем
+
+    // который по всем ссылкам из массива xmlUrls последовательно скачивает,
+    // парсит и сохраняет данные в базу данных. Перед сохранением данных,
+    // он очищает все таблицы, чтобы избежать дублирования.
+    // В конце он возвращает статистику по количеству импортированных секций и автомобилей.
     async importXmlData(db) {
         try {
-            //Clear all tables before importing new data
-            await this.clearTables(db);
-            // create new tables
-            await this.createTables(db);
+            console.time('⚡ Время парсинга xml в предварительные базы')
 
-            console.time('Время импорта')
+            await ServiceSections.clearTables(db);
+            await ServiceSections.createTables(db);
 
             let totalResult = {
                 sectionsImported: 0,
@@ -30,19 +46,10 @@ class XmlImportService {
                 total: 0
             };
 
-            for (const xmlUrl of this.xmlUrls) {
-                console.log('Fetching XML data from:', xmlUrl);
 
-                // Fetch the XML data from the remoteURL
-                const response = await axios.get(xmlUrl, {
-                    timeout: 30000, // 30 seconds timeout
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (compatible; AutoNetBot/1.0)'
-                    }
-                });
 
-                // Parse the XMLdata
-                const xmlData = response.data;
+            for (const xmlName of this.xmlNames) {
+                let xmlData = await PrepareXMLService.getXMLContent(xmlName)
 
                 const result = await new Promise((resolve, reject) => {
                     parseString(xmlData, {
@@ -55,7 +62,7 @@ class XmlImportService {
                             return;
                         }
 
-                        console.log('XML parsed successfully, processing data...');
+                        console.log('⚡ заполняем базу из xml...');
                         this.processXmlData(result, db)
                             .then(resolve)
                             .catch(reject);
@@ -68,7 +75,7 @@ class XmlImportService {
                 totalResult.total += result.total;
             }
 
-            console.log(`Total sections imported: ${totalResult.sectionsImported}`);
+            console.log(`⚡ Total sections imported: ${totalResult.sectionsImported}`);
 
 
             // TODO когда все удачно, подменяю. Нужно тервожный сигнал себе отправлять, если неудачно
@@ -82,53 +89,16 @@ class XmlImportService {
 
 
 
-            console.log('::: EVERYTHING SUCCESS :::');
+            console.log('⚡ ::: SUCCESS Предварительные таблицы запонены :::');
 
             // PhotoPrepareService.savePhotos() // todo тут записывание обработанных фоток к себе
 
-            console.timeEnd('Время импорта')
+            console.timeEnd('⚡ Время парсинга xml в предварительные базы')
 
             return totalResult;
         } catch (error) {
             console.error('Error fetching XML data:', error.message);
             throw error;
-        }
-    }
-
-
-    async clearTables(db) {
-        try {
-            // Clear all the tables with conditional checks
-            await this.deleteFromTableIfExists(db, 'cars');
-            await this.deleteFromTableIfExists(db, 'cars_table');
-            await this.deleteFromTableIfExists(db, 'sections');
-            await this.deleteFromTableIfExists(db, 'sections_table');
-
-            console.log('All tables cleared successfully');
-        } catch (error) {
-            console.error('Error clearing tables:', error.message);
-            throw error;
-        }
-    }
-
-    async deleteFromTableIfExists(db, tableName) {
-        try {
-            // Check if the table exists
-            const result = await db.get(`SELECT name
-                                         FROM sqlite_master
-                                         WHERE type = 'table'
-                                           AND name = '${tableName}'`);
-
-            if (result) {
-                // Table exists, proceed with deletion
-                await db.exec(`DELETE
-                               FROM ${tableName};`);
-            } else {
-                // Table doesn't exist, log and continue
-                console.log(`Table ${tableName} does not exist, skipping...`);
-            }
-        } catch (error) {
-            console.warn(`Warning: Could not clear table ${tableName}:`, error.message);
         }
     }
 
@@ -164,7 +134,7 @@ class XmlImportService {
             carsCount = await findAndProcessCars(parsedData, db);
         }
 
-        console.log(`Successfully imported ${sectionsCount} sections and ${carsCount} cars`);
+        console.log(`⚡ success импортированы Секций: ${sectionsCount} и автомобилей: ${carsCount}`);
         return {
             sectionsImported: sectionsCount,
             carsImported: carsCount,
@@ -218,8 +188,10 @@ class XmlImportService {
             `);
 
             // Clear existing data in a_car and a_section tables
-            await this.deleteFromTableIfExists(db, 'a_car');
-            await this.deleteFromTableIfExists(db, 'a_section');
+
+            // TODO перед публикацией баз придется делать
+            // await this.deleteFromTableIfExists(db, 'a_car');
+            // await this.deleteFromTableIfExists(db, 'a_section');
 
             // Copy data from cars_table to a_car
             await this.copyTableData(db, 'cars_table', 'a_car');
@@ -227,7 +199,7 @@ class XmlImportService {
             // Copy data from sections_table to a_section
             await this.copyTableData(db, 'sections_table', 'a_section');
 
-            console.log('Data copied to a_car and a_section tables successfully');
+            console.log('⚡ Data copied to a_car and a_section tables successfully');
         } catch (error) {
             console.error('Error copying data to info tables:', error.message);
             throw error;
@@ -240,7 +212,7 @@ class XmlImportService {
             const sourceExists = await db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${sourceTable}'`);
 
             if (!sourceExists) {
-                console.log(`Source table ${sourceTable} does not exist, skipping copy to ${targetTable}`);
+                console.log(`⚡ Source table ${sourceTable} does not exist, skipping copy to ${targetTable}`);
                 return;
             }
 
@@ -263,7 +235,7 @@ class XmlImportService {
                     await db.run(insertSql, values);
                 }
 
-                console.log(`Copied ${sourceData.length} rows from ${sourceTable} to ${targetTable}`);
+                console.log(`⚡ Copied ${sourceData.length} rows from ${sourceTable} to ${targetTable}`);
             } else {
                 console.log(`No data to copy from ${sourceTable} to ${targetTable}`);
             }
@@ -273,70 +245,7 @@ class XmlImportService {
         }
     }
 
-    async createTables(db) {
-        // Create sections table with dynamic columns based on XML structure
-        // language=SQLite
-        await db.exec(`
-            CREATE TABLE IF NOT EXISTS sections
-            (
-                id
-                    INTEGER
-                    PRIMARY
-                        KEY
-                    AUTOINCREMENT,
-                data
-                    TEXT
-            )
-        `);
 
-        // Create cars table with dynamic columns based on XML structure
-        // language=SQLite
-        await db.exec(`
-            CREATE TABLE IF NOT EXISTS cars
-            (
-                id
-                    INTEGER
-                    PRIMARY
-                        KEY
-                    AUTOINCREMENT,
-                data
-                    TEXT
-                    NOT
-                        NULL
-            )
-        `);
-
-        // Create a more structured cars table
-        // language=SQLite
-        await db.exec(`
-            CREATE TABLE IF NOT EXISTS cars_table
-            (
-                id                     TEXT PRIMARY KEY,
-                name                   TEXT,
-                section                TEXT,
-                price                  REAL,
-                prop_milleage          INTEGER,
-                prop_year              INTEGER,
-                prop_color             TEXT,
-                prop_engine_capacity   REAL,
-                prop_engine_type       TEXT,
-                prop_power             INTEGER,
-                prop_transmission_type TEXT,
-                prop_drive             TEXT,
-                prop_body_type         TEXT,
-                prop_steering_wheel    TEXT,
-                prop_address           TEXT,
-                prop_options           TEXT,
-                prop_city              TEXT,
-                prop_brand             TEXT,
-                prop_model             TEXT,
-                prop_VIN               TEXT,
-                images                 TEXT
-            )
-        `);
-
-        console.log('sections, cars and cars_table tables created/verified');
-    }
 
     async insertSections(sections, db) {
         let insertedCount = 0;
@@ -423,4 +332,4 @@ class XmlImportService {
 
 }
 
-export default new XmlImportService();
+export default new importService();
