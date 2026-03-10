@@ -6,8 +6,6 @@ class PreliminaryTables {
             await this.deleteFromTableIfExists(db, 'cars_table');
             await this.deleteFromTableIfExists(db, 'sections');
             await this.deleteFromTableIfExists(db, 'sections_table');
-
-            console.log('⚡ success Все предварительные таблицы удалены');
         } catch (error) {
             console.error('Error clearing tables:', error.message);
             throw error;
@@ -76,7 +74,7 @@ class PreliminaryTables {
             )
         `);
 
-        console.log('⚡ success Предвариельные таблицы созданы');
+        console.log('⚡ Предварительные таблицы очищены');
     }
 
     async deleteFromTableIfExists(db, tableName) {
@@ -211,6 +209,9 @@ class PreliminaryTables {
 
     async copyToInfoTables(db) {
         try {
+            await this.deleteFromTableIfExists(db, 'a_car');
+            await this.deleteFromTableIfExists(db, 'a_section');
+
             // Create a_car table if it doesn't exist (matching cars_table structure)
             // language=SQLite
             await db.exec(`
@@ -252,6 +253,8 @@ class PreliminaryTables {
                 )
             `);
 
+            console.log('⚡ ')
+
             // Clear existing data in a_car and a_section tables
 
             // TODO перед публикацией баз придется делать
@@ -264,7 +267,10 @@ class PreliminaryTables {
             // Copy data from sections_table to a_section
             await this.copyTableData(db, 'sections_table', 'a_section');
 
-            console.log('⚡ Data copied to a_car and a_section tables successfully');
+            console.log('⚡   БАЗА ОБНОВЛЕНА !');
+            console.log('⚡ ')
+            console.log('⚡ ====================================')
+
         } catch (error) {
             console.error('Error copying data to info tables:', error.message);
             throw error;
@@ -300,7 +306,8 @@ class PreliminaryTables {
                     await db.run(insertSql, values);
                 }
 
-                console.log(`⚡ Copied ${sourceData.length} rows from ${sourceTable} to ${targetTable}`);
+                // console.log(`⚡ Copied ${sourceData.length} rows from ${sourceTable} to ${targetTable}`);
+                console.log(`⚡   Скопировано ${sourceData.length} строк в ${targetTable}`)
             } else {
                 console.log(`No data to copy from ${sourceTable} to ${targetTable}`);
             }

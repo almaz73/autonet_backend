@@ -9,11 +9,11 @@ import path from "path";
 class importService {
     constructor() {
         this.xmlNames = [
-            // 'AVTO_NIGNEKAMSK.xml',
-            // 'AlfaAvto5_AMK.xml',
-            // 'AlfaAvto5_Astrahan.xml',
-            // 'AlfaAvto5_Tver.xml',
-            // 'alfa5_gktm.xml',
+            'AVTO_NIGNEKAMSK.xml',
+            'AlfaAvto5_AMK.xml',
+            'AlfaAvto5_Astrahan.xml',
+            'AlfaAvto5_Tver.xml',
+            'alfa5_gktm.xml',
             'alfa-trade.xml'
         ];
     }
@@ -28,17 +28,17 @@ class importService {
     // Создаем список ссылок из "новой" базы, только что слитой из XML
 
     // Находим новые ссылки на фото, добавляем,
-    // Опубликуем новую базу
+    // опубликуем новую базу
     // Устаревшие фотки удаляем
     // Проверяем устаревшие больше чем на 2 месяца фотки, создаем список, если они еще активны, если нет удаляем
 
-    // который по всем ссылкам из массива xmlUrls последовательно скачивает,
+    // Который по всем ссылкам из массива xmlUrls последовательно скачивает,
     // парсит и сохраняет данные в базу данных. Перед сохранением данных,
     // он очищает все таблицы, чтобы избежать дублирования.
     // В конце он возвращает статистику по количеству импортированных секций и автомобилей.
     async importXmlData(db) {
         try {
-            console.time('⚡ Общее время обоновления баз')
+            console.time('⚡ Общее время обновления')
 
             await PreliminaryTables.clearTables(db);
             await PreliminaryTables.createTables(db);
@@ -62,7 +62,6 @@ class importService {
                             return;
                         }
 
-                        console.log('⚡ заполняем базу из xml...');
                         this.processXmlData(result, db)
                             .then(resolve)
                             .catch(reject);
@@ -80,17 +79,17 @@ class importService {
 
             // Считаем общее количество ссылок на фото
             let newPhotos = await A_car.getNewLinks()
-            console.log('⚡ all newPhoto', newPhotos.length)
+            console.log('⚡ all newPhoto links:', newPhotos.length)
             let oldPhotos = await A_car.getOldLinks()
-            console.log('⚡ all oldPhoto', oldPhotos.length)
+            console.log('⚡ all oldPhoto links:', oldPhotos.length)
 
 
             const newLinksWithPhoto = newPhotos.filter(link => !oldPhotos.includes(link));
-            console.log('⚡ ::: Добавлять нужно фоток', newLinksWithPhoto.length)
+            console.log('⚡ ::: Появились новые фотки:', newLinksWithPhoto.length)
 
 
             if (newLinksWithPhoto.length) {
-                console.log('⚡ ::: Добавляем новые фотки в папку оптимизировав заранеe')
+                console.log('⚡ ::: Добавляем фотки оптимизировав')
                 let placeInLine = 0
                 for (const url of newLinksWithPhoto) {
                     placeInLine++
@@ -99,10 +98,19 @@ class importService {
                 }
             }
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+            // тут обновляем базы из временных в работающие
+            console.log('⚡ Публикуем обновленную базу ')
+            console.log('⚡ ====================================')
+            await PreliminaryTables.copyToInfoTables(db);
+            // и удаляется кэш, если был
+
 
             // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
             const staleLinksWithPhoto = oldPhotos.filter(link => !newPhotos.includes(link));
-            console.log('⚡ ::: Удалять нужно фоток', staleLinksWithPhoto.length)
+            console.log('⚡ ::: Список фоток на удаление:', staleLinksWithPhoto.length)
 
             if (staleLinksWithPhoto.length) {
                 console.log('⚡ ::: Удаляем фотки')
@@ -124,21 +132,19 @@ class importService {
 
 
             // TODO когда все удачно, подменяю. Нужно тервожный сигнал себе отправлять, если неудачно
-// TODO - потом включим. Перед копированием нужно создать список фоток для удаления и добавления.
 
 
-// await PreliminaryTables.copyToInfoTables(db);
-// TODO после скопирования удалить несуществующие файлы
+
 // TODO нужно будет дополнительное удаление файлов по старости, и заодно создавать талицу непродоваемых авто
 // TODO для этого находим все файлы по старости (2 месяца), ищем в списке существующих, и удаляем те, которых нет в списке.
 // TODO И добавляем в базу непродаваемых авто в отдельную таблицу (просто для знакомства)
 
+            await PrepareXMLService.getOldPhotoToDelete()
 
-            console.log('⚡ ::: SUCCESS Базы обновлены :::');
 
             // PhotoPrepareService.savePhotos() // todo тут записывание обработанных фоток к себе в первый раз
 
-            console.timeEnd('⚡ Общее время обоновления баз')
+            console.timeEnd('⚡ Общее время обновления')
 
             return totalResult;
         } catch (error) {
@@ -179,7 +185,8 @@ class importService {
             carsCount = await findAndProcessCars(parsedData, db);
         }
 
-        console.log(`⚡ success импортированы Секций: ${sectionsCount} и автомобилей: ${carsCount}`);
+
+        console.log(`⚡     добавлено СЕКЦИЙ: ${sectionsCount}, АВТОМОБИЛЕЙ: ${carsCount}`);
         return {
             sectionsImported: sectionsCount,
             carsImported: carsCount,

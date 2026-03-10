@@ -58,6 +58,7 @@ class CityListService {
             results = results.sort((a, b) => b.count - a.count)
 
             if (results.length > 20) results.length = 20
+            console.log('results', results)
             return results;
         } catch (error) {
             console.error('Error retrieving car count by brand from a_car and a_section tables:', error.message);

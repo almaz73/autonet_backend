@@ -39,7 +39,7 @@ class PrepareXMLService {
     }
 
     async getXMLContent(xmlName) {
-        console.log('файл:', xmlName)
+        console.log('      Заполняем базу из', xmlName)
         const xmlFolderPath = path.join(process.cwd(), 'public', 'xml');
         let xmlData = '';
         const filePath = path.join(xmlFolderPath, xmlName);
@@ -160,13 +160,13 @@ class PrepareXMLService {
 
             const files = fs.readdirSync(fotoDir);
             const currentTime = new Date();
-            const hoar = 15; // часы отсечения
+            const hoar = 15//24*3; // часы отсечения
             const timeAgo = new Date(currentTime.getTime() - 60 * 60 * 1000 * hoar); // hoar часов назад
 
             const recentFiles = [];
 
             for (const file of files) {
-                if (recentFiles.length >= 2) break;
+                if (recentFiles.length >= 5) break; // берем только первые несколько файлов
 
                 const filePath = path.join(fotoDir, file);
 
@@ -174,17 +174,14 @@ class PrepareXMLService {
                     const stats = fs.statSync(filePath);
 
                     if (stats.birthtime < timeAgo) { // старше
-                        recentFiles.push({
-                            fileName: file,
-                            createdDate: stats.birthtime // Creation time
-                        });
+                        recentFiles.push(file +' : '+ stats.birthtime.toLocaleDateString('ru-RU'));
                     }
                 } catch (error) {
                     console.error(`Error getting stats for file ${filePath}:`, error.message);
                 }
             }
 
-            console.log(' @@@ ', recentFiles);
+            console.log(`⚡ ⚡ ⚡ список файлов созданных давно (${hoar} часа назад)`, recentFiles);
             return recentFiles;
         } catch (error) {
             console.error('Error in getOldPhotoToDelete:', error.message);

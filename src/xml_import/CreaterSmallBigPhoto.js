@@ -63,7 +63,7 @@ async function createSmallPhoto(baseName, uploadDir, imageUrl) {
         .toBuffer();
 
     await fs.promises.writeFile(filePath, processedBuffer);
-    console.log('⚡ ::: small')
+    console.log('  ⚡ ::: small')
 }
 
 async function createBigPhoto(baseName, uploadDir, imageUrl) {
@@ -82,7 +82,7 @@ async function createBigPhoto(baseName, uploadDir, imageUrl) {
         .toBuffer();
 
     await fs.promises.writeFile(filePath, processedBuffer);
-    console.log('⚡ ::: big')
+    console.log('  ⚡ ::: big')
 }
 
 export default new CreaterSmallBigPhoto();
