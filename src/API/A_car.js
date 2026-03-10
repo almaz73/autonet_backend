@@ -336,6 +336,59 @@ class CityListService {
         }
     }
 
+    async getNewLinks() {
+        const db = global.db
+        try {
+            // Query the a_car table to get all non-null images
+            // language=SQLite
+            const results = await db.all(`
+                SELECT images
+                FROM cars_table
+                WHERE images IS NOT NULL
+                  AND images != ''
+            `);
+
+            let totalLinks = [];
+            results.forEach(row => {
+                if (row.images && typeof row.images === 'string') {
+                    const links = row.images.split(/, /).filter(link => link.trim() !== '');
+                    totalLinks.push(...links)
+                }
+            });
+
+            return totalLinks
+        } catch (error) {
+            console.error('Error counting image links in a_car table:', error.message);
+            throw error;
+        }
+    }
+
+    async getOldLinks() {
+        const db = global.db
+        try {
+            // Query the a_car table to get all non-null images
+            // language=SQLite
+            const results = await db.all(`
+                SELECT images
+                FROM a_car
+                WHERE images IS NOT NULL
+                  AND images != ''
+            `);
+
+            let totalLinks = [];
+            results.forEach(row => {
+                if (row.images && typeof row.images === 'string') {
+                    const links = row.images.split(/, /).filter(link => link.trim() !== '');
+                    totalLinks.push(...links)
+                }
+            });
+
+            return totalLinks
+        } catch (error) {
+            console.error('Error counting image links in a_car table:', error.message);
+            throw error;
+        }
+    }
 
     async checkDuplicateVINs() {
         const db = global.db
@@ -362,8 +415,8 @@ class CityListService {
                 `, results[0].prop_VIN);
             }
 
-            console.log('Duplicate VINs:', results);
-            console.log('results2', results2)
+            console.log('Дубликатов VIN:', results.length?results:'НЕТ');
+            if (results2) console.log('results2', results2)
             return results.length ? results2 : 'Нет дубликатов VIN';
         } catch (error) {
             console.error('Error checking duplicate VINs in a_car table:', error.message);

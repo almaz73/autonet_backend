@@ -29,7 +29,7 @@ class Controllers {
 
     // async processSections(req, res) {
     //     try {
-    //         const result = await ServiceSections.processSections(global.db);
+    //         const result = await PreliminaryTables.processSections(global.db);
     //         res.json(result);
     //     } catch (error) {
     //         console.error('Error processing sections:', error);
