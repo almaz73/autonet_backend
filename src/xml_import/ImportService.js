@@ -3,15 +3,17 @@ import {insertCars, findAndProcessCars} from './ServiceCars.js'
 import PreliminaryTables from "./PreliminaryTables.js";
 import PrepareXMLService from "./PrepareXMLService.js"
 import A_car from "../API/A_car.js";
+import PreparePhotoService from "./PreparePhotoService.js";
+import path from "path";
 
 class importService {
     constructor() {
         this.xmlNames = [
-            'AVTO_NIGNEKAMSK.xml',
-            'AlfaAvto5_AMK.xml',
-            'AlfaAvto5_Astrahan.xml',
-            'AlfaAvto5_Tver.xml',
-            'alfa5_gktm.xml',
+            // 'AVTO_NIGNEKAMSK.xml',
+            // 'AlfaAvto5_AMK.xml',
+            // 'AlfaAvto5_Astrahan.xml',
+            // 'AlfaAvto5_Tver.xml',
+            // 'alfa5_gktm.xml',
             'alfa-trade.xml'
         ];
     }
@@ -36,7 +38,7 @@ class importService {
     // В конце он возвращает статистику по количеству импортированных секций и автомобилей.
     async importXmlData(db) {
         try {
-            console.time('⚡ Время парсинга xml в предварительные базы')
+            console.time('⚡ Общее время обоновления баз')
 
             await PreliminaryTables.clearTables(db);
             await PreliminaryTables.createTables(db);
@@ -77,19 +79,48 @@ class importService {
             await A_car.checkDuplicateVINs()
 
             // Считаем общее количество ссылок на фото
-            let newLinks = await A_car.getNewLinks()
-            console.log('⚡ newLinks',newLinks.length)
-            let oldLinks = await A_car.getOldLinks()
-            console.log('⚡ oldLinks',oldLinks.length)
+            let newPhotos = await A_car.getNewLinks()
+            console.log('⚡ all newPhoto', newPhotos.length)
+            let oldPhotos = await A_car.getOldLinks()
+            console.log('⚡ all oldPhoto', oldPhotos.length)
+
+
+            const newLinksWithPhoto = newPhotos.filter(link => !oldPhotos.includes(link));
+            console.log('⚡ ::: Добавлять нужно фоток', newLinksWithPhoto.length)
+
+
+            if (newLinksWithPhoto.length) {
+                console.log('⚡ ::: Добавляем новые фотки в папку оптимизировав заранеe')
+                let placeInLine = 0
+                for (const url of newLinksWithPhoto) {
+                    placeInLine++
+                    if (placeInLine > 2) break // todo пока по частям добавляем
+                    await PreparePhotoService.addNewPhoto(url, placeInLine)
+                }
+            }
+
 
             // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
-            const staleLinks = oldLinks.filter(link => !newLinks.includes(link));
-            console.log('⚡ устаревшие ссылки', staleLinks.length)
+            const staleLinksWithPhoto = oldPhotos.filter(link => !newPhotos.includes(link));
+            console.log('⚡ ::: Удалять нужно фоток', staleLinksWithPhoto.length)
 
-            const addLinks = newLinks.filter(link => !oldLinks.includes(link));
-            console.log('⚡ добавляемые ссылки', addLinks.length)
+            if (staleLinksWithPhoto.length) {
+                console.log('⚡ ::: Удаляем фотки')
+                let placeInLine = 0
+                for (const url of staleLinksWithPhoto) {
 
-// ... existing code ...
+                    const urlObj = new URL(url);
+                    let originalFilename = path.basename(urlObj.pathname);
+                    const baseName = path.parse(originalFilename).name;
+
+                    placeInLine++
+                    if (placeInLine > 2) break // todo пока по частям удаляем
+                    await PreparePhotoService.deleteFileByName(baseName+'_small.webp')
+                    await PreparePhotoService.deleteFileByName(baseName+'_big.webp')
+                }
+            }
+
+
 
 
             // TODO когда все удачно, подменяю. Нужно тервожный сигнал себе отправлять, если неудачно
@@ -103,12 +134,11 @@ class importService {
 // TODO И добавляем в базу непродаваемых авто в отдельную таблицу (просто для знакомства)
 
 
+            console.log('⚡ ::: SUCCESS Базы обновлены :::');
 
-            console.log('⚡ ::: SUCCESS Предварительные таблицы запонены :::');
+            // PhotoPrepareService.savePhotos() // todo тут записывание обработанных фоток к себе в первый раз
 
-            // PhotoPrepareService.savePhotos() // todo тут записывание обработанных фоток к себе
-
-            console.timeEnd('⚡ Время парсинга xml в предварительные базы')
+            console.timeEnd('⚡ Общее время обоновления баз')
 
             return totalResult;
         } catch (error) {
@@ -156,13 +186,6 @@ class importService {
             total: sectionsCount + carsCount
         };
     }
-
-
-
-
-
-
-
 
 
     async insertSections(sections, db) {

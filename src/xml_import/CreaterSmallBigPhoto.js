@@ -39,7 +39,7 @@ class CreaterSmallBigPhoto {
             if (placeInLine < 6) await createSmallPhoto(baseName, uploadDir, imageUrl);
             await createBigPhoto(baseName, uploadDir, imageUrl)
 
-            return 'Скопирована фоткa №' + placeInLine;
+            return '⚡ Скопирована фоткa №' + placeInLine;
         } catch (error) {
             return {error: error.message};
         }
@@ -63,7 +63,7 @@ async function createSmallPhoto(baseName, uploadDir, imageUrl) {
         .toBuffer();
 
     await fs.promises.writeFile(filePath, processedBuffer);
-    console.log('::: small')
+    console.log('⚡ ::: small')
 }
 
 async function createBigPhoto(baseName, uploadDir, imageUrl) {
@@ -82,7 +82,7 @@ async function createBigPhoto(baseName, uploadDir, imageUrl) {
         .toBuffer();
 
     await fs.promises.writeFile(filePath, processedBuffer);
-    console.log('::: big')
+    console.log('⚡ ::: big')
 }
 
 export default new CreaterSmallBigPhoto();

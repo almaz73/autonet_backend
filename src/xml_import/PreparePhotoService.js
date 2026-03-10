@@ -1,5 +1,12 @@
 import PhotoSaver from './CreaterSmallBigPhoto.js'
-const folderName = 'public/foto_dev'
+import path from "path";
+import fs from "fs";
+import {fileURLToPath} from 'url'; // Add this import to define __dirname
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const folderName = 'public/foto'
 
 class PreparePhotoService {
     async savePhotos() {
@@ -37,6 +44,32 @@ class PreparePhotoService {
         } catch (error) {
             console.error('Error retrieving images from a_car table:', error.message);
             throw error;
+        }
+    }
+
+    async addNewPhoto(url, placeInLine){
+        console.log(url)
+        let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, folderName);
+        console.log('  ⚡ :::', zz);
+    }
+
+    async deleteFileByName(filename, directory = folderName) {
+        try {
+            if (!filename) return {error: 'Filename is required'};
+
+            const uploadDir = path.join(__dirname, '../..', directory);
+            const filePath = path.join(uploadDir, filename);
+
+            if (fs.existsSync(filePath)) {
+                await fs.promises.unlink(filePath);
+                console.log(`  ⚡ File ${filename} удален`)
+                return {success: true, message: `File ${filename} deleted successfully from ${directory}`};
+            } else {
+                console.log(`  ⚡ File ${filename} не существует`)
+            }
+        } catch (error) {
+            console.log('Error deleting file:', error.message)
+            return {error: error.message};
         }
     }
 }

@@ -300,6 +300,40 @@ class CityListService {
         }
     }
 
+    async checkDuplicateVINs() {
+        const db = global.db
+        try {
+            // Query to find duplicate prop_VIN values
+            // language=SQLite
+            const results = await db.all(`
+                SELECT prop_VIN, COUNT(*) as count
+                FROM a_car
+                WHERE prop_VIN IS NOT NULL
+                  AND prop_VIN != ''
+                GROUP BY prop_VIN
+                HAVING COUNT(*) > 1
+            `);
+
+
+            let results2
+            if (results.length) {
+                // language=SQLite
+                results2 = await db.all(`
+                    SELECT prop_VIN, name, prop_city as 'Город'
+                    FROM a_car
+                    WHERE prop_VIN = ?
+                `, results[0].prop_VIN);
+            }
+
+            console.log('Дубликатов VIN:', results.length?results:'НЕТ');
+            if (results2) console.log('results2', results2)
+            return results.length ? results2 : 'Нет дубликатов VIN';
+        } catch (error) {
+            console.error('Error checking duplicate VINs in a_car table:', error.message);
+            throw error;
+        }
+    }
+
     async getImageLinksCount() {
         const db = global.db
         try {
@@ -390,46 +424,8 @@ class CityListService {
         }
     }
 
-    async checkDuplicateVINs() {
-        const db = global.db
-        try {
-            // Query to find duplicate prop_VIN values
-            // language=SQLite
-            const results = await db.all(`
-                SELECT prop_VIN, COUNT(*) as count
-                FROM a_car
-                WHERE prop_VIN IS NOT NULL
-                  AND prop_VIN != ''
-                GROUP BY prop_VIN
-                HAVING COUNT(*) > 1
-            `);
 
 
-            let results2
-            if (results.length) {
-                // language=SQLite
-                results2 = await db.all(`
-                    SELECT prop_VIN, name, prop_city as 'Город'
-                    FROM a_car
-                    WHERE prop_VIN = ?
-                `, results[0].prop_VIN);
-            }
-
-            console.log('Дубликатов VIN:', results.length?results:'НЕТ');
-            if (results2) console.log('results2', results2)
-            return results.length ? results2 : 'Нет дубликатов VIN';
-        } catch (error) {
-            console.error('Error checking duplicate VINs in a_car table:', error.message);
-            throw error;
-        }
-    }
-
-//     async hasDuplicateVINs() {
-//         const duplicates = await this.checkDuplicateVINs();
-//         return duplicates.length > 0;
-//     }
-//
-// // ... existing code ...
 
 
 }
