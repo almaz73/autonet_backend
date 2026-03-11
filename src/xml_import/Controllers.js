@@ -8,6 +8,19 @@ import PrepareXMLService from "./PrepareXMLService.js";
 
 
 class Controllers {
+
+    async test(req, res) {
+        try {
+            console.log('   ⚡ test ⚡ test ⚡ Есть связь с сервером!!!'  )
+            res.json(' ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ');
+        } catch (error) {
+            console.error('Ошибка сервера:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
     async importXML(req, res) {
         try {
             const result = await ImportService.importXmlData(global.db);

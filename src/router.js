@@ -3,6 +3,7 @@ import Controllers from "./xml_import/Controllers.js";
 
 const router = new Router()
 
+router.get('/test', Controllers.test)
 router.get('/import-xml', Controllers.importXML)
 // router.get('/process-sections', Controllers.processSections)
 // router.get('/sections', Controllers.sections)

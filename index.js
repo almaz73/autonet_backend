@@ -4,6 +4,8 @@ import { open } from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
 import fileUpload from 'express-fileupload';
 
+
+const HOST = '127.0.0.1'; // Привязка
 const PORT = 5000;
 const DB_PATH = './database.sqlite'; // Local SQLite file
 
@@ -12,6 +14,11 @@ const app = express()
 app.use(express.json())
 app.use(express.static('static'))
 app.use(fileUpload({}))
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
 app.use('/api', router)
 
 async function startApp() {
@@ -42,7 +49,7 @@ async function startApp() {
         // Make db available globally or pass to controllers
         global.db = db;
 
-        app.listen(PORT, () => console.log('SERVER STARTED ON PORT ' + PORT))
+        app.listen(PORT, HOST,() => console.log('SERVER STARTED ON PORT ' + PORT))
     } catch (e) {
         console.log(e)
     }
