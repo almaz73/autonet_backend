@@ -22,8 +22,8 @@ class GetListService {
                        ac.prop_transmission_type as gearboxType,
                        ac.prop_drive             as driveType,
                        ac.prop_body_type         as bodyType,
-                       ac.prop_steering_wheel    as rule,
                        ac.prop_address           as fullAddress,
+                       ac.prop_steering_wheel    as wheelType,
                        ac.images
 
                 FROM a_car ac

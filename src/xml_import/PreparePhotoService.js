@@ -36,21 +36,19 @@ class PreparePhotoService {
                         placeInLine++
 
 
-
                         const urlParts = url.split('/');
                         let fileName = urlParts[urlParts.length - 1];
                         fileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
-                        let exist =ListExistPhoto.find(el=>el===fileName)
-                        if(exist) continue
+                        let exist = ListExistPhoto.find(el => el === fileName)
+                        if (exist) continue
 
                         // нужно перепрыгивать если файл уже существует
 
 
-
                         addCount++
 
-                        if(addCount>3) {
+                        if (addCount > 50) {
                             howMuchIsLeft = addCount
                             break
                         } // не более за раз
@@ -58,13 +56,13 @@ class PreparePhotoService {
                         console.log('▙▟ ДОБАВЛЯЮ', fileName)
 
                         let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, folderName);
-                        console.log(':::', zz, '(',count,')');
+                        console.log(':::', zz, '(', count, ')');
                     }
                 }
             }
 
             console.timeEnd('🐾🐾🐾 Общее время оптимизации/копирования фоток')
-            console.log('🐾🐾🐾 Было в системе ссылок с созданными файлами до этого:', ListExistPhoto.length, ' (Около для ' + parseInt(ListExistPhoto.length/10)+' АВТО)')
+            console.log('🐾🐾🐾 Было в системе ссылок с созданными файлами до этого:', ListExistPhoto.length, ' (Около для ' + parseInt(ListExistPhoto.length / 10) + ' АВТО)')
             console.log('🐾🐾🐾 Всего сейчас добавлено:', addCount)
             console.log('🐾🐾🐾 Осталось добавить фоток по ссылкам:', howMuchIsLeft)
             console.log('🐾🐾🐾 Общее количество АВТО требующих создания фоток (там по 20):', await A_car.getImageLinksCount(true))
@@ -75,7 +73,7 @@ class PreparePhotoService {
         }
     }
 
-    async addNewPhoto(url, placeInLine){
+    async addNewPhoto(url, placeInLine) {
         console.log(url)
         let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, folderName);
         console.log('  ⚡ :::', zz);

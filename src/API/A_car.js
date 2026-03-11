@@ -7,6 +7,7 @@ class CityListService {
             const result = await db.get(`
                 SELECT ac.id,
                        ac.price,
+                       ac.prop_brand             as brand,
                        sec.id                    as brandId,
                        ac.prop_milleage          as milleage,
                        ac.prop_color             as color,
@@ -18,7 +19,8 @@ class CityListService {
                        ac.prop_body_type         as bodyType,
                        ac.prop_steering_wheel    as wheelType,
                        ac.prop_address           as fullAddress,
-                       ac.prop_options           as сonfiguration,
+                       ac.prop_options           as configuration,
+                       ac.prop_year              as yearReleased,
                        ac.images
 
                 FROM a_car ac
@@ -69,31 +71,65 @@ class CityListService {
     async getSpecials(city) {
         const db = global.db
         try {
-            // Query the a_car table for cars matching the criteria
-            // language=SQLite
-            const results = await db.all(`
-                SELECT ac.id,
-                       ac.prop_brand             as brand,
-                       ac.prop_model             as model,
-                       ac.prop_year              as yearReleased,
-                       ac.price,
-                       ac.prop_milleage          as milleage,
-                       ac.prop_power             as enginePower,
-                       ac.prop_engine_capacity   as engineCapacity,
-                       ac.prop_transmission_type as gearboxType,
-                       ac.prop_body_type         as bodyType,
-                       ac.prop_engine_type       as engineType,
-                       ac.prop_drive             as driveType,
-                       ac.prop_address           as fullAddress,
-                       ac.prop_color             as color,
-                       ac.prop_steering_wheel    as wheelType,
-                       ac.images
-                FROM a_car ac
-                WHERE prop_city = ?
-                  AND price > 400000
-                  AND price < 800000
-                LIMIT 5
-            `, [city]);
+            let query;
+            let params;
+
+            if (city) {
+                // If city is provided, filter by specific city
+                //  language=SQLite
+                query = `
+                    SELECT ac.id,
+                           ac.prop_brand             as brand,
+                           ac.prop_model             as model,
+                           ac.prop_year              as yearReleased,
+                           ac.price,
+                           ac.prop_milleage          as milleage,
+                           ac.prop_power             as enginePower,
+                           ac.prop_engine_capacity   as engineCapacity,
+                           ac.prop_transmission_type as gearboxType,
+                           ac.prop_body_type         as bodyType,
+                           ac.prop_engine_type       as engineType,
+                           ac.prop_drive             as driveType,
+                           ac.prop_address           as fullAddress,
+                           ac.prop_color             as color,
+                           ac.prop_steering_wheel    as wheelType,
+                           ac.images
+                    FROM a_car ac
+                    WHERE prop_city = ?
+                      AND price > 400000
+                      AND price < 800000
+                    LIMIT 5
+                `;
+                params = [city];
+            } else {
+                // If no city is provided, return results from all cities
+                //  language=SQLite
+                query = `
+                    SELECT ac.id,
+                           ac.prop_brand             as brand,
+                           ac.prop_model             as model,
+                           ac.prop_year              as yearReleased,
+                           ac.price,
+                           ac.prop_milleage          as milleage,
+                           ac.prop_power             as enginePower,
+                           ac.prop_engine_capacity   as engineCapacity,
+                           ac.prop_transmission_type as gearboxType,
+                           ac.prop_body_type         as bodyType,
+                           ac.prop_engine_type       as engineType,
+                           ac.prop_drive             as driveType,
+                           ac.prop_address           as fullAddress,
+                           ac.prop_color             as color,
+                           ac.prop_steering_wheel    as wheelType,
+                           ac.images
+                    FROM a_car ac
+                    WHERE price > 400000
+                      AND price < 800000
+                    LIMIT 5
+                `;
+                params = [];
+            }
+
+            const results = await db.all(query, params);
 
             results.map(el => {
                 try {
