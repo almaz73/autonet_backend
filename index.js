@@ -6,7 +6,7 @@ import fileUpload from 'express-fileupload';
 
 
 const HOST = '127.0.0.1'; // Привязка
-const PORT = 5000;
+const PORT = 3000;
 const DB_PATH = './database.sqlite'; // Local SQLite file
 
 const app = express()

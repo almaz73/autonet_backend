@@ -439,14 +439,21 @@ class CityListService {
     async getOldLinks() {
         const db = global.db
         try {
+            // Проверка наличия
+            const tableInfo = await db.all("PRAGMA table_info(a_car)");
+            const hasImagesColumn = tableInfo.some(column => column.name === 'images');
+
             // Query the a_car table to get all non-null images
             // language=SQLite
-            const results = await db.all(`
-                SELECT images
-                FROM a_car
-                WHERE images IS NOT NULL
-                  AND images != ''
-            `);
+            let results = []
+            if (hasImagesColumn) {
+                results = await db.all(`
+                    SELECT images
+                    FROM a_car
+                    WHERE images IS NOT NULL
+                      AND images != ''
+                `);
+            }
 
             let totalLinks = [];
             results.forEach(row => {

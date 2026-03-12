@@ -9,10 +9,10 @@ import path from "path";
 class importService {
     constructor() {
         this.xmlNames = [
-            'AVTO_NIGNEKAMSK.xml',
-            'AlfaAvto5_AMK.xml',
-            'AlfaAvto5_Astrahan.xml',
-            'AlfaAvto5_Tver.xml',
+            // 'AVTO_NIGNEKAMSK.xml',
+            // 'AlfaAvto5_AMK.xml',
+            // 'AlfaAvto5_Astrahan.xml',
+            // 'AlfaAvto5_Tver.xml',
             'alfa5_gktm.xml',
             'alfa-trade.xml'
         ];
@@ -40,8 +40,9 @@ class importService {
         try {
             console.time('⚡ Общее время обновления')
 
+            await PrepareXMLService.saveXmlFilesToPublic() // копируем к себе из интернета
             await PreliminaryTables.clearTables(db);
-            await PreliminaryTables.createTables(db);
+            await PreliminaryTables.createTables(db); // почистили старые предварительные базы
 
             let totalResult = {
                 sectionsImported: 0,
@@ -74,9 +75,6 @@ class importService {
                 totalResult.total += result.total;
             }
 
-            // нет ли копий VIN
-            await A_car.checkDuplicateVINs()
-
             // Считаем общее количество ссылок на фото
             let newPhotos = await A_car.getNewLinks()
             console.log('⚡ all newPhoto links:', newPhotos.length)
@@ -89,7 +87,7 @@ class importService {
 
 
             if (newLinksWithPhoto.length) {
-                console.log('⚡ ::: Добавляем фотки оптимизировав')
+                console.log('⚡ ::: Фотки адаптируем и кладем в папку')
                 let placeInLine = 0
                 for (const url of newLinksWithPhoto) {
                     placeInLine++
@@ -105,8 +103,11 @@ class importService {
             console.log('⚡ Публикуем обновленную базу ')
             console.log('⚡ ====================================')
             await PreliminaryTables.copyToInfoTables(db);
-            // и удаляется кэш, если был
+            // тут нужно будет удалять кэш, если был
 
+
+            // нет ли копий VIN
+            await A_car.checkDuplicateVINs()
 
             // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
             const staleLinksWithPhoto = oldPhotos.filter(link => !newPhotos.includes(link));

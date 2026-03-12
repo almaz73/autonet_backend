@@ -14,7 +14,7 @@ class PrepareXMLService {
             // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
             // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
             // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
             'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
         ];
 
@@ -61,8 +61,6 @@ class PrepareXMLService {
 
             for (const xmlUrl of this.xmlUrls) {
                 try {
-                    console.log(`Fetching XML from: ${xmlUrl}`);
-
                     // Extract filename from URL
                     const urlParts = xmlUrl.split('/');
                     const fileName = urlParts[urlParts.length - 1];
@@ -80,7 +78,6 @@ class PrepareXMLService {
                     // Write the XML content to the file
                     fs.writeFileSync(filePath, response.data, 'utf8');
 
-                    console.log(`Saved XML file: ${filePath}`);
                     savedFiles.push({
                         url: xmlUrl,
                         filePath: filePath,
@@ -92,10 +89,8 @@ class PrepareXMLService {
             }
 
 
-            console.log(`Successfully saved ${savedFiles.length} XML files to public/xml`);
-
-
-            return this.getXmlFileDates();
+            console.log(`⚡ Удачно сохранены ${savedFiles.length} XML файла из интернета в серверную папку`);
+            return `⚡ Удачно сохранены ${savedFiles.length} XML файла из интернета в серверную папку` ;
         } catch (error) {
             console.error('Error in saveXmlFilesToPublic:', error.message);
             throw error;

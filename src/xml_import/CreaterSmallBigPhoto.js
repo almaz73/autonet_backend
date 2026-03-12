@@ -39,7 +39,7 @@ class CreaterSmallBigPhoto {
             if (placeInLine < 6) await createSmallPhoto(baseName, uploadDir, imageUrl);
             await createBigPhoto(baseName, uploadDir, imageUrl)
 
-            return '⚡ Скопирована фоткa №' + placeInLine;
+            return '▙▟ Скопирована фоткa №' + placeInLine+' '+ imageUrl;
         } catch (error) {
             return {error: error.message};
         }

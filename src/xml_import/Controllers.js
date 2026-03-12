@@ -22,6 +22,7 @@ class Controllers {
         }
     }
     async importXML(req, res) {
+        console.log('  import XML ⚡ start ⚡ start ⚡ start ⚡ start ⚡ start ⚡')
         try {
             const result = await ImportService.importXmlData(global.db);
             res.json(' БАЗА ОБНОВЛЕНА '+result);
