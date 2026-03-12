@@ -136,7 +136,7 @@ class Controllers {
 
     async getModelList(req, res) {
         try {
-            const list = await A_section.getModelList(req.query.id)
+            const list = await A_section.getModelList(req.query.brandId)
             res.json(list);
         } catch (error) {
             console.error('Error getModelList:', error);

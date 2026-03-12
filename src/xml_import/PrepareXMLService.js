@@ -10,10 +10,10 @@ const __dirname = path.dirname(__filename);
 class PrepareXMLService {
     constructor() {
         this.xmlUrls = [
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
-            // 'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
+            'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
             'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
             'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
         ];

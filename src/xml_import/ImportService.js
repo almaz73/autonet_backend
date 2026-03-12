@@ -9,10 +9,10 @@ import path from "path";
 class importService {
     constructor() {
         this.xmlNames = [
-            // 'AVTO_NIGNEKAMSK.xml',
-            // 'AlfaAvto5_AMK.xml',
-            // 'AlfaAvto5_Astrahan.xml',
-            // 'AlfaAvto5_Tver.xml',
+            'AVTO_NIGNEKAMSK.xml',
+            'AlfaAvto5_AMK.xml',
+            'AlfaAvto5_Astrahan.xml',
+            'AlfaAvto5_Tver.xml',
             'alfa5_gktm.xml',
             'alfa-trade.xml'
         ];

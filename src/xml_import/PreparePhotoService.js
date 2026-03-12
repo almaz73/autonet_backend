@@ -59,7 +59,7 @@ class PreparePhotoService {
 
             console.timeEnd('🐾🐾🐾 Общее время оптимизации/копирования фоток')
             console.log('🐾🐾🐾 Было в системе ссылок с созданными файлами до этого:', ListExistPhoto.length, ' (Около для ' + parseInt(ListExistPhoto.length / 10) + ' АВТО)')
-            console.log('🐾🐾🐾 Всего сейчас добавлено:', addCount)
+            console.log('🐾🐾🐾 Ссылок для добавления:', addCount)
             console.log('🐾🐾🐾 Общее количество АВТО требующих создания фоток (там по 20):', await A_car.getImageLinksCount(true))
             // return allImageUrls;
         } catch (error) {
