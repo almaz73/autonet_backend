@@ -36,16 +36,8 @@ class GetListService {
             const whereConditions = [];
             const params = [];
 
-            // filter.brandId = '329253'
-            //
-            // if (filter.brandId) {
-            //     console.log('filter.brandId', filter.brandId)
-            //     whereConditions.push('LOWER(ast.id) = LOWER(?)');
-            //     params.push(+filter.brandId)
-            // }
-
             if (filter.city) {
-                whereConditions.push('LOWER(ac.prop_city) = LOWER(?)');
+                whereConditions.push('UPPER(ac.prop_city) = UPPER(?)');
                 params.push(filter.city);
             }
 
@@ -61,6 +53,15 @@ class GetListService {
             }
 
 
+            if (filter.brand) {
+                whereConditions.push('UPPER(ac.prop_brand) = UPPER(?)');
+                params.push(filter.brand)
+            }
+
+            if (filter.color) {
+                whereConditions.push('UPPER(ac.prop_color) = UPPER(?)');
+                params.push(filter.color)
+            }
 
             let query = baseQuery;
 
