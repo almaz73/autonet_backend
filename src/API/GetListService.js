@@ -41,7 +41,6 @@ class GetListService {
                 params.push(filter.city);
             }
 
-            // Add year range filters if provided
             if (filter.yearReleasedFrom) {
                 whereConditions.push('ac.prop_year >= ?');
                 params.push(filter.yearReleasedFrom);
@@ -50,6 +49,51 @@ class GetListService {
             if (filter.yearReleasedTo) {
                 whereConditions.push('ac.prop_year <= ?');
                 params.push(filter.yearReleasedTo);
+            }
+
+            if (filter.priceFrom) {
+                whereConditions.push('ac.price >= ?');
+                params.push(filter.priceFrom);
+            }
+
+            if (filter.priceTo) {
+                whereConditions.push('ac.price <= ?');
+                params.push(filter.priceTo);
+            }
+
+            if (filter.milleageFrom) {
+                whereConditions.push('ac.prop_milleage >= ?');
+                params.push(filter.milleageFrom);
+            }
+
+            if (filter.milleageTo) {
+                whereConditions.push('ac.prop_milleage <= ?');
+                params.push(filter.milleageTo);
+            }
+
+            if (filter.bodyType) {
+                whereConditions.push('UPPER(ac.prop_body_Type) = UPPER(?)');
+                params.push(filter.bodyType)
+            }
+
+            if (filter.engineType) {
+                whereConditions.push('UPPER(ac.prop_engine_type) = UPPER(?)');
+                params.push(filter.engineType)
+            }
+
+            if (filter.driveType) {
+                whereConditions.push('UPPER(ac.prop_drive) = UPPER(?)');
+                params.push(filter.driveType)
+            }
+
+            if (filter.wheelType) {
+                whereConditions.push('UPPER(ac.prop_steering_wheel) = UPPER(?)');
+                params.push(filter.wheelType)
+            }
+
+            if (filter.engineCapacity) {
+                whereConditions.push('UPPER(ac.prop_steering_wheel) = UPPER(?)');
+                params.push(filter.engineCapacity)
             }
 
 
