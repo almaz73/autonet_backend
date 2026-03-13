@@ -102,6 +102,11 @@ class GetListService {
                 params.push(filter.brand)
             }
 
+            if (filter.modelId) {
+                whereConditions.push('ac.section = ?');
+                params.push(filter.modelId)
+            }
+
             if (filter.color) {
                 whereConditions.push('UPPER(ac.prop_color) = UPPER(?)');
                 params.push(filter.color)
