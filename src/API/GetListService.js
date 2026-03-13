@@ -4,14 +4,15 @@ class GetListService {
         const limit = filter.limit || 10; // Default limit
         const offset = filter.offset || 0; // Default offset
 
+        console.log('filter', filter)
+
         const db = global.db;
         try {
-            // Query the a_car table with limit and offset, joining with a_section
-            // language=SQLite
-            const query = `
+            //  language=SQLite
+            let baseQuery = `
                 SELECT ac.id,
-                       ac.prop_brand            as brand,
-                       ac.prop_model            as model,
+                       ac.prop_brand             as brand,
+                       ac.prop_model             as model,
                        ac.prop_year              as yearReleased,
                        ac.price,
                        ac.prop_milleage          as milleage,
@@ -23,16 +24,57 @@ class GetListService {
                        ac.prop_drive             as driveType,
                        ac.prop_body_type         as bodyType,
                        ac.prop_address           as fullAddress,
+                       ac.prop_city              as city,
                        ac.prop_steering_wheel    as wheelType,
                        ac.images
 
                 FROM a_car ac
                          LEFT JOIN a_section ast ON ac.section = ast.id
-                LIMIT ? OFFSET ?
             `;
 
-            // Execute the query with the provided limit and offset
-            const items = await db.all(query, [limit, offset]);
+            // Build WHERE clause dynamically based on filters
+            const whereConditions = [];
+            const params = [];
+
+            // filter.brandId = '329253'
+            //
+            // if (filter.brandId) {
+            //     console.log('filter.brandId', filter.brandId)
+            //     whereConditions.push('LOWER(ast.id) = LOWER(?)');
+            //     params.push(+filter.brandId)
+            // }
+
+            if (filter.city) {
+                whereConditions.push('LOWER(ac.prop_city) = LOWER(?)');
+                params.push(filter.city);
+            }
+
+            // Add year range filters if provided
+            if (filter.yearReleasedFrom) {
+                whereConditions.push('ac.prop_year >= ?');
+                params.push(filter.yearReleasedFrom);
+            }
+
+            if (filter.yearReleasedTo) {
+                whereConditions.push('ac.prop_year <= ?');
+                params.push(filter.yearReleasedTo);
+            }
+
+
+
+            let query = baseQuery;
+
+            if (whereConditions.length > 0) {
+                query += 'WHERE ' + whereConditions.join(' AND ');
+            }
+
+            // Add pagination
+            query += ' LIMIT ? OFFSET ?';
+            params.push(limit, offset);
+
+            // Execute the query with the parameters
+            console.log('params', params)
+            const items = await db.all(query, params);
 
             items.map(el => {
                 try {
@@ -44,9 +86,17 @@ class GetListService {
                 }
             });
 
-            // Get the total count for the pagination
-            // language=SQLite
-            const countResult = await db.get('SELECT COUNT(*) as totalCount FROM a_car ac LEFT JOIN a_section ast ON ac.section = ast.id');
+            // Build count query with the same filters
+            let countQuery = 'SELECT COUNT(*) as totalCount FROM a_car ac LEFT JOIN a_section ast ON ac.section = ast.id';
+            let countParams = [];
+
+            if (whereConditions.length > 0) {
+                countQuery += ' WHERE ' + whereConditions.join(' AND ');
+                // Use only the filter parameters for count query (not limit/offset)
+                countParams = params.slice(0, -2); // Remove limit and offset from params
+            }
+
+            const countResult = await db.get(countQuery, countParams);
             const totalCount = countResult.totalCount;
 
             return {

@@ -9,6 +9,7 @@ class CityListService {
                        ac.price,
                        ac.prop_brand             as brand,
                        sec.id                    as brandId,
+                       ac.prop_city              as city,
                        ac.prop_milleage          as milleage,
                        ac.prop_color             as color,
                        ac.prop_engine_capacity   as engineCapacity,
