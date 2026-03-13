@@ -76,8 +76,8 @@ class importService {
 
 
             const newLinksWithPhoto = newPhotos.filter(link => !oldPhotos.includes(link));
-            console.log('⚡ ::: >>> >>> >>> >>> >>> >>> Появились новые фотки:', newLinksWithPhoto.length)
-            textForReport += '>>> Появились новые фотки: ' + newLinksWithPhoto.length
+            console.log('⚡ ::: >>> >>> >>> >>> >>> >>> Новые фотки:', newLinksWithPhoto.length)
+            textForReport += '>>> Новые фотки: ' + newLinksWithPhoto.length
 
 
             if (newLinksWithPhoto.length) {
@@ -98,7 +98,7 @@ class importService {
             console.log('⚡ ====================================')
             await PreliminaryTables.copyToInfoTables(db);
             // тут нужно будет удалять кэш, если был
-            textForReport += '⚡ ========== Новые данные опубликованы ==========='
+            textForReport += '⚡= Новые Базы опубликованы ='
 
             // нет ли копий VIN
             await A_car.checkDuplicateVINs()
@@ -106,7 +106,7 @@ class importService {
             // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
             const staleLinksWithPhoto = oldPhotos.filter(link => !newPhotos.includes(link));
             console.log('⚡ ::: Список фоток на удаление:', staleLinksWithPhoto.length)
-            textForReport += '⚡ ::: Список фоток на удаление: ' + staleLinksWithPhoto.length
+            textForReport += '⚡ ::: Список фоток на удаление: ' + staleLinksWithPhoto.length + ' ' + new Date().toLocaleDateString()
 
             if (staleLinksWithPhoto.length) {
                 console.log('⚡ ::: Удаляем фотки')

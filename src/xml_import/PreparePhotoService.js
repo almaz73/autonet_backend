@@ -8,7 +8,8 @@ import A_car from "../API/A_car.js"; // Add this import to define __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const folderName = 'public/foto'
+// const folderName = 'public/foto'
+const folderName = '../autonet/public/auto'
 
 class PreparePhotoService {
     async uploadAllPhotos() {
@@ -42,12 +43,9 @@ class PreparePhotoService {
                         let exist = ListExistPhoto.find(el => el === fileName)
                         if (exist) continue
 
-                        // нужно перепрыгивать если файл уже существует
-
-
                         addCount++
 
-                        if (addCount > 5) { // ТОДО временно ограничиваю на время разработки
+                        if (addCount > 200) { // ТОДО временно ограничиваю на время разработки
                             break
                         } // не более за раз
 

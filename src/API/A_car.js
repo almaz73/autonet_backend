@@ -34,6 +34,10 @@ class CityListService {
                 return null; // Return null if no car is found with the given guid
             }
 
+            if (result.images) {
+                result.images = result.images.split(',').map(url => url.trim())
+                result.images = result.images.map(el => '/auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
+            }
             return result;
         } catch (error) {
             console.error('Error retrieving car info from a_car table:', error.message);
@@ -401,7 +405,7 @@ class CityListService {
                 console.log('group', group)
                 console.log('Общее количество прикрепленных фоток: ', totalLinks);
                 console.log('Автомобилей с фотками: ', results.length);
-            } else  return results.length
+            } else return results.length
 
             return `Всего ссылок на фотo: ${totalLinks}  /  Автомобилей с фотками: ${results.length}`;
         } catch (error) {
