@@ -1,8 +1,8 @@
 // src/api/GetListService.js
 class GetListService {
-    async getList(query) {
-        const limit = query.limit || 10; // Default limit
-        const offset = query.offset || 0; // Default offset
+    async getList(filter) {
+        const limit = filter.limit || 10; // Default limit
+        const offset = filter.offset || 0; // Default offset
 
         const db = global.db;
         try {
