@@ -132,6 +132,7 @@ class GetListService {
             });
 
             // Build count query with the same filters
+            // language=SQLite
             let countQuery = 'SELECT COUNT(*) as totalCount FROM a_car ac LEFT JOIN a_section ast ON ac.section = ast.id';
             let countParams = [];
 

@@ -49,13 +49,13 @@ class importService {
             for (const xmlName of this.xmlNames) {
                 let xmlData = await PrepareXMLService.getXMLContent(xmlName)
 
-                const result = await new Promise((resolve, reject) => {
+                await new Promise((resolve, reject) => {
                     parseString(xmlData, {
                         explicitArray: false,
                         ignoreAttrs: false
                     }, (err, result) => {
                         if (err) {
-                            console.error('Errorparsing XML:', err);
+                            console.error('Error parsing XML:', err);
                             reject(err);
                             return;
                         }
