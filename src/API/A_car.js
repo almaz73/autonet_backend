@@ -24,7 +24,7 @@ class CityListService {
                        ac.images
 
                 FROM a_car ac
-                         LEFT JOIN a_section sec ON ac.prop_brand = sec.brand
+                         LEFT JOIN a_section sec ON UPPER(ac.prop_brand) = UPPER(sec.brand)
                 WHERE ac.id = ?
             `, [guid]);
 
@@ -50,7 +50,7 @@ class CityListService {
                        COUNT(ac.id) as count,
                        sec.brand    as name
                 FROM a_section sec
-                         LEFT JOIN a_car ac ON sec.brand = ac.prop_brand
+                         LEFT JOIN a_car ac ON UPPER(sec.brand) = UPPER(ac.prop_brand)
                 WHERE sec.brand IS NOT NULL
                   AND sec.brand != ''
                 GROUP BY sec.id, sec.brand

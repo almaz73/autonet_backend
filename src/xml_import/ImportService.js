@@ -44,11 +44,8 @@ class importService {
             await PreliminaryTables.clearTables(db);
             await PreliminaryTables.createTables(db); // почистили старые предварительные базы
 
-            let totalResult = {
-                sectionsImported: 0,
-                carsImported: 0,
-                total: 0
-            };
+            let textForReport = ''
+
             for (const xmlName of this.xmlNames) {
                 let xmlData = await PrepareXMLService.getXMLContent(xmlName)
 
@@ -69,10 +66,6 @@ class importService {
                     });
                 });
 
-                // Accumulate results from each XML file
-                totalResult.sectionsImported += result.sectionsImported;
-                totalResult.carsImported += result.carsImported;
-                totalResult.total += result.total;
             }
 
             // Считаем общее количество ссылок на фото
@@ -83,11 +76,12 @@ class importService {
 
 
             const newLinksWithPhoto = newPhotos.filter(link => !oldPhotos.includes(link));
-            console.log('⚡ ::: Появились новые фотки:', newLinksWithPhoto.length)
+            console.log('⚡ ::: >>> >>> >>> >>> >>> >>> Появились новые фотки:', newLinksWithPhoto.length)
+            textForReport += '>>> Появились новые фотки: ' + newLinksWithPhoto.length
 
 
             if (newLinksWithPhoto.length) {
-                console.log('⚡ ::: Фотки адаптируем и кладем в папку')
+                console.log('⚡ ::: Забираем к себе новые фотки:')
                 let placeInLine = 0
                 for (const url of newLinksWithPhoto) {
                     placeInLine++
@@ -104,7 +98,7 @@ class importService {
             console.log('⚡ ====================================')
             await PreliminaryTables.copyToInfoTables(db);
             // тут нужно будет удалять кэш, если был
-
+            textForReport += '⚡ ========== Новые данные опубликованы ==========='
 
             // нет ли копий VIN
             await A_car.checkDuplicateVINs()
@@ -112,6 +106,7 @@ class importService {
             // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
             const staleLinksWithPhoto = oldPhotos.filter(link => !newPhotos.includes(link));
             console.log('⚡ ::: Список фоток на удаление:', staleLinksWithPhoto.length)
+            textForReport += '⚡ ::: Список фоток на удаление: ' + staleLinksWithPhoto.length
 
             if (staleLinksWithPhoto.length) {
                 console.log('⚡ ::: Удаляем фотки')
@@ -124,16 +119,13 @@ class importService {
 
                     placeInLine++
                     if (placeInLine > 2) break // todo пока по частям удаляем
-                    await PreparePhotoService.deleteFileByName(baseName+'_small.webp')
-                    await PreparePhotoService.deleteFileByName(baseName+'_big.webp')
+                    await PreparePhotoService.deleteFileByName(baseName + '_small.webp')
+                    await PreparePhotoService.deleteFileByName(baseName + '_big.webp')
                 }
             }
 
 
-
-
             // TODO когда все удачно, подменяю. Нужно тервожный сигнал себе отправлять, если неудачно
-
 
 
 // TODO нужно будет дополнительное удаление файлов по старости, и заодно создавать талицу непродоваемых авто
@@ -143,7 +135,6 @@ class importService {
             await PrepareXMLService.getOldPhotoToDelete()
 
 
-
             console.timeEnd('⚡ Общее время обновления')
 
             console.log(' ')
@@ -151,7 +142,7 @@ class importService {
 
             PreparePhotoService.uploadAllPhotos() // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
 
-            return totalResult;
+            return textForReport;
         } catch (error) {
             console.error('Error fetching XML data:', error.message);
             throw error;

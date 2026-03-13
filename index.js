@@ -5,7 +5,7 @@ import router from "./src/router.js"; // Updated path to reflect router.js being
 import fileUpload from 'express-fileupload';
 
 
-const HOST = '127.0.0.1'; // Привязка
+// const HOST = '127.0.0.1'; // Привязка
 const PORT = 3000;
 const DB_PATH = './database.sqlite'; // Local SQLite file
 
@@ -49,7 +49,7 @@ async function startApp() {
         // Make db available globally or pass to controllers
         global.db = db;
 
-        app.listen(PORT, HOST,() => console.log('SERVER STARTED ON PORT ' + PORT))
+        app.listen(PORT, () => console.log('SERVER STARTED ON PORT ' + PORT))
     } catch (e) {
         console.log(e)
     }
