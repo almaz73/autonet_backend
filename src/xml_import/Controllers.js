@@ -6,7 +6,7 @@ import GetListService from "../API/GetListService.js";
 import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
 import PreparePhotoService from "./PreparePhotoService.js";
-
+import { Worker } from 'worker_threads';
 
 class Controllers {
 
@@ -22,6 +22,40 @@ class Controllers {
             });
         }
     }
+
+    async workerImportXML(req, res) {
+        console.log('  worker import XML ⚡ start ⚡ start ⚡ start ⚡ start ⚡ start ⚡')
+
+        try {
+            res.json('Параллельный поток запущен');
+
+            const worker = new Worker('./src/worker/ImportXMLWorker.js');
+
+            worker.on('message', (message) => {
+                console.log('Worker message:', message);
+            });
+
+            worker.on('error', (error) => {
+                console.error('Worker error:', error);
+            });
+
+            worker.on('exit', (code) => {
+                if (code !== 0) {
+                    console.error(`Worker stopped with exit code ${code}`);
+                } else {
+                    console.log('Worker completed successfully');
+                }
+            });
+
+        } catch (error) {
+            console.error('Ошибка запуска воркера:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
     async importXML(req, res) {
         console.log('  import XML ⚡ start ⚡ start ⚡ start ⚡ start ⚡ start ⚡')
         try {
@@ -301,9 +335,5 @@ class Controllers {
     }
 
 
-
-
-
 }
-
 export default new Controllers();

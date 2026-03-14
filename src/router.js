@@ -33,6 +33,8 @@ router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее 
 router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
 router.get('/getListExistPhoto', Controllers.getListExistPhoto) // получить список фоток из папки с файлами
 
+router.get('/worker-import-xml', Controllers.workerImportXML) // запуск тяжелого процесса в отдельном потоке
+
 /*
  // Интервал цен
     router.get('/getPriceGap', Controllers.getPriceGap)
