@@ -85,7 +85,7 @@ class importService {
                 let placeInLine = 0
                 for (const url of newLinksWithPhoto) {
                     placeInLine++
-                    if (placeInLine > 2) break // todo пока по частям добавляем
+                    // if (placeInLine > 2) break // todo пока по частям добавляем
                     await PreparePhotoService.addNewPhoto(url, placeInLine)
                 }
             }
@@ -117,7 +117,7 @@ class importService {
                     const baseName = path.parse(originalFilename).name;
 
                     placeInLine++
-                    if (placeInLine > 2) break // todo пока по частям удаляем
+                    // if (placeInLine > 2) break // todo пока по частям удаляем
                     await PreparePhotoService.deleteFileByName(baseName + '_small.webp')
                     await PreparePhotoService.deleteFileByName(baseName + '_big.webp')
                 }
