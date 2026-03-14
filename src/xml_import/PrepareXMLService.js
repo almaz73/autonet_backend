@@ -1,11 +1,6 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import {fileURLToPath} from 'url';
-
-// Resolve __dirname equivalent for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 class PrepareXMLService {
     constructor() {

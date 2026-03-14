@@ -81,7 +81,7 @@ class PreparePhotoService {
             await this.uploadAllPhotos() // добавляем недостающие фотки (вдруг еще есть такие)
             await this.unnecessaryPhoto() // удаляем ненужные фотки
 
-
+            return'Готово'
         } catch (error) {
             console.error('Error retrieving images from a_car table:', error.message);
             throw error;

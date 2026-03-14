@@ -406,10 +406,9 @@ class CityListService {
     async getImageLinksCount(withoutComments) {
         try {
             let totalLinks = 0;
-            let group = ''
             let links = await this.getAllImageLinksFromBD()
 
-            group = links.length
+            let group = links.length
             totalLinks = links.length;
 
             if (!withoutComments) {
