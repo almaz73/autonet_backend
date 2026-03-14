@@ -23,15 +23,15 @@ router.get('/getDriveTypes', Controllers.getDriveTypes)
 router.get('/getWheelTypes', Controllers.getWheelTypes)
 router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
-router.get('/upload', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
 router.get('/getYearGap', Controllers.getYearGap)
 
+router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
+router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние фотки в папке, которых уже нет в базе
 router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
 router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
 router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
 router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
-router.get('/getListExistPhoto', Controllers.getListExistPhoto) // чтобы найти старые фотки
-
+router.get('/getListExistPhoto', Controllers.getListExistPhoto) // получить список фоток из папки с файлами
 
 /*
  // Интервал цен

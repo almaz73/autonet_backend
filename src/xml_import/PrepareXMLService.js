@@ -24,7 +24,7 @@ class PrepareXMLService {
 
     loadXmlUrlsFromPublic() {
         try {
-            const xmlDir = path.join(__dirname, '..', '..', 'public', 'xml');
+            const xmlDir = '../autonet/public/XML'
             if (fs.existsSync(xmlDir)) {
                 const files = fs.readdirSync(xmlDir);
                 files.forEach(file => {
@@ -40,9 +40,9 @@ class PrepareXMLService {
 
     async getXMLContent(xmlName) {
         console.log('      Заполняем базу из', xmlName)
-        const xmlFolderPath = path.join(process.cwd(), 'public', 'xml');
+        const xmlDir = '../autonet/public/XML'
         let xmlData = '';
-        const filePath = path.join(xmlFolderPath, xmlName);
+        const filePath = path.join(xmlDir, xmlName);
         const fileContent = fs.readFileSync(filePath, 'utf8');
         xmlData += fileContent; // Combine all XML files content
         return xmlData;
@@ -51,7 +51,7 @@ class PrepareXMLService {
     async saveXmlFilesToPublic() {
         try {
             // Create public/xml directory if it doesn't exist
-            const xmlDir = path.join(__dirname, '..', '..', 'public', 'xml');
+            const xmlDir = '../autonet/public/XML'
             if (!fs.existsSync(xmlDir)) {
                 fs.mkdirSync(xmlDir, {recursive: true});
                 console.log(`Created directory: ${xmlDir}`);
@@ -90,7 +90,7 @@ class PrepareXMLService {
 
 
             console.log(`⚡ Удачно сохранены ${savedFiles.length} XML файла из интернета в серверную папку`);
-            return `⚡ Удачно сохранены ${savedFiles.length} XML файла из интернета в серверную папку` ;
+            return `⚡ Удачно сохранены ${savedFiles.length} XML файла из интернета в серверную папку`;
         } catch (error) {
             console.error('Error in saveXmlFilesToPublic:', error.message);
             throw error;
@@ -101,7 +101,7 @@ class PrepareXMLService {
     async getXmlFileDates() {
         console.log('getXmlFileDates ...........')
         try {
-            const xmlDir = path.join(__dirname, '..', '..', 'public', 'xml');
+            const xmlDir = '../autonet/public/XML'
 
             // Check if directory exists
             if (!fs.existsSync(xmlDir)) {
@@ -145,7 +145,7 @@ class PrepareXMLService {
 
     async getOldPhotoToDelete() {
         try {
-            const fotoDir = path.join(__dirname, '..', '..', 'public', 'foto');
+            const fotoDir = '../autonet/public/auto'
 
             // Check if directory exists
             if (!fs.existsSync(fotoDir)) {
@@ -155,7 +155,7 @@ class PrepareXMLService {
 
             const files = fs.readdirSync(fotoDir);
             const currentTime = new Date();
-            const hoar = 24*10//24*3; // часы отсечения
+            const hoar = 24 * 10//24*3; // часы отсечения
             const timeAgo = new Date(currentTime.getTime() - 60 * 60 * 1000 * hoar); // hoar часов назад
 
             const recentFiles = [];
@@ -186,7 +186,7 @@ class PrepareXMLService {
 
     async getListExistPhoto() {
         try {
-            const fotoDir = path.join(__dirname, '..', '..', 'public', 'foto');
+            const fotoDir = '../autonet/public/auto'
 
             // Check if directory exists
             if (!fs.existsSync(fotoDir)) {

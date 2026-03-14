@@ -5,6 +5,7 @@ import GetListService from "../API/GetListService.js";
 
 import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
+import PreparePhotoService from "./PreparePhotoService.js";
 
 
 class Controllers {
@@ -282,6 +283,16 @@ class Controllers {
     async getListExistPhoto(req, res) {
         try {
             let list= await PrepareXMLService.getListExistPhoto()
+            res.json(list);
+        } catch (error) {
+            console.error('Error getListExistPhoto:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
+    async unnecessaryPhoto(req, res) {
+        try {
+            let list= await PreparePhotoService.unnecessaryPhoto()
             res.json(list);
         } catch (error) {
             console.error('Error getListExistPhoto:', error);

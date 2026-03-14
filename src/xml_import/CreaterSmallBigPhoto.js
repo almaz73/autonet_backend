@@ -10,27 +10,13 @@ const __dirname = path.dirname(__filename);
 
 class CreaterSmallBigPhoto {
 
-    // deleteFolder(directory) {
-    //     return new Promise((resolve, reject) => {
-    //         fs.rm(directory, {recursive: true, force: true}, (err) => {
-    //             if (err) reject('!!! НЕ ПОЛУЧИЛОСЬ УДАЛИТЬ ПАПКУ ' + err)
-    //             else {
-    //                 console.log(`Папка с фотками ${directory} успешно удалена`)
-    //
-    //                 const uploadDir = path.join(__dirname, '../..', directory);
-    //                 fs.mkdirSync(uploadDir, {recursive: true});
-    //                 console.log(`Папка для фоток ${directory} создана`)
-    //                 resolve()
-    //             }
-    //         });
-    //     })
-    // }
-
     async savePhotoToServer(imageUrl, placeInLine, directory) {
         try {
             if (!imageUrl) return {error: 'Image URL is required'};
 
             const uploadDir = path.join(__dirname, '../..', directory);
+
+            console.log('по ссылке:', imageUrl)
 
             const urlObj = new URL(imageUrl);
             let originalFilename = path.basename(urlObj.pathname);
@@ -39,7 +25,7 @@ class CreaterSmallBigPhoto {
             if (placeInLine < 6) await createSmallPhoto(baseName, uploadDir, imageUrl);
             await createBigPhoto(baseName, uploadDir, imageUrl)
 
-            return '▙▟ Скопирована фоткa №' + placeInLine+' '+ imageUrl;
+            return '▙▟ Скопирована фоткa №' + placeInLine;
         } catch (error) {
             return {error: error.message};
         }

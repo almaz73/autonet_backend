@@ -376,10 +376,9 @@ class CityListService {
         }
     }
 
-    async getImageLinksCount(withoutComments) {
+    async getAllImageLinksFromBD() {
         const db = global.db
         try {
-            // Query the a_car table to get all non-null images
             // language=SQLite
             const results = await db.all(`
                 SELECT images
@@ -388,26 +387,38 @@ class CityListService {
                   AND images != ''
             `);
 
-            let totalLinks = 0;
-            let group = ''
+            let links = []
 
             results.forEach(row => {
                 if (row.images && typeof row.images === 'string') {
-                    // Split the images string by whitespace and count non-empty links
-                    const links = row.images.split(/\s+/).filter(link => link.trim() !== '');
-                    // console.log('links', links.length)
-                    group += links.length + ', '
-                    totalLinks += links.length;
+                     links.push(...row.images.split(/, /));
                 }
             });
+
+
+            return links;
+        } catch (error) {
+            console.error('Error counting image links in a_car table:', error.message);
+            throw error;
+        }
+    }
+
+    async getImageLinksCount(withoutComments) {
+        try {
+            let totalLinks = 0;
+            let group = ''
+            let links = await this.getAllImageLinksFromBD()
+
+            group = links.length
+            totalLinks = links.length;
 
             if (!withoutComments) {
                 console.log('group', group)
                 console.log('Общее количество прикрепленных фоток: ', totalLinks);
-                console.log('Автомобилей с фотками: ', results.length);
-            } else return results.length
+                console.log('Автомобилей с фотками: ', links.length);
+            } else return links.length
 
-            return `Всего ссылок на фотo: ${totalLinks}  /  Автомобилей с фотками: ${results.length}`;
+            return `Всего ссылок на фотo: ${totalLinks}  /  Автомобилей с фотками: ${links.length}`;
         } catch (error) {
             console.error('Error counting image links in a_car table:', error.message);
             throw error;
