@@ -3,8 +3,6 @@ import Controllers from "./xml_import/Controllers.js";
 
 const router = new Router()
 
-router.get('/test', Controllers.test)
-router.get('/import-xml', Controllers.importXML)
 // router.get('/process-sections', Controllers.processSections)
 // router.get('/sections', Controllers.sections)
 // router.get('/cars', Controllers.cars)
@@ -25,6 +23,8 @@ router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
 router.get('/getYearGap', Controllers.getYearGap)
 
+router.get('/test', Controllers.test)
+router.get('/import-xml', Controllers.importXML) // загрузка xml в папку, заполнение БД, добавление фоток по ссылкам, удаление лишних фоток
 router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
 router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние фотки в папке, которых уже нет в базе
 router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
