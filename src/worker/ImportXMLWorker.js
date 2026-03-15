@@ -1,5 +1,5 @@
-import { parentPort, workerData } from 'worker_threads';
-import { open } from 'sqlite';
+import {parentPort, workerData} from 'worker_threads';
+import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import PrepareXMLService from "../xml_import/PrepareXMLService.js";
 import PreliminaryTables from "../xml_import/PreliminaryTables.js";
@@ -7,6 +7,8 @@ import {parseString} from "xml2js";
 import PreparePhotoService from "../xml_import/PreparePhotoService.js";
 import path from "path";
 import {findAndProcessCars, insertCars} from "../xml_import/ServiceCars.js";
+import PhotoSaver from "../xml_import/CreaterSmallBigPhoto.js";
+import fs from "fs";
 
 async function processXMLImport() {
     try {
@@ -21,7 +23,7 @@ async function processXMLImport() {
 
         await db.close();
 
-         parentPort.postMessage({status: 'COMPLETE',message: result});
+        parentPort.postMessage({status: 'COMPLETE', message: result});
     } catch (error) {
         parentPort.postMessage({
             status: 'ERROR',
@@ -40,37 +42,188 @@ async function processXMLImport() {
 // Start the processing
 processXMLImport();
 
-const  xmlNames = [
-    // 'AVTO_NIGNEKAMSK.xml',
-    // 'AlfaAvto5_AMK.xml',
-    // 'AlfaAvto5_Astrahan.xml',
-    // 'AlfaAvto5_Tver.xml',
-    // 'alfa5_gktm.xml',
+const fotoDir = '../autonet/public/auto'
+const xmlNames = [
+    'AVTO_NIGNEKAMSK.xml',
+    'AlfaAvto5_AMK.xml',
+    'AlfaAvto5_Astrahan.xml',
+    'AlfaAvto5_Tver.xml',
+    'alfa5_gktm.xml',
     'alfa-trade.xml'
 ];
+
+
+async function getAllImageLinksFromBD() {
+    const db = global.db
+    try {
+        // language=SQLite
+        const results = await db.all(`
+                SELECT images
+                FROM a_car
+                WHERE images IS NOT NULL
+                  AND images != ''
+            `);
+
+        let links = []
+
+        results.forEach(row => {
+            if (row.images && typeof row.images === 'string') {
+                links.push(...row.images.split(/, /));
+            }
+        });
+
+
+        return links;
+    } catch (error) {
+        console.error('Error counting image links in a_car table:', error.message);
+        throw error;
+    }
+}
+
+async function getListExistPhoto() {
+    try {
+
+
+        // Check if directory exists
+        if (!fs.existsSync(fotoDir)) {
+            console.log(`Directory does not exist: ${fotoDir}`);
+            return [];
+        }
+
+        const files = fs.readdirSync(fotoDir);
+        let links = {}
+
+        console.log('!!!!!!! links.length = ', links.length)
+
+        files.forEach(el => {
+            el = el.replace('_big.webp', '')
+            el = el.replace('_small.webp', '')
+            links[el] = 1
+        })
+
+        return Object.keys(links);
+    } catch (error) {
+        console.error('Error in getOldPhotoToDelete:', error.message);
+        throw error;
+    }
+}
+async function getCountUplFilews(db) {
+    const ListExistPhoto = await getListExistPhoto()
+    let count = 0
+    try {
+        let linksBD = await getAllImageLinksFromBD(db)
+
+        if (linksBD) {
+            for (const url of linksBD) {
+                const fileName = url.split('/').pop().slice(0, -4)
+                if (!ListExistPhoto.find(el => el === fileName)) count++
+            }
+            console.log('🐾🐾🐾 Теперь в базе ссылок:', linksBD.length)
+            console.log('🐾🐾🐾 В папках уже есть фотки по этим ссылкам:', linksBD.length - count)
+            console.log('🐾🐾🐾 Осталось обработать:', count)
+
+        }
+    } catch (error) {
+        console.error('Error retrieving images from a_car table:', error.message);
+        throw error;
+    }
+}
+// лишние фотки в папке, которых уже нет в базе
+async function unnecessaryPhoto(db) {
+    try {
+
+        // беру список файлов из папки
+        let linksFolder = await getListExistPhoto()
+        console.log(' 👻 👻 👻 Фоток в папке', linksFolder.length)
+        // беру список файлов из базы
+        let listBD = await getAllImageLinksFromBD(db)
+        console.log(' 👻 👻 👻 Ссылок в базе', listBD.length)
+
+        listBD = listBD.map(el => el.split('/').pop().slice(0, -4))
+        const deprecatedPhoto = linksFolder.filter(link => !listBD.includes(link));
+
+        console.log(' 👻 👻 👻 Фоток, которых уже нет в базе, но лежат в папке', deprecatedPhoto.length)
+
+
+        await this.prepareUnnecesaryPhotoForDelete(deprecatedPhoto)
+
+        return ' 👻 👻 👻 Удаление произошло '
+    } catch (error) {
+        console.error('Error in getOldPhotoToDelete:', error.message);
+        throw error;
+    }
+}
+
+async function uploadAllPhotos(db) {
+    // await getCountUplFilews(db) // Сколько нжно хотел вычислить.. можно без этого  
+    const ListExistPhoto = await getListExistPhoto()
+    let count = 0
+    let addCount = 0
+    try {
+        // Query the a_car table to get the images column
+        // language=SQLite
+        const cars = await db.all('SELECT images FROM a_car WHERE images IS NOT NULL AND images != ""');
+
+        console.time('🐾🐾🐾 Общее время оптимизации/копирования фоток')
+
+        for (const car of cars) {
+            if (car.images) {
+                let imageArray = [];
+                imageArray = car.images.split(',').map(url => url.trim());
+
+                let placeInLine = 0
+                for (const url of imageArray) {
+                    count++
+                    placeInLine++
+                    const urlParts = url.split('/');
+                    let fileName = urlParts[urlParts.length - 1];
+                    fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+
+                    let exist = ListExistPhoto.find(el => el === fileName)
+                    if (exist) continue
+
+                    addCount++
+
+                    let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, fotoDir);
+                    console.log(zz, '(', addCount, ')');
+                }
+            }
+        }
+
+        console.timeEnd('🐾🐾🐾 Общее время оптимизации/копирования фоток')
+
+        // await uploadAllPhotos() // добавляем недостающие фотки (вдруг еще есть такие)
+        // await unnecessaryPhoto(db) // удаляем ненужные фотки
+
+        return'Готово'
+    } catch (error) {
+        console.error('Error retrieving images from a_car table:', error.message);
+        throw error;
+    }
+}
 
 async function checkDuplicateVINs(db) {
     try {
         // Query to find duplicate prop_VIN values
         // language=SQLite
         const results = await db.all(`
-                SELECT prop_VIN, COUNT(*) as count
-                FROM a_car
-                WHERE prop_VIN IS NOT NULL
-                  AND prop_VIN != ''
-                GROUP BY prop_VIN
-                HAVING COUNT(*) > 1
-            `);
+            SELECT prop_VIN, COUNT(*) as count
+            FROM a_car
+            WHERE prop_VIN IS NOT NULL
+              AND prop_VIN != ''
+            GROUP BY prop_VIN
+            HAVING COUNT(*) > 1
+        `);
 
 
         let results2
         if (results.length) {
             // language=SQLite
             results2 = await db.all(`
-                    SELECT prop_VIN, name, prop_city as 'Город'
-                    FROM a_car
-                    WHERE prop_VIN = ?
-                `, results[0].prop_VIN);
+                SELECT prop_VIN, name, prop_city as 'Город'
+                FROM a_car
+                WHERE prop_VIN = ?
+            `, results[0].prop_VIN);
         }
 
         console.log('Дубликатов VIN:', results.length ? results : 'НЕТ');
@@ -93,11 +246,11 @@ async function getOldLinks(db) {
         let results = []
         if (hasImagesColumn) {
             results = await db.all(`
-                    SELECT images
-                    FROM a_car
-                    WHERE images IS NOT NULL
-                      AND images != ''
-                `);
+                SELECT images
+                FROM a_car
+                WHERE images IS NOT NULL
+                  AND images != ''
+            `);
         }
 
         let totalLinks = [];
@@ -120,11 +273,11 @@ async function getNewLinks(db) {
         // Query the a_car table to get all non-null images
         // language=SQLite
         const results = await db.all(`
-                SELECT images
-                FROM cars_table
-                WHERE images IS NOT NULL
-                  AND images != ''
-            `);
+            SELECT images
+            FROM cars_table
+            WHERE images IS NOT NULL
+              AND images != ''
+        `);
 
         let totalLinks = [];
         results.forEach(row => {
@@ -267,14 +420,14 @@ async function processSections(db) {
         // Create a new table for sections with id, parentId, Brand, Model
         // language=SQLite
         await db.exec(`
-                CREATE TABLE IF NOT EXISTS sections_table
-                (
-                    id       TEXT PRIMARY KEY,
-                    parentId TEXT,
-                    Brand    TEXT,
-                    Model    TEXT
-                )
-            `);
+            CREATE TABLE IF NOT EXISTS sections_table
+            (
+                id       TEXT PRIMARY KEY,
+                parentId TEXT,
+                Brand    TEXT,
+                Model    TEXT
+            )
+        `);
 
         // Process sections and their potential subsections recursively
         await processSectionRecursive(parsedSections, db, '');
@@ -369,7 +522,7 @@ async function importXmlData(db) {
     try {
         console.time('⚡ Общее время обновления')
 
-       // await PrepareXMLService.saveXmlFilesToPublic() // копируем к себе из интернета TODO Потом включить
+        await PrepareXMLService.saveXmlFilesToPublic() // копируем к себе из интернета TODO Потом включить
         await PreliminaryTables.clearTables(db);
         await PreliminaryTables.createTables(db); // почистили старые предварительные базы
 
@@ -398,7 +551,6 @@ async function importXmlData(db) {
         }
 
 
-
         // Считаем общее количество ссылок на фото
         let newPhotos = await getNewLinks(db)
         console.log('⚡ all newPhoto links:', newPhotos.length)
@@ -416,7 +568,7 @@ async function importXmlData(db) {
             let placeInLine = 0
             for (const url of newLinksWithPhoto) {
                 placeInLine++
-                if (placeInLine > 2) break // todo пока по частям добавляем
+                // if (placeInLine > 2) break // todo пока по частям добавляем
                 await PreparePhotoService.addNewPhoto(url, placeInLine)
             }
         }
@@ -453,8 +605,6 @@ async function importXmlData(db) {
         }
 
 
-
-
 // TODO нужно будет дополнительное удаление файлов по старости, и заодно создавать талицу непродоваемых авто
 // TODO для этого находим все файлы по старости (2 месяца), ищем в списке существующих, и удаляем те, которых нет в списке.
 // TODO И добавляем в базу непродаваемых авто в отдельную таблицу (просто для знакомства)
@@ -465,11 +615,11 @@ async function importXmlData(db) {
         console.timeEnd('⚡ Общее время обновления')
 
         console.log(' ')
-        /*console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
+        console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
 
-                        PreparePhotoService.uploadAllPhotos() // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
+        uploadAllPhotos(db) // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
 
-                        */
+        // */
 
         return textForReport;
     } catch (error) {

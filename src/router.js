@@ -29,7 +29,7 @@ router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее 
 router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
 router.get('/getListExistPhoto', Controllers.getListExistPhoto) // получить список фоток из папки с файлами
 
-router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке , Обновления БАЗ
+router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке, Обновления БАЗ
 
 /*
  // Интервал цен
