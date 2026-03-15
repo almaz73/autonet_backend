@@ -568,7 +568,7 @@ async function importXmlData(db) {
             let placeInLine = 0
             for (const url of newLinksWithPhoto) {
                 placeInLine++
-                // if (placeInLine > 2) break // todo пока по частям добавляем
+                // if (placeInLine > 2) break
                 await PreparePhotoService.addNewPhoto(url, placeInLine)
             }
         }
@@ -598,7 +598,7 @@ async function importXmlData(db) {
                 let originalFilename = path.basename(urlObj.pathname);
                 const baseName = path.parse(originalFilename).name;
                 placeInLine++
-                // if (placeInLine > 2) break // todo пока по частям удаляем
+                // if (placeInLine > 2) break
                 await PreparePhotoService.deleteFileByName(baseName + '_small.webp')
                 await PreparePhotoService.deleteFileByName(baseName + '_big.webp')
             }
@@ -617,7 +617,7 @@ async function importXmlData(db) {
         console.log(' ')
         console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
 
-        uploadAllPhotos(db) // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
+        uploadAllPhotos(db) // записывание обработанных фоток к себе только недобавленые
 
         // */
 
