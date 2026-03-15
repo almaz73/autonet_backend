@@ -4,40 +4,28 @@ import sqlite3 from 'sqlite3';
 import PrepareXMLService from "../xml_import/PrepareXMLService.js";
 import PreliminaryTables from "../xml_import/PreliminaryTables.js";
 import {parseString} from "xml2js";
-import A_car from "../API/A_car.js";
 import PreparePhotoService from "../xml_import/PreparePhotoService.js";
 import path from "path";
 import {findAndProcessCars, insertCars} from "../xml_import/ServiceCars.js";
 
 async function processXMLImport() {
     try {
-        // Notify that parallel processing has started
-        // parentPort.postMessage({
-        //     status: 'STARTED',
-        //     message: 'Параллельный поток запущен'
-        // });
-
-
         console.log('================== Обработка XML импорта в параллельном потоке... ==================');
 
-        // Open database connection in the worker thread
         const db = await open({
             filename: './database.sqlite',
             driver: sqlite3.Database
         });
 
-        // Perform the XML import operation using the method that was copied from ImportService
         const result = await importXmlData(db);
 
-        // Close the database connection
         await db.close();
 
-        // Send completion message back to main thread
-        // parentPort.postMessage({status: 'COMPLETE',message: 'XML успешно обработан и сохранен в SQLite'});
+         parentPort.postMessage({status: 'COMPLETE',message: result});
     } catch (error) {
         parentPort.postMessage({
             status: 'ERROR',
-            message: 'Ошибка при обработке XML в параллельном потоке',
+            message: 'Ошибка при обработке XML',
             error: error.message
         });
     }
@@ -60,6 +48,39 @@ const  xmlNames = [
     // 'alfa5_gktm.xml',
     'alfa-trade.xml'
 ];
+
+async function checkDuplicateVINs(db) {
+    try {
+        // Query to find duplicate prop_VIN values
+        // language=SQLite
+        const results = await db.all(`
+                SELECT prop_VIN, COUNT(*) as count
+                FROM a_car
+                WHERE prop_VIN IS NOT NULL
+                  AND prop_VIN != ''
+                GROUP BY prop_VIN
+                HAVING COUNT(*) > 1
+            `);
+
+
+        let results2
+        if (results.length) {
+            // language=SQLite
+            results2 = await db.all(`
+                    SELECT prop_VIN, name, prop_city as 'Город'
+                    FROM a_car
+                    WHERE prop_VIN = ?
+                `, results[0].prop_VIN);
+        }
+
+        console.log('Дубликатов VIN:', results.length ? results : 'НЕТ');
+        if (results2) console.log('results2', results2)
+        return results.length ? results2 : 'Нет дубликатов VIN';
+    } catch (error) {
+        console.error('Error checking duplicate VINs in a_car table:', error.message);
+        throw error;
+    }
+}
 
 async function getOldLinks(db) {
     try {
@@ -376,7 +397,6 @@ async function importXmlData(db) {
 
         }
 
-        console.log('888 = ', 888)
 
 
         // Считаем общее количество ссылок на фото
@@ -408,15 +428,14 @@ async function importXmlData(db) {
         console.log('⚡ Публикуем обновленную базу ')
         console.log('⚡ ====================================')
         await PreliminaryTables.copyToInfoTables(db);
-        // тут нужно будет удалять кэш, если был
-/*
+
         // нет ли копий VIN
-        await A_car.checkDuplicateVINs()
+        await checkDuplicateVINs(db)
 
         // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
         const staleLinksWithPhoto = oldPhotos.filter(link => !newPhotos.includes(link));
-        console.log('⚡ ::: Фотки на удаление:', staleLinksWithPhoto.length)
-        textForReport += '⚡ ::: Фотки на удаление: ' + staleLinksWithPhoto.length + ' ::: ⚡ ' + new Date().toLocaleDateString()
+        console.log('⚡ ::: Фоток на удаление:', staleLinksWithPhoto.length)
+        textForReport += '⚡ ::: Фоток на удаление (по данным баз): ' + staleLinksWithPhoto.length + ' ::: ⚡ ' + new Date().toLocaleDateString()
 
         if (staleLinksWithPhoto.length) {
             console.log('⚡ ::: Удаляем фотки')
@@ -426,7 +445,6 @@ async function importXmlData(db) {
                 const urlObj = new URL(url);
                 let originalFilename = path.basename(urlObj.pathname);
                 const baseName = path.parse(originalFilename).name;
-
                 placeInLine++
                 // if (placeInLine > 2) break // todo пока по частям удаляем
                 await PreparePhotoService.deleteFileByName(baseName + '_small.webp')
@@ -435,7 +453,6 @@ async function importXmlData(db) {
         }
 
 
-        // TODO когда все удачно, подменяю. Нужно тервожный сигнал себе отправлять, если неудачно
 
 
 // TODO нужно будет дополнительное удаление файлов по старости, и заодно создавать талицу непродоваемых авто
@@ -448,11 +465,11 @@ async function importXmlData(db) {
         console.timeEnd('⚡ Общее время обновления')
 
         console.log(' ')
-        console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
+        /*console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
 
-        PreparePhotoService.uploadAllPhotos() // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
+                        PreparePhotoService.uploadAllPhotos() // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
 
-        */
+                        */
 
         return textForReport;
     } catch (error) {

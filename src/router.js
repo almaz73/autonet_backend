@@ -3,10 +3,6 @@ import Controllers from "./xml_import/Controllers.js";
 
 const router = new Router()
 
-// router.get('/process-sections', Controllers.processSections)
-// router.get('/sections', Controllers.sections)
-// router.get('/cars', Controllers.cars)
-
 
 router.get('/getList', Controllers.getList)
 router.get('/getSpecials', Controllers.getSpecials) // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
@@ -33,7 +29,7 @@ router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее 
 router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
 router.get('/getListExistPhoto', Controllers.getListExistPhoto) // получить список фоток из папки с файлами
 
-router.get('/worker-import-xml', Controllers.workerImportXML) // запуск тяжелого процесса в отдельном потоке
+router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке , Обновления БАЗ
 
 /*
  // Интервал цен

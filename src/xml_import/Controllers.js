@@ -24,19 +24,17 @@ class Controllers {
     }
 
     async workerImportXML(req, res) {
-        console.log('  worker import XML ⚡ start ⚡ start ⚡ start ⚡ start ⚡ start ⚡')
-
         try {
-            res.json('Параллельный поток запущен');
-
             const worker = new Worker('./src/worker/ImportXMLWorker.js');
 
             worker.on('message', (message) => {
-                console.log('Worker message:', message);
+                console.log('!!!! Worker message:', message);
+                res.json('Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился: '+message.message);
             });
 
             worker.on('error', (error) => {
                 console.error('Worker error:', error);
+                res.json(error)
             });
 
             worker.on('exit', (code) => {
@@ -71,50 +69,6 @@ class Controllers {
     }
 
 
-    // async processSections(req, res) {
-    //     try {
-    //         const result = await PreliminaryTables.processSections(global.db);
-    //         res.json(result);
-    //     } catch (error) {
-    //         console.error('Error processing sections:', error);
-    //         res.status(500).json({
-    //             success: false,
-    //             error: error.message
-    //         });
-    //     }
-    // }
-
-    // async sections(req, res) {
-    //     try {
-    //         // language=SQLite
-    //         const sections = await global.db.all('SELECT * FROM sections');
-    //         // Parse the JSON data for each section
-    //         const sectionsWithParsedData = sections.map(section => ({
-    //             ...section,
-    //             data: JSON.parse(section.data)
-    //         }));
-    //         res.json(sectionsWithParsedData);
-    //     } catch (error) {
-    //         console.error('Error getting sections:', error);
-    //         res.status(500).json({error: error.message});
-    //     }
-    // }
-
-    // async cars(req, res) {
-    //     try {
-    //         // language=SQLite
-    //         const cars = await global.db.all('SELECT * FROM cars');
-    //         // Parse the JSON data for each car
-    //         const carsWithParsedData = cars.map(car => ({
-    //             ...car,
-    //             data: JSON.parse(car.data)
-    //         }));
-    //         res.json(carsWithParsedData);
-    //     } catch (error) {
-    //         console.error('Error getting cars:', error);
-    //         res.status(500).json({error: error.message});
-    //     }
-    // }
 
 
     async getList(req, res) {
