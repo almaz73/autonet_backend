@@ -12,12 +12,13 @@ import {findAndProcessCars, insertCars} from "../xml_import/ServiceCars.js";
 async function processXMLImport() {
     try {
         // Notify that parallel processing has started
-        parentPort.postMessage({
-            status: 'STARTED',
-            message: 'Параллельный поток запущен'
-        });
+        // parentPort.postMessage({
+        //     status: 'STARTED',
+        //     message: 'Параллельный поток запущен'
+        // });
 
-        console.log('Обработка XML импорта в параллельном потоке...');
+
+        console.log('================== Обработка XML импорта в параллельном потоке... ==================');
 
         // Open database connection in the worker thread
         const db = await open({
@@ -32,12 +33,7 @@ async function processXMLImport() {
         await db.close();
 
         // Send completion message back to main thread
-        parentPort.postMessage({
-            status: 'COMPLETE',
-            message: 'XML успешно обработан и сохранен в SQLite',
-            result: result
-        });
-
+        // parentPort.postMessage({status: 'COMPLETE',message: 'XML успешно обработан и сохранен в SQLite'});
     } catch (error) {
         parentPort.postMessage({
             status: 'ERROR',
@@ -64,6 +60,65 @@ const  xmlNames = [
     // 'alfa5_gktm.xml',
     'alfa-trade.xml'
 ];
+
+async function getOldLinks(db) {
+    try {
+        // Проверка наличия
+        const tableInfo = await db.all("PRAGMA table_info(a_car)");
+        const hasImagesColumn = tableInfo.some(column => column.name === 'images');
+
+        // Query the a_car table to get all non-null images
+        // language=SQLite
+        let results = []
+        if (hasImagesColumn) {
+            results = await db.all(`
+                    SELECT images
+                    FROM a_car
+                    WHERE images IS NOT NULL
+                      AND images != ''
+                `);
+        }
+
+        let totalLinks = [];
+        results.forEach(row => {
+            if (row.images && typeof row.images === 'string') {
+                const links = row.images.split(/, /).filter(link => link.trim() !== '');
+                totalLinks.push(...links)
+            }
+        });
+
+        return totalLinks
+    } catch (error) {
+        console.error('Error counting image links in a_car table:', error.message);
+        throw error;
+    }
+}
+
+async function getNewLinks(db) {
+    try {
+        // Query the a_car table to get all non-null images
+        // language=SQLite
+        const results = await db.all(`
+                SELECT images
+                FROM cars_table
+                WHERE images IS NOT NULL
+                  AND images != ''
+            `);
+
+        let totalLinks = [];
+        results.forEach(row => {
+            if (row.images && typeof row.images === 'string') {
+                const links = row.images.split(/, /).filter(link => link.trim() !== '');
+                totalLinks.push(...links)
+            }
+        });
+
+        return totalLinks
+    } catch (error) {
+        console.error('Error counting image links in a_car table:', error.message);
+        throw error;
+    }
+}
 
 function looksLikeSectionObject(obj) {
     // Check for common section properties
@@ -206,7 +261,6 @@ async function processSections(db) {
         // Get the processed data
         // language=SQLite
         const processedData = await db.all('SELECT * FROM sections_table');
-
         return {
             success: true,
             message: 'Sections processed successfully into sections_table',
@@ -294,12 +348,11 @@ async function importXmlData(db) {
     try {
         console.time('⚡ Общее время обновления')
 
-        await PrepareXMLService.saveXmlFilesToPublic() // копируем к себе из интернета
+       // await PrepareXMLService.saveXmlFilesToPublic() // копируем к себе из интернета TODO Потом включить
         await PreliminaryTables.clearTables(db);
         await PreliminaryTables.createTables(db); // почистили старые предварительные базы
 
         let textForReport = ''
-
 
         for (const xmlName of xmlNames) {
             let xmlData = await PrepareXMLService.getXMLContent(xmlName)
@@ -323,10 +376,13 @@ async function importXmlData(db) {
 
         }
 
+        console.log('888 = ', 888)
+
+
         // Считаем общее количество ссылок на фото
-        let newPhotos = await A_car.getNewLinks()
+        let newPhotos = await getNewLinks(db)
         console.log('⚡ all newPhoto links:', newPhotos.length)
-        let oldPhotos = await A_car.getOldLinks()
+        let oldPhotos = await getOldLinks(db)
         console.log('⚡ all oldPhoto links:', oldPhotos.length)
 
 
@@ -340,7 +396,7 @@ async function importXmlData(db) {
             let placeInLine = 0
             for (const url of newLinksWithPhoto) {
                 placeInLine++
-                // if (placeInLine > 2) break // todo пока по частям добавляем
+                if (placeInLine > 2) break // todo пока по частям добавляем
                 await PreparePhotoService.addNewPhoto(url, placeInLine)
             }
         }
@@ -353,7 +409,7 @@ async function importXmlData(db) {
         console.log('⚡ ====================================')
         await PreliminaryTables.copyToInfoTables(db);
         // тут нужно будет удалять кэш, если был
-
+/*
         // нет ли копий VIN
         await A_car.checkDuplicateVINs()
 
@@ -395,6 +451,8 @@ async function importXmlData(db) {
         console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
 
         PreparePhotoService.uploadAllPhotos() // todo тут записывание обработанных фоток к себе в первый раз, вне потока импорта
+
+        */
 
         return textForReport;
     } catch (error) {
