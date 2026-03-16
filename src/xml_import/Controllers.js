@@ -12,8 +12,9 @@ class Controllers {
 
     async test(req, res) {
         try {
-            console.log('   ⚡ test ⚡ test ⚡ Есть связь с сервером!!!'  )
-            res.json(' ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ');
+            let ver = 'ВЕРСИЯ 16марта2026'
+            console.log(`'   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${ver}`  )
+            res.json(`' ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ${ver} ⚡ ⚡ ⚡`);
         } catch (error) {
             console.error('Ошибка сервера:', error);
             res.status(500).json({

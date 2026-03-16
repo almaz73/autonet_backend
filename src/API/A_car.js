@@ -36,7 +36,7 @@ class CityListService {
 
             if (result.images) {
                 result.images = result.images.split(',').map(url => url.trim())
-                result.images = result.images.map(el => '/auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
+                result.images = result.images.map(el => 'pub_auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
             }
             return result;
         } catch (error) {

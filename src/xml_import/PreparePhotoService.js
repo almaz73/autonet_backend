@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // const folderName = 'public/foto'
-const folderName = '../front/public/auto'
+const folderName = '../front/pub_auto'
 
 
 class PreparePhotoService {
@@ -78,10 +78,9 @@ class PreparePhotoService {
 
             console.timeEnd('🐾🐾🐾 Общее время оптимизации/копирования фоток')
 
-            await this.uploadAllPhotos() // добавляем недостающие фотки (вдруг еще есть такие)
             await this.unnecessaryPhoto() // удаляем ненужные фотки
 
-            return'Готово'
+            return 'Все. Готово'
         } catch (error) {
             console.error('Error retrieving images from a_car table:', error.message);
             throw error;
@@ -151,6 +150,7 @@ class PreparePhotoService {
             }
 
             console.log(` 👻 👻 👻 Эти файлы устарели ${hoar} часа(ов) - итого на удаление `, recentFiles.length);
+            console.log(` 👻 👻 👻 Все! `);
 
             if(recentFiles) {
                 for (const filename of recentFiles) {

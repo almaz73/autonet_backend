@@ -42,7 +42,7 @@ async function processXMLImport() {
 // Start the processing
 processXMLImport();
 
-const fotoDir = '../front/public/auto'
+const fotoDir = '../front/pub_auto'
 const xmlNames = [
     'AVTO_NIGNEKAMSK.xml',
     'AlfaAvto5_AMK.xml',
@@ -192,7 +192,6 @@ async function uploadAllPhotos(db) {
 
         console.timeEnd('🐾🐾🐾 Общее время оптимизации/копирования фоток')
 
-        // await uploadAllPhotos() // добавляем недостающие фотки (вдруг еще есть такие)
         // await unnecessaryPhoto(db) // удаляем ненужные фотки
 
         return'Готово'

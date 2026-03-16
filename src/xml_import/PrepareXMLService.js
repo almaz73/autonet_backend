@@ -140,7 +140,7 @@ class PrepareXMLService {
 
     async getOldPhotoToDelete() {
         try {
-            const fotoDir = '../front/public/auto'
+            const fotoDir = '../front/pub_auto'
 
             // Check if directory exists
             if (!fs.existsSync(fotoDir)) {
@@ -181,7 +181,7 @@ class PrepareXMLService {
 
     async getListExistPhoto() {
         try {
-            const fotoDir = '../front/public/auto'
+            const fotoDir = '../front/pub_auto'
 
             // Check if directory exists
             if (!fs.existsSync(fotoDir)) {
