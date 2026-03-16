@@ -36,7 +36,7 @@ class CityListService {
 
             if (result.images) {
                 result.images = result.images.split(',').map(url => url.trim())
-                result.images = result.images.map(el => 'pub_auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
+                result.images = result.images.map(el => '../../pub_auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
             }
             return result;
         } catch (error) {
@@ -69,86 +69,6 @@ class CityListService {
             return results;
         } catch (error) {
             console.error('Error retrieving car count by brand from a_car and a_section tables:', error.message);
-            throw error;
-        }
-    }
-
-    async getSpecials(city) {
-        const db = global.db
-        try {
-            let query;
-            let params;
-
-            if (city) {
-                // If city is provided, filter by specific city
-                //  language=SQLite
-                query = `
-                    SELECT ac.id,
-                           ac.prop_brand             as brand,
-                           ac.prop_model             as model,
-                           ac.prop_year              as yearReleased,
-                           ac.price,
-                           ac.prop_milleage          as milleage,
-                           ac.prop_power             as enginePower,
-                           ac.prop_engine_capacity   as engineCapacity,
-                           ac.prop_transmission_type as gearboxType,
-                           ac.prop_body_type         as bodyType,
-                           ac.prop_engine_type       as engineType,
-                           ac.prop_drive             as driveType,
-                           ac.prop_address           as fullAddress,
-                           ac.prop_color             as color,
-                           ac.prop_steering_wheel    as wheelType,
-                           ac.images
-                    FROM a_car ac
-                    WHERE prop_city = ?
-                      AND price > 400000
-                      AND price < 800000
-                    LIMIT 5
-                `;
-                params = [city];
-            } else {
-                // If no city is provided, return results from all cities
-                //  language=SQLite
-                query = `
-                    SELECT ac.id,
-                           ac.prop_brand             as brand,
-                           ac.prop_model             as model,
-                           ac.prop_year              as yearReleased,
-                           ac.price,
-                           ac.prop_milleage          as milleage,
-                           ac.prop_power             as enginePower,
-                           ac.prop_engine_capacity   as engineCapacity,
-                           ac.prop_transmission_type as gearboxType,
-                           ac.prop_body_type         as bodyType,
-                           ac.prop_engine_type       as engineType,
-                           ac.prop_drive             as driveType,
-                           ac.prop_address           as fullAddress,
-                           ac.prop_color             as color,
-                           ac.prop_steering_wheel    as wheelType,
-                           ac.images
-                    FROM a_car ac
-                    WHERE price > 400000
-                      AND price < 800000
-                    LIMIT 5
-                `;
-                params = [];
-            }
-
-            const results = await db.all(query, params);
-
-            results.map(el => {
-                try {
-                    el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
-                    el.images.length = 5
-                } catch (error) {
-                    console.error('Error parsing images for car ID ' + el.id + ':', error.message);
-                    el.images = [];
-                }
-            });
-
-            return results;
-        } catch (error) {
-            console.error('Error retrieving special cars from a_car table:', error.message);
             throw error;
         }
     }
@@ -405,11 +325,9 @@ class CityListService {
 
     async getImageLinksCount(withoutComments) {
         try {
-            let totalLinks = 0;
             let links = await this.getAllImageLinksFromBD()
-
             let group = links.length
-            totalLinks = links.length;
+            let totalLinks = links.length;
 
             if (!withoutComments) {
                 console.log('group', group)

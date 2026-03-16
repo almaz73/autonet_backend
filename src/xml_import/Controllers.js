@@ -12,7 +12,7 @@ class Controllers {
 
     async test(req, res) {
         try {
-            let ver = 'ВЕРСИЯ 16марта2026'
+            let ver = 'ВЕРСИЯ 4 версия (16марта)'
             console.log(`'   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${ver}`  )
             res.json(`' ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ${ver} ⚡ ⚡ ⚡`);
         } catch (error) {
@@ -84,7 +84,7 @@ class Controllers {
 
     async getSpecials(req, res) {
         try {
-            const list = await A_car.getSpecials(req.query.city)
+            const list = await GetListService.getSpecials(req.query.city)
             res.json(list);
         } catch (error) {
             console.error('Error getSpecials:', error);
