@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // const folderName = 'public/foto'
-const folderName = '../autonet/public/auto'
+const folderName = '../front/public/auto'
 
 
 class PreparePhotoService {

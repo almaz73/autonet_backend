@@ -42,7 +42,7 @@ async function processXMLImport() {
 // Start the processing
 processXMLImport();
 
-const fotoDir = '../autonet/public/auto'
+const fotoDir = '../front/public/auto'
 const xmlNames = [
     'AVTO_NIGNEKAMSK.xml',
     'AlfaAvto5_AMK.xml',
