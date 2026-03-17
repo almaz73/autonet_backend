@@ -7,14 +7,14 @@ import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
 import PreparePhotoService from "./PreparePhotoService.js";
 import { Worker } from 'worker_threads';
+import {Version} from "../constants.js";
 
 class Controllers {
 
     async test(req, res) {
         try {
-            let ver = 'ВЕРСИЯ 5 версия (17марта)'
-            console.log(`'   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${ver}`  )
-            res.json(`' ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ${ver} ⚡ ⚡ ⚡`);
+            console.log(`   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${Version}`  )
+            res.json(` ⚡ ⚡ ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ${Version}`);
         } catch (error) {
             console.error('Ошибка сервера:', error);
             res.status(500).json({

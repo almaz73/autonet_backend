@@ -27,7 +27,8 @@ class CreaterSmallBigPhoto {
 
             return '▙▟ Скопирована фоткa №' + placeInLine;
         } catch (error) {
-            return {error: error.message};
+
+            return {error: 'ЕСЛИ НЕТ ПАПКИ - ЭТО ЛОКАЛЬНЫЙ ТЕСТ:  '+ error.message};
         }
     }
 }

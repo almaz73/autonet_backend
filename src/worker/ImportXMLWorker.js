@@ -1,4 +1,5 @@
 import {parentPort, workerData} from 'worker_threads';
+import {FolderPhoto} from '../constants.js'
 import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import PrepareXMLService from "../xml_import/PrepareXMLService.js";
@@ -42,7 +43,6 @@ async function processXMLImport() {
 // Start the processing
 processXMLImport();
 
-const fotoDir = '../front/pub_auto'
 const xmlNames = [
     'AVTO_NIGNEKAMSK.xml',
     'AlfaAvto5_AMK.xml',
@@ -85,12 +85,12 @@ async function getListExistPhoto() {
 
 
         // Check if directory exists
-        if (!fs.existsSync(fotoDir)) {
-            console.log(`Directory does not exist: ${fotoDir}`);
+        if (!fs.existsSync(FolderPhoto)) {
+            console.log(`Directory does not exist: ${FolderPhoto}`);
             return [];
         }
 
-        const files = fs.readdirSync(fotoDir);
+        const files = fs.readdirSync(FolderPhoto);
         let links = {}
 
         console.log('!!!!!!! links.length = ', links.length)
@@ -184,7 +184,7 @@ async function uploadAllPhotos(db) {
 
                     addCount++
 
-                    let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, fotoDir);
+                    let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, FolderPhoto);
                     console.log(zz, '(', addCount, ')');
                 }
             }

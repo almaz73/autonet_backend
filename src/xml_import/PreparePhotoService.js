@@ -3,14 +3,11 @@ import path from "path";
 import fs from "fs";
 import {fileURLToPath} from 'url';
 import PrepareXMLService from "./PrepareXMLService.js";
-import A_car from "../API/A_car.js"; // Add this import to define __dirname
+import A_car from "../API/A_car.js";
+import {FolderPhoto} from "../constants.js"; // Add this import to define __dirname
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// const folderName = 'public/foto'
-const folderName = '../front/pub_auto'
-
 
 class PreparePhotoService {
 
@@ -66,11 +63,7 @@ class PreparePhotoService {
 
                         addCount++
 
-                        // if (addCount > 200) { // ТОДО временно ограничиваю на время разработки
-                        //     break
-                        // } // не более за раз
-
-                        let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, folderName);
+                        let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, FolderPhoto);
                         console.log(zz, '(', addCount, ')');
                     }
                 }
@@ -88,7 +81,7 @@ class PreparePhotoService {
     }
 
     async addNewPhoto(url, placeInLine) {
-        let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, folderName);
+        let zz = await PhotoSaver.savePhotoToServer(url, placeInLine, FolderPhoto);
         console.log('  ⚡ :::', zz);
     }
 
@@ -96,7 +89,7 @@ class PreparePhotoService {
         try {
             if (!filename) return {error: 'Filename is required'};
 
-            const uploadDir = path.join(__dirname, '../..', folderName);
+            const uploadDir = path.join(__dirname, '../..', FolderPhoto);
             const filePath = path.join(uploadDir, filename)
 
             if (fs.existsSync(filePath)) {
@@ -116,8 +109,8 @@ class PreparePhotoService {
         try {
 
             // Check if directory exists
-            if (!fs.existsSync(folderName)) {
-                console.log(`Directory does not exist: ${folderName}`);
+            if (!fs.existsSync(FolderPhoto)) {
+                console.log(`Directory does not exist: ${FolderPhoto}`);
                 return [];
             }
 
@@ -133,7 +126,7 @@ class PreparePhotoService {
                 //     break; // берем только первые несколько файлов
 
                 ['_small', '_big'].forEach( type=>{
-                    const filePath = path.join(folderName, file+type+'.webp');
+                    const filePath = path.join(FolderPhoto, file+type+'.webp');
 
                     try {
                         const stats = fs.statSync(filePath);
@@ -154,7 +147,7 @@ class PreparePhotoService {
 
             if(recentFiles) {
                 for (const filename of recentFiles) {
-                    await this.deleteFileByName(filename, folderName)
+                    await this.deleteFileByName(filename, FolderPhoto)
                 }
             }
 

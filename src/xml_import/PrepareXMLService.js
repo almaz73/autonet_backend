@@ -1,6 +1,7 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import {FolderPhoto, FolderXML} from "../constants.js";
 
 class PrepareXMLService {
     constructor() {
@@ -19,12 +20,11 @@ class PrepareXMLService {
 
     loadXmlUrlsFromPublic() {
         try {
-            const xmlDir = '../autonet/public/XML'
-            if (fs.existsSync(xmlDir)) {
-                const files = fs.readdirSync(xmlDir);
+            if (fs.existsSync(FolderXML)) {
+                const files = fs.readdirSync(FolderXML);
                 files.forEach(file => {
                     if (path.extname(file).toLowerCase() === '.xml') {
-                        this.xmlUrlsFromPublic.push(path.join(xmlDir, file));
+                        this.xmlUrlsFromPublic.push(path.join(FolderXML, file));
                     }
                 });
             }
@@ -35,9 +35,8 @@ class PrepareXMLService {
 
     async getXMLContent(xmlName) {
         console.log('      Заполняем базу из', xmlName)
-        const xmlDir = '../autonet/public/XML'
         let xmlData = '';
-        const filePath = path.join(xmlDir, xmlName);
+        const filePath = path.join(FolderXML, xmlName);
         const fileContent = fs.readFileSync(filePath, 'utf8');
         xmlData += fileContent; // Combine all XML files content
         return xmlData;
@@ -46,10 +45,9 @@ class PrepareXMLService {
     async saveXmlFilesToPublic() {
         try {
             // Create public/xml directory if it doesn't exist
-            const xmlDir = '../autonet/public/XML'
-            if (!fs.existsSync(xmlDir)) {
-                fs.mkdirSync(xmlDir, {recursive: true});
-                console.log(`Created directory: ${xmlDir}`);
+            if (!fs.existsSync(FolderXML)) {
+                fs.mkdirSync(FolderXML, {recursive: true});
+                console.log(`Created directory: ${FolderXML}`);
             }
 
             const savedFiles = [];
@@ -59,7 +57,7 @@ class PrepareXMLService {
                     // Extract filename from URL
                     const urlParts = xmlUrl.split('/');
                     const fileName = urlParts[urlParts.length - 1];
-                    const filePath = path.join(xmlDir, fileName);
+                    const filePath = path.join(FolderXML, fileName);
 
                     // Fetch the XML data from the URL
                     const response = await axios.get(xmlUrl, {
@@ -96,23 +94,22 @@ class PrepareXMLService {
     async getXmlFileDates() {
         console.log('getXmlFileDates ...........')
         try {
-            const xmlDir = '../autonet/public/XML'
 
             // Check if directory exists
-            if (!fs.existsSync(xmlDir)) {
-                console.log(`Directory does not exist: ${xmlDir}`);
+            if (!fs.existsSync(FolderXML)) {
+                console.log(`Directory does not exist: ${FolderXML}`);
                 return [];
             }
 
             // Read all files in the directory
-            const files = fs.readdirSync(xmlDir);
+            const files = fs.readdirSync(FolderXML);
 
             const xmlFilesWithDates = [];
 
             for (const file of files) {
                 // Only process XML files
                 if (path.extname(file).toLowerCase() === '.xml') {
-                    const filePath = path.join(xmlDir, file);
+                    const filePath = path.join(FolderXML, file);
 
                     try {
                         const stats = fs.statSync(filePath);
@@ -140,7 +137,7 @@ class PrepareXMLService {
 
     async getOldPhotoToDelete() {
         try {
-            const fotoDir = '../front/pub_auto'
+            const fotoDir = FolderPhoto
 
             // Check if directory exists
             if (!fs.existsSync(fotoDir)) {
@@ -181,7 +178,7 @@ class PrepareXMLService {
 
     async getListExistPhoto() {
         try {
-            const fotoDir = '../front/pub_auto'
+            const fotoDir = FolderPhoto
 
             // Check if directory exists
             if (!fs.existsSync(fotoDir)) {
