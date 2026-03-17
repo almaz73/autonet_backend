@@ -12,7 +12,7 @@ class Controllers {
 
     async test(req, res) {
         try {
-            let ver = 'ВЕРСИЯ 4 версия (16марта)'
+            let ver = 'ВЕРСИЯ 5 версия (17марта)'
             console.log(`'   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${ver}`  )
             res.json(`' ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ${ver} ⚡ ⚡ ⚡`);
         } catch (error) {

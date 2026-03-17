@@ -191,11 +191,19 @@ class PrepareXMLService {
 
             const files = fs.readdirSync(fotoDir);
             let links = {}
+            let linksSmall = {}
+            let linksBig = {}
 
             files.forEach(el => {
-                el = el.replace('_big.webp', '')
-                el = el.replace('_small.webp', '')
-                links[el] = 1
+                if(el.indexOf('_big.webp')>0)linksBig[el.slice(0, -9)] = 1
+            })
+
+            files.forEach(el => {
+                if(el.indexOf('_small.webp')>0)linksSmall[el.slice(0, -11)] = 1
+            })
+
+            Object.keys(linksBig).forEach(el=>{
+                if(linksSmall[el]) links[el] = 1
             })
 
             return Object.keys(links);
