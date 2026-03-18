@@ -41,6 +41,11 @@ class GetListService {
                 params.push(filter.city);
             }
 
+            if (filter.gearboxType) {
+                whereConditions.push('UPPER(ac.prop_transmission_type) = UPPER(?)');
+                params.push(filter.gearboxType)
+            }
+
             if (filter.yearReleasedFrom) {
                 whereConditions.push('ac.prop_year >= ?');
                 params.push(filter.yearReleasedFrom);
