@@ -1,5 +1,5 @@
 import {parentPort, workerData} from 'worker_threads';
-import {FolderPhoto} from '../constants.js'
+import {devMode, FolderPhoto} from '../constants.js'
 import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import PrepareXMLService from "../xml_import/PrepareXMLService.js";
@@ -10,6 +10,7 @@ import path from "path";
 import {findAndProcessCars, insertCars} from "../xml_import/ServiceCars.js";
 import PhotoSaver from "../xml_import/CreaterSmallBigPhoto.js";
 import fs from "fs";
+import {sendTelegram} from "../telegramReport.js";
 
 async function processXMLImport() {
     try {
@@ -43,7 +44,7 @@ async function processXMLImport() {
 // Start the processing
 processXMLImport();
 
-const xmlNames = [
+let xmlNames = [
     'AVTO_NIGNEKAMSK.xml',
     'AlfaAvto5_AMK.xml',
     'AlfaAvto5_Astrahan.xml',
@@ -51,6 +52,8 @@ const xmlNames = [
     'alfa5_gktm.xml',
     'alfa-trade.xml'
 ];
+if (devMode) xmlNames = ['alfa-trade.xml']
+
 
 
 async function getAllImageLinksFromBD() {
@@ -172,6 +175,9 @@ async function uploadAllPhotos(db) {
                 imageArray = car.images.split(',').map(url => url.trim());
 
                 let placeInLine = 0
+
+                if(devMode) imageArray.length =2
+
                 for (const url of imageArray) {
                     count++
                     placeInLine++
@@ -521,9 +527,9 @@ async function importXmlData(db) {
     try {
         console.time('⚡ Общее время обновления')
 
-        await PrepareXMLService.saveXmlFilesToPublic() // копируем к себе из интернета TODO Потом включить
+        if (!devMode) await PrepareXMLService.saveXmlFilesToPublic()
         await PreliminaryTables.clearTables(db);
-        await PreliminaryTables.createTables(db); // почистили старые предварительные базы
+        await PreliminaryTables.createTables(db);
 
         let textForReport = ''
 
@@ -558,12 +564,12 @@ async function importXmlData(db) {
 
 
         const newLinksWithPhoto = newPhotos.filter(link => !oldPhotos.includes(link));
-        console.log('⚡ ::: >>> >>> >>> >>> >>> >>> Новые фотки:', newLinksWithPhoto.length)
-        textForReport += '>>> Новые фотки: ' + newLinksWithPhoto.length
+        console.log('⚡ ::: >>> >>> >>> >>> >>> >>> Новые фото:', newLinksWithPhoto.length)
+        textForReport += '>>> Новые фото: ' + newLinksWithPhoto.length
 
 
-        if (newLinksWithPhoto.length) {
-            console.log('⚡ ::: Забираем к себе новые фотки:')
+        if (newLinksWithPhoto.length && !devMode) {
+            console.log('⚡ ::: Забираем к себе Новые фото:')
             let placeInLine = 0
             for (const url of newLinksWithPhoto) {
                 placeInLine++
@@ -585,10 +591,12 @@ async function importXmlData(db) {
 
         // Находим устаревшие ссылки (которые есть в oldLinks, но нет в newLinks)
         const staleLinksWithPhoto = oldPhotos.filter(link => !newPhotos.includes(link));
-        console.log('⚡ ::: Фоток на удаление:', staleLinksWithPhoto.length)
-        textForReport += '⚡ ::: Фоток на удаление (по данным баз): ' + staleLinksWithPhoto.length + ' ::: ⚡ ' + new Date().toLocaleDateString()
+        console.log('  ⚡ ::: Фото на удаление:', staleLinksWithPhoto.length)
+        textForReport += '  ⚡ ::: Фото на удаление (по XML): '
+            + staleLinksWithPhoto.length + ' ::: ⚡ '
+            + new Date().toLocaleDateString('ru') +' '+ new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 
-        if (staleLinksWithPhoto.length) {
+        if (staleLinksWithPhoto.length && !devMode) {
             console.log('⚡ ::: Удаляем фотки')
             let placeInLine = 0
             for (const url of staleLinksWithPhoto) {
@@ -616,10 +624,9 @@ async function importXmlData(db) {
         console.log(' ')
         console.log('▼ Дополнительно проверяю и добрасываю недостающие фотки ▼')
 
-        uploadAllPhotos(db) // записывание обработанных фоток к себе только недобавленые
+        if (!devMode) uploadAllPhotos(db) // записывание обработанных фоток к себе только недобавленые
 
-        // */
-
+        sendTelegram(textForReport)
         return textForReport;
     } catch (error) {
         console.error('Error fetching XML data:', error.message);

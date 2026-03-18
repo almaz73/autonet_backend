@@ -4,7 +4,7 @@ import fs from "fs";
 import {fileURLToPath} from 'url';
 import PrepareXMLService from "./PrepareXMLService.js";
 import A_car from "../API/A_car.js";
-import {FolderPhoto} from "../constants.js"; // Add this import to define __dirname
+import {devMode, FolderPhoto} from "../constants.js"; // Add this import to define __dirname
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,6 +49,9 @@ class PreparePhotoService {
                 if (car.images) {
                     let imageArray = [];
                     imageArray = car.images.split(',').map(url => url.trim());
+
+
+                    if (devMode) imageArray.length = 2
 
                     let placeInLine = 0
                     for (const url of imageArray) {

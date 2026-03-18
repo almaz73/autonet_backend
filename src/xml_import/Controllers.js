@@ -6,14 +6,14 @@ import GetListService from "../API/GetListService.js";
 import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
 import PreparePhotoService from "./PreparePhotoService.js";
-import { Worker } from 'worker_threads';
+import {Worker} from 'worker_threads';
 import {Version} from "../constants.js";
 
 class Controllers {
 
     async test(req, res) {
         try {
-            console.log(`   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${Version}`  )
+            console.log(`   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${Version}`)
             res.json(` ⚡ ⚡ ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ${Version}`);
         } catch (error) {
             console.error('Ошибка сервера:', error);
@@ -26,23 +26,59 @@ class Controllers {
 
     async workerImportXML(req, res) {
         try {
+            // Store the response data to build a report
+            let responseData = null;
+            let hasCompleted = false;
+
             const worker = new Worker('./src/worker/ImportXMLWorker.js');
 
             worker.on('message', (message) => {
-                console.log('!!!! Worker message:', message);
-                res.json('Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился: '+message.message);
+                // console.log('!!!! Worker message:', message);
+                responseData = message;
+
+                // Only send response if worker has completed successfully
+                if (message.status === 'COMPLETE' && !hasCompleted) {
+                    hasCompleted = true;
+                    try {
+                        res.json({
+                            success: true,
+                            message: 'Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился',
+                            data: message.message
+                        });
+                    } catch (e) {
+                        return message.message
+                    }
+                }
             });
 
             worker.on('error', (error) => {
                 console.error('Worker error:', error);
-                res.json(error)
+                if (!hasCompleted) {
+                    hasCompleted = true;
+                    res.status(500).json({
+                        success: false,
+                        error: error.message,
+                        message: 'Worker error occurred'
+                    });
+                }
             });
 
             worker.on('exit', (code) => {
-                if (code !== 0) {
-                    console.error(`Worker stopped with exit code ${code}`);
-                } else {
-                    console.log('Worker completed successfully');
+                if (code !== 0 && !hasCompleted) {
+                    hasCompleted = true;
+                    res.status(500).json({
+                        success: false,
+                        error: `Worker stopped with exit code ${code}`,
+                        message: `Worker stopped with exit code ${code}`
+                    });
+                } else if (code === 0 && !hasCompleted && responseData) {
+                    // In case COMPLETE message wasn't received but worker exited normally
+                    hasCompleted = true;
+                    res.json({
+                        success: true,
+                        message: 'Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился',
+                        data: responseData.message
+                    });
                 }
             });
 
@@ -59,7 +95,7 @@ class Controllers {
         console.log('  import XML ⚡ start ⚡ start ⚡ start ⚡ start ⚡ start ⚡')
         try {
             const result = await ImportService.importXmlData(global.db);
-            res.json(' БАЗА ОБНОВЛЕНА '+result);
+            res.json(' БАЗА ОБНОВЛЕНА ' + result);
         } catch (error) {
             console.error('Ошибка импорта XML:', error);
             res.status(500).json({
@@ -68,8 +104,6 @@ class Controllers {
             });
         }
     }
-
-
 
 
     async getList(req, res) {
@@ -239,8 +273,8 @@ class Controllers {
     async checkDuplicateVINs(req, res) {
         console.log('⚡ Есть ли дубликаты VIN ?...')
         try {
-            let list= await A_car.checkDuplicateVINs()
-            console.log('⚡ '+list)
+            let list = await A_car.checkDuplicateVINs()
+            console.log('⚡ ' + list)
             res.json(list);
         } catch (error) {
             console.error('Error checkDuplicateVINs:', error);
@@ -251,7 +285,7 @@ class Controllers {
     async saveXmlFilesToPublic(req, res) {
         console.log('⚡ Сохраним XML к себе ...')
         try {
-            let list= await PrepareXMLService.saveXmlFilesToPublic()
+            let list = await PrepareXMLService.saveXmlFilesToPublic()
             res.json(list);
         } catch (error) {
             console.error('Error saveXmlFilesToPublic:', error);
@@ -261,7 +295,7 @@ class Controllers {
 
     async getOldPhotoToDelete(req, res) {
         try {
-            let list= await PrepareXMLService.getOldPhotoToDelete()
+            let list = await PrepareXMLService.getOldPhotoToDelete()
             res.json(list);
         } catch (error) {
             console.error('Error getOldPhotoToDelete:', error);
@@ -271,7 +305,7 @@ class Controllers {
 
     async getListExistPhoto(req, res) {
         try {
-            let list= await PrepareXMLService.getListExistPhoto()
+            let list = await PrepareXMLService.getListExistPhoto()
             res.json(list);
         } catch (error) {
             console.error('Error getListExistPhoto:', error);
@@ -281,7 +315,7 @@ class Controllers {
 
     async unnecessaryPhoto(req, res) {
         try {
-            let list= await PreparePhotoService.unnecessaryPhoto()
+            let list = await PreparePhotoService.unnecessaryPhoto()
             res.json(list);
         } catch (error) {
             console.error('Error getListExistPhoto:', error);
