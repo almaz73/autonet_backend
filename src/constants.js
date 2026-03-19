@@ -1,4 +1,4 @@
-export const Version = '18.03.2026, ver.1.7.3 запуск worker'
+export const Version = '18.03.2026, ver.1.7.4 worker заработал'
 
 export const devMode = false // для тестирования
 
