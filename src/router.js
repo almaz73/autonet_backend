@@ -1,7 +1,35 @@
 import Router from 'express'
 import Controllers from "./xml_import/Controllers.js";
+import multer from "multer";
 
 const router = new Router()
+
+// Configure multer for file uploads with appropriate limits
+class MulterConfig {
+    static getUpload() {
+        const storage = multer.memoryStorage();
+        
+        const fileFilter = (req, file, cb) => {
+            // Allow all file types for attachments
+            cb(null, true);
+        };
+        
+        const limits = {
+            fileSize: 10 * 1024 * 1024, // 10MB limit
+            fieldSize: 10 * 1024 * 1024, // 10MB field size
+            fields: 10, // Max number of non-file fields
+            parts: 100 // Max number of parts (files + fields)
+        };
+        
+        return multer({ 
+            storage: storage,
+            fileFilter: fileFilter,
+            limits: limits
+        });
+    }
+}
+
+const upload = MulterConfig.getUpload();
 
 
 router.get('/getList', Controllers.getList)
@@ -20,7 +48,7 @@ router.get('/getColorList', Controllers.getColorList)
 router.get('/getYearGap', Controllers.getYearGap)
 
 router.post('/postEmail', Controllers.postEmail)
-router.post('/postEmailWithAttachement', Controllers.postEmailWithAttachement)
+router.post('/postEmailWithAttachement', upload.single('file'), Controllers.postEmailWithAttachement)
 
 router.get('/test', Controllers.test)
 router.get('/import-xml', Controllers.importXML) // загрузка xml в папку, заполнение БД, добавление фоток по ссылкам, удаление лишних фоток
