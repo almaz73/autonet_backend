@@ -7,7 +7,8 @@ import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
 import PreparePhotoService from "./PreparePhotoService.js";
 import {Worker} from 'worker_threads';
-import {Version} from "../constants.js";
+import {Version, receivedDataTypes} from "../constants.js";
+import {transporter} from "../nodemailer.js";
 
 class Controllers {
 
@@ -246,6 +247,47 @@ class Controllers {
             console.error('Error getYearGap:', error);
             res.status(500).json({error: error.message});
         }
+    }
+
+    async postEmail(req, res) {
+        try {
+            const receivedData = req.body; // Данные находятся в req.body
+
+            let result = await transporter.sendMail({
+                from: 'autoset_info@cartat.ru',
+                to: 'autoset_info@cartat.ru, ',
+                subject: receivedDataTypes[receivedData.type],
+                html:
+                    'This <i>message</i> was sent from <strong>Node.js</strong> server.',
+            });
+
+            // Отправка ответа клиенту
+            res.status(200).json({
+                message: 'Данные успешно получены',
+                data: result
+            });
+        } catch (error) {
+            console.error('Error postEmail:', error);
+            res.status(500).json({error: error.message});
+        }
+
+    }
+
+    async postEmailWithAttachement(req, res) {
+        try {
+            const receivedData = req.body; // Данные находятся в req.body
+            console.log('22222 postEmailWithAttachement данные:', receivedData);
+
+            // Отправка ответа клиенту
+            res.status(200).json({
+                message: 'Данные успешно получены',
+                data: receivedData
+            });
+        } catch (error) {
+            console.error('Error postEmailWithAttachement:', error);
+            res.status(500).json({error: error.message});
+        }
+
     }
 
     async getImageLinksCount(req, res) {

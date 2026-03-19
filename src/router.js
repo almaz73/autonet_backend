@@ -19,6 +19,9 @@ router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
 router.get('/getYearGap', Controllers.getYearGap)
 
+router.post('/postEmail', Controllers.postEmail)
+router.post('/postEmailWithAttachement', Controllers.postEmailWithAttachement)
+
 router.get('/test', Controllers.test)
 router.get('/import-xml', Controllers.importXML) // загрузка xml в папку, заполнение БД, добавление фоток по ссылкам, удаление лишних фоток
 router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние фотки в папке, которых уже нет в базе
