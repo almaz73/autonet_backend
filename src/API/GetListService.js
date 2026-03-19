@@ -189,6 +189,7 @@ class GetListService {
                            ac.prop_drive             as driveType,
                            ac.prop_address           as fullAddress,
                            ac.prop_color             as color,
+                           ac.prop_city              as city,
                            ac.prop_steering_wheel    as wheelType,
                            ac.images
                     FROM a_car ac
