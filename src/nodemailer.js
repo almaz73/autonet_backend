@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 export const transporter = nodemailer.createTransport({
-    host: '213.159.206.196',//'mx.orange.local',
+    host: 'mx.orange.local',//'213.159.206.196',//'mx.orange.local',
     port: 587,
     auth: {
         user: 'autoset_info@cartat.ru',
