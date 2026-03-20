@@ -255,7 +255,7 @@ class Controllers {
 
             let result = await transporter.sendMail({
                 from: 'autoset_info@cartat.ru',
-                to: 'autoset_info@cartat.ru, ',
+                to: 'a.fayzrakhmanov@cartat.ru, ',
                 subject: receivedDataTypes[receivedData.type],
                 html:
                     'This <i>message</i> was sent from <strong>Node.js</strong> server.',
@@ -263,7 +263,7 @@ class Controllers {
 
             // Отправка ответа клиенту
             res.status(200).json({
-                message: 'Данные успешно получены',
+                message: 'Данные успешно получены. Почта',
                 data: result
             });
         } catch (error) {
