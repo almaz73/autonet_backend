@@ -1,4 +1,3 @@
-import PrepareXMLService from "../xml_import/PrepareXMLService.js";
 import fs from "fs";
 import {devMode, FolderXML, xmlUrls} from "../constants.js";
 import path from "path";

@@ -1,6 +1,3 @@
-import PreliminaryTables from "../xml_import/PreliminaryTables.js";
-import A_car from "../API/A_car.js";
-
 async function deleteFromTableIfExists(db, tableName) {
     try {
         // Check if the table exists
@@ -60,7 +57,9 @@ async function copyTableData(db, sourceTable, targetTable) {
         // Don't throw the error, just log it to allow the process to continue
     }
 }
-async function copyToInfoTables(db) {
+export async function publicBD(db) {
+    console.log('⚡ Публикуем обновленную базу ')
+    console.log('⚡ ====================================')
     try {
         await deleteFromTableIfExists(db, 'a_car');
         await deleteFromTableIfExists(db, 'a_section');
@@ -118,13 +117,4 @@ async function copyToInfoTables(db) {
     } catch (error) {
         return 'Error copying data to info tables:' + error.message;
     }
-}
-
-export async function publicBD(db) {
-    // тут обновляем базы из временных в работающие
-    console.log('⚡ Публикуем обновленную базу ')
-    console.log('⚡ ====================================')
-    let res = await copyToInfoTables(db);
-    return res
-    // тут нужно будет удалять кэш, если был
 }
