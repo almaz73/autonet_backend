@@ -1,4 +1,4 @@
-export const Version = 'ver.1.7.6 steps_1'
+export const Version = 'ver.1.7.7 steps_upload'
 
 export const devMode = false // для тестирования
 

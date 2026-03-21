@@ -1,7 +1,5 @@
 export function sendTelegram(message) {
-    console.log('TELEGRAM  SEND message = ', message)
-
-    message += ' :::ver.1.7.5::: ' + message
+    // console.log('TELEGRAM  SEND message = ', message)
 
     let botId = 'bot8235288635:AAF_soJaYR8OPHAQrpfcF4FDUr2JjRRDlVw';
     let chatId = '-5064627941';

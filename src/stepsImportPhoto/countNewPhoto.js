@@ -59,5 +59,5 @@ export async function countNewPhoto(db) {
     let oldPhotos = await getOldLinks(db)
 
     const newLinksWithPhoto = newPhotos.filter(link => !oldPhotos.includes(link));
-    return '⚡ Удачно. Потребуется загрузить новые фото: ' + newLinksWithPhoto.length
+    return newLinksWithPhoto
 }
