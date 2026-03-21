@@ -244,6 +244,13 @@ class GetListService {
 
             results.map(el => {
                 try {
+                    if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity / 1000)
+                    if (el.gearboxType) {
+                        if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
+                        if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
+                        if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
+                        if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
+                    }
                     el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
                     el.images.length = 5
                     el.images = el.images.map(item => '../../pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
