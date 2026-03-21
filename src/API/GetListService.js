@@ -4,7 +4,7 @@ class GetListService {
         const limit = filter.limit || 10; // Default limit
         const offset = filter.offset || 0; // Default offset
 
-        console.log('filter', filter)
+        console.log('>>> filter ', filter)
 
         const db = global.db;
         try {
@@ -120,7 +120,22 @@ class GetListService {
             let query = baseQuery;
 
             if (whereConditions.length > 0) {
-                query += 'WHERE ' + whereConditions.join(' AND ');
+                query += ' WHERE ' + whereConditions.join(' AND ');
+            }
+
+            // Add price sorting if priceOrder parameter is present
+            if (filter.priceOrder !== undefined && filter.priceOrder !== '') {
+                // Convert priceOrder to boolean if it's a string
+                const isDescending = (filter.priceOrder === 'true' || 
+                                     filter.priceOrder === true || 
+                                     filter.priceOrder === 'desc' || 
+                                     filter.priceOrder === 'DESC') ? true : false;
+                
+                if (isDescending) {
+                    query += ' ORDER BY ac.price DESC'; // Sort from expensive to cheap
+                } else {
+                    query += ' ORDER BY ac.price ASC'; // Sort from cheap to expensive
+                }
             }
 
             // Add pagination
@@ -128,7 +143,6 @@ class GetListService {
             params.push(limit, offset);
 
             // Execute the query with the parameters
-            console.log('params', params)
             const items = await db.all(query, params);
 
             items.map(el => {
