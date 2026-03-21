@@ -1,4 +1,4 @@
-export const Version = '18.03.2026, ver.1.7.4 worker заработал'
+export const Version = 'ver.1.7.6 steps_1'
 
 export const devMode = false // для тестирования
 
@@ -20,4 +20,28 @@ export const receivedDataTypes = {
     '13': 'Сервисное обслуживание',
     '15': 'Письмо ген. директору',
     '17': 'Автострахование'
+}
+
+export let xmlUrls = [
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
+];
+export let xmlNames = [
+    'AVTO_NIGNEKAMSK.xml',
+    'AlfaAvto5_AMK.xml',
+    'AlfaAvto5_Astrahan.xml',
+    'AlfaAvto5_Tver.xml',
+    'alfa5_gktm.xml',
+    'alfa-trade.xml'
+];
+
+export function getTime() {
+    return new Date().toLocaleDateString('ru') + ' ' + new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    }) + ' '
 }
