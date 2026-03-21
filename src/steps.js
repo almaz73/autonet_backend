@@ -63,7 +63,7 @@ if (report.indexOf('успешно') < 0) {
     reportForTelegram += '☹  ☹  ☹ FAILED'
 }
 
-console.log('REPORT \n\n' + report)
+console.log('\n' + report)
 sendTelegram(reportForTelegram)
 
 if (newLinksWithPhoto.length) {

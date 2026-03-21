@@ -9,7 +9,7 @@ export function sendTelegram(message) {
         fetch(linkTelega)
             .then(response => response.json())
             .then(() => {
-                console.log('сообщение доставлено = ')
+                // console.log('сообщение доставлено = ')
             });
     } catch (e) {
         console.log('Ошибка. ТЕЛЕГРАММ НЕ ОТПРАВИЛСЯ')
