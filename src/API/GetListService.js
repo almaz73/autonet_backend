@@ -217,7 +217,7 @@ class GetListService {
                     WHERE prop_city = ?
                       AND price > 400000
                       AND price < 800000
-                    LIMIT 5
+                    LIMIT 15
                 `;
                 params = [city];
             } else {
@@ -237,37 +237,47 @@ class GetListService {
                            ac.prop_drive             as driveType,
                            ac.prop_address           as fullAddress,
                            ac.prop_color             as color,
+                           ac.prop_city              as city,
                            ac.prop_steering_wheel    as wheelType,
                            ac.images
                     FROM a_car ac
                     WHERE price > 400000
                       AND price < 800000
-                    LIMIT 5
+                    LIMIT 15
                 `;
                 params = [];
             }
 
             const results = await db.all(query, params);
+            const uniqueBrands = new Set();
+            const uniqueResults = [];
 
-            results.map(el => {
-                try {
-                    if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity / 1000)
-                    if (el.gearboxType) {
-                        if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
-                        if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
-                        if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
-                        if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
+            for (const el of results) {
+                const brandKey = `${el.brand}`;
+                try{
+                    if (!uniqueBrands.has(brandKey)) {
+                        uniqueBrands.add(brandKey);
+                        uniqueResults.push(el);
+
+                        if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity / 1000)
+                        if (el.gearboxType) {
+                            if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
+                            if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
+                            if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
+                            if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
+                        }
+                        el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
+                        el.images.length = 5
+                        el.images = el.images.map(item => '../../pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
                     }
-                    el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
-                    el.images.length = 5
-                    el.images = el.images.map(item => '../../pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
                 } catch (error) {
                     console.error('Error parsing images for car ID ' + el.id + ':', error.message);
                     el.images = [];
                 }
-            });
+            }
 
-            return results;
+            uniqueResults.length = 5
+            return uniqueResults;
         } catch (error) {
             console.error('Error retrieving special cars from a_car table:', error.message);
             throw error;

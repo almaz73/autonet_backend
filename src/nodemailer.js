@@ -1,16 +1,24 @@
 import nodemailer from "nodemailer";
 
 export const transporter = nodemailer.createTransport({
-    // host: 'email.cartat.ru',
-    // host: '213.159.206.196',
-    host: 'mx.orange.local',
+    // host: 'mx.orange.local',
+    // secure: false,
+    // port: 587,
+    // tls: { rejectUnauthorized: false },
+    // auth: {
+    //     user: 'autoset_info@cartat.ru',
+    //     pass: 'Xx0nx75hL',
+    // },
+
+    host: 'email.cartat.ru', // Адрес SMTP сервера
+    // port: 465,                // Порт (465 - SSL, 587 - TLS)
+    // secure: true,             // true для 465, false для 587
     secure: false,
     port: 587,
-    tls: { rejectUnauthorized: false },
     auth: {
         user: 'autoset_info@cartat.ru',
         pass: 'Xx0nx75hL',
-    },
+    }
 });
 
 // let result = await transporter.sendMail({
