@@ -7,8 +7,7 @@ import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
 import PreparePhotoService from "./PreparePhotoService.js";
 import {Worker} from 'worker_threads';
-import {Version, receivedDataTypes} from "../constants.js";
-import {transporter} from "../nodemailer.js";
+import {Version} from "../constants.js";
 
 class Controllers {
 
