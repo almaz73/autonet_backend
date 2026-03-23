@@ -3,6 +3,29 @@ import {receivedDataTypes} from "../constants.js";
 
 class Post {
     async postEmail(req, res) {
+        try {
+            const receivedData = req.body; // Данные находятся в req.body
+
+            let result = await transporter.sendMail({
+                from: 'autoset_info@cartat.ru',
+                to: 'a.fayzrakhmanov@cartat.ru, ',
+                subject: receivedDataTypes[receivedData.type],
+                html:
+                    '333 This <i>message</i> was sent from <strong>Node.js</strong> server.',
+            });
+
+            // Отправка ответа клиенту
+            res.status(200).json({
+                message: 'Данные успешно получены',
+                data: result
+            });
+        } catch (error) {
+            console.error('Error postEmail:', error);
+            res.status(500).json({error: error.message});
+        }
+
+    }
+    /*async postEmail(req, res) {
 
         console.log('111111111111 = ', 111111111111)
         try {
@@ -13,7 +36,7 @@ class Post {
 
             let result = await transporter.sendMail({
                 from: 'autoset_info@cartat.ru',
-                to: 'a.fayzrakhmanov@cartat.ru, ',
+                to: 'a.fayzrakhmanov@cartat.ru',
                 subject: receivedDataTypes[receivedData.type],
                 html: '!!!!! С обновленного сайта' + receivedData.text
             });
@@ -30,7 +53,7 @@ class Post {
             res.status(500).json({error: error.message});
         }
 
-    }
+    }*/
 
     async postEmailWithAttachement(req, res) {
         try {
@@ -52,7 +75,7 @@ class Post {
             // Prepare email with attachment
             let mailOptions = {
                 from: 'autoset_info@cartat.ru',
-                to: 'autoset_info@cartat.ru',
+                to: 'a.fayzrakhmanov@cartat.ru',
                 subject: receivedData.subject || 'Email with attachment',
                 text: receivedData.text || 'Email with attachment',
                 html: receivedData.html || '<p>Email with attachment</p>',
