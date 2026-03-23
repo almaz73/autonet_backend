@@ -2,7 +2,6 @@ import express from 'express'
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
-import fileUpload from 'express-fileupload';
 
 
 // const HOST = '127.0.0.1'; // Привязка
@@ -13,7 +12,6 @@ const app = express()
 
 app.use(express.json())
 app.use(express.static('static'))
-app.use(fileUpload({}))
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
