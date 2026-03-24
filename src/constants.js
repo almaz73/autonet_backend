@@ -1,4 +1,4 @@
-export const Version = 'ver.2.0.8'
+export const Version = 'ver.2.1.3'
 
 export const devMode = false // для тестирования
 

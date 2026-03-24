@@ -8,11 +8,9 @@ class Post {
         try {
             const receivedData = req.body; // Данные находятся в req.body
 
-            console.log('receivedData.text = ', receivedData.text)
-
             let result = await transporterYandex.sendMail({
                 from: 'almaz73@yandex.ru',
-                to: 'autoset_info@cartat.ru',
+                to: 'autoset_info@cartat.ru, almaz73@yandex.ru',//'almaz73@gmail.com',
                 subject: receivedDataTypes[receivedData.type],
                 text: receivedData.text
             });
@@ -32,8 +30,7 @@ class Post {
     async postEmailWithAttachementYa(req, res) {
         try {
             // Check if file was uploaded
-            if (!req.file) return res.status(400).json({error: 'No file uploaded'});
-
+            if (!req.file) return res.status(400).json({error: 'Нет прикрепленного файла'});
 
             // Log file information
             console.log('УДАЧА File info:', {
@@ -42,17 +39,14 @@ class Post {
                 mimetype: req.file.mimetype
             });
 
-            console.log('req.file.buffer = ', req.file.buffer)
-
             const receivedData = req.body;
-            console.log('Received data:', receivedData);
 
             // Prepare email with attachment
             let mailOptions = {
                 from: 'almaz73@yandex.ru',
-                to: 'autoset_info@cartat.ru',
+                to: 'autoset_info@cartat.ru, almaz73@yandex.ru',//'autoset_info@cartat.ru',
                 subject: receivedDataTypes[receivedData.type],
-                text: receivedData.text || 'Email with attachment',
+                text: receivedData.text,
                 attachments: [
                     {
                         filename: req.file.originalname,
@@ -67,7 +61,7 @@ class Post {
 
             // Send response to client
             res.status(200).json({
-                message: 'Email with attachment sent successfully',
+                message: 'Письмо с прикрепленным файлом удачно доставлено',
                 data: {
                     fileInfo: {
                         originalName: req.file.originalname,
@@ -83,7 +77,7 @@ class Post {
             // Handle specific multer errors
             if (error.code === 'LIMIT_FILE_SIZE') {
                 return res.status(400).json({
-                    error: 'File too large. Maximum size is 10MB.'
+                    error: 'Размер прикрепленного файла не должен превышать 30MB.'
                 });
             }
 
@@ -97,7 +91,7 @@ class Post {
         }
     }
 
-    async postEmail(req, res) {
+    /*async postEmail(req, res) {
         try {
             const receivedData = req.body; // Данные находятся в req.body
 
@@ -119,39 +113,9 @@ class Post {
             res.status(500).json({error: error.message});
         }
 
-    }
-
-    /*async postEmail(req, res) {
-
-        console.log('111111111111 = ', 111111111111)
-        try {
-            const receivedData = req.body; // Данные находятся в req.body
-
-            console.log('postEmail req.body= ', req.body)
-            console.log('Тема письма = ', receivedDataTypes[receivedData.type])
-
-            let result = await transporter.sendMail({
-                from: 'autoset_info@cartat.ru',
-                to: 'a.fayzrakhmanov@cartat.ru',
-                subject: receivedDataTypes[receivedData.type],
-                html: '!!!!! С обновленного сайта' + receivedData.text
-            });
-
-            console.log('УДАЧНО result = ', result)
-
-            // Отправка ответа клиенту
-            res.status(200).json({
-                message: 'Данные успешно получены. Почта',
-                data: result
-            });
-        } catch (error) {
-            console.error('Error postEmail:', error);
-            res.status(500).json({error: error.message});
-        }
-
     }*/
 
-    async postEmailWithAttachement(req, res) {
+    /*async postEmailWithAttachement(req, res) {
         try {
             console.log('postEmailWithAttachement req= ', req)
             // Check if file was uploaded
@@ -217,7 +181,7 @@ class Post {
 
             res.status(500).json({error: error.message});
         }
-    }
+    }*/
 }
 
 export default new Post();

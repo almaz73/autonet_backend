@@ -17,8 +17,8 @@ export const transporter = nodemailer.createTransport({
     // secure: false,
     // port: 25,
     auth: {
-        user: 'autoset_info@cartat.ru',
-        pass: 'Xx0nx75hL',
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
     },
 });
 
