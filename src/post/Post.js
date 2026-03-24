@@ -50,7 +50,7 @@ class Post {
             // Prepare email with attachment
             let mailOptions = {
                 from: 'almaz73@yandex.ru',
-                to: 'almaz73@gmail.com', //'autoset_info@cartat.ru',
+                to: 'autoset_info@cartat.ru',
                 subject: receivedDataTypes[receivedData.type],
                 text: receivedData.text || 'Email with attachment',
                 attachments: [
@@ -63,7 +63,7 @@ class Post {
             };
 
             // Send email with attachment
-            let result = await transporter.sendMail(mailOptions);
+            let result = await transporterYandex.sendMail(mailOptions);
 
             // Send response to client
             res.status(200).json({

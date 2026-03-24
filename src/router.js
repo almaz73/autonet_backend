@@ -8,17 +8,23 @@ const router = new Router()
 // Configure multer for file uploads with appropriate limits
 class MulterConfig {
     static getUpload() {
+        //Use memory storage for file uploads
         const storage = multer.memoryStorage();
+
+        // Allow all file types
         const fileFilter = (req, file, cb) => {
-            // Allow all file types for attachments
             cb(null, true);
         };
+
+        // Set file size limits
         const limits = {
-            fileSize: 10 * 1024 * 1024, // 10MB limit
+            fileSize: 30 * 1024 * 1024, // 30MB limit
             fieldSize: 10 * 1024 * 1024, // 10MB field size
             fields: 10, // Max number of non-file fields
             parts: 100 // Max number of parts (files + fields)
         };
+
+        // Configuremulter
         return multer({
             storage: storage,
             fileFilter: fileFilter,
