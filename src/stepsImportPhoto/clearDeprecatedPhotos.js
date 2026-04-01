@@ -10,7 +10,6 @@ async function getListExistPhoto() {
     try {
         const fotoDir = FolderPhoto
 
-        // Check if directory exists
         if (!fs.existsSync(fotoDir)) {
             console.log(`Directory does not exist: ${fotoDir}`);
             return [];
@@ -18,19 +17,11 @@ async function getListExistPhoto() {
 
         const files = fs.readdirSync(fotoDir);
         let links = {}
-        let linksSmall = {}
-        let linksBig = {}
 
-        files.forEach(el => {
-            if(el.indexOf('_big.webp')>0)linksBig[el.slice(0, -9)] = 1
-        })
-
-        files.forEach(el => {
-            if(el.indexOf('_small.webp')>0)linksSmall[el.slice(0, -11)] = 1
-        })
-
-        Object.keys(linksBig).forEach(el=>{
-            if(linksSmall[el]) links[el] = 1
+        files.forEach(el=>{
+            if(el.indexOf('_big.webp')!==-1) links[el.slice(0,-9)]=1
+            else if(el.indexOf('_small.webp')!==-1) links[el.slice(0,-11)]=1
+            else links[el.slice(0,-5)]=1
         })
 
         return Object.keys(links);
@@ -51,7 +42,7 @@ async function deleteFileByName(filename) {
             await fs.promises.unlink(filePath);
             console.log(`       👻  ${filename} - удален`)
         } else {
-            console.log(`👻 👻 👻  File ${filename} не существует`)
+            // console.log(`👻 👻 👻  File ${filename} не существует`)
         }
     } catch (error) {
         console.log('Error deleting file:', error.message)
@@ -71,11 +62,12 @@ async function prepareUnnecesaryPhotoForDelete(deprecatedPhoto) {
         const recentFiles = [];
 
         for (const file of deprecatedPhoto) {
-            ['_small', '_big'].forEach( type=>recentFiles.push(file+type+'.webp'))
+
+            ['_small', '_big', ''].forEach( type=>recentFiles.push(file+type+'.webp'))
         }
 
-        console.log(` 👻 👻 👻 Эти файлы на удаление `, recentFiles.length);
-        console.log(` 👻 👻 👻 Все! `);
+        // console.log(` 👻 👻 👻 Эти файлы на удаление `, recentFiles.length);
+        // console.log(` 👻 👻 👻 Все! `);
 
         if (recentFiles) {
             for (const filename of recentFiles) {
@@ -117,21 +109,24 @@ export async function clearDeprecatedPhotos(db) {
     try {
 
         // беру список файлов из папки
-        let linksFolder = await getListExistPhoto()
-        console.log(' 👻 👻 👻 Фоток в папке', linksFolder.length)
+        let unicalPhotName = await getListExistPhoto()
+
+        console.log(' 👻 🎁 👻 Фоток в папке', unicalPhotName.length)
         // беру список файлов из базы
         let listBD = await getAllImageLinksFromBD(db)
-        console.log(' 👻 👻 👻 Ссылок в базе', listBD.length)
+        console.log(' 👻 🚇 👻 Ссылок в базе', listBD.length)
 
         listBD = listBD.map(el => el.split('/').pop().slice(0, -4))
-        const deprecatedPhoto = linksFolder.filter(link => !listBD.includes(link));
+
+        const deprecatedPhoto = unicalPhotName.filter(link => !listBD.includes(link));
 
         console.log(' 👻 👻 👻 Фоток, которых уже нет в базе, но лежат в папке', deprecatedPhoto.length)
 
 
         await prepareUnnecesaryPhotoForDelete(deprecatedPhoto)
 
-        return ' 👻 👻 👻 Удаление произошло '
+        // return ' 👻 👻 👻 Удаление произошло '
+        return deprecatedPhoto.length
 
     } catch (error) {
         console.error('Error in getOldPhotoToDelete:', error.message);

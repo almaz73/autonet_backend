@@ -182,7 +182,8 @@ async function processXmlData(parsedData, db) {
 
 export async function parseXMLToBD(db) {
     let ARR = xmlNames
-    if (devMode) ARR = ['alfa-trade.xml']
+    // if (devMode) ARR = ['AlfaAvto5_Tver.xml','alfa-trade.xml']
+    if (devMode) ARR = ['AlfaAvto5_Tver.xml']
     for (const xmlName of ARR) {
 
         // console.log('      Заполняем базу из', xmlName)

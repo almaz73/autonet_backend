@@ -14,6 +14,8 @@ export async function uploadPhotos(db) {
         // language=SQLite
         const cars = await db.all('SELECT images FROM a_car WHERE images IS NOT NULL AND images != ""');
 
+        if(devMode) cars.length = 2
+
         for (const car of cars) {
             if (car.images) {
                 let imageArray = [];
@@ -40,7 +42,8 @@ export async function uploadPhotos(db) {
             }
         }
 
-        return `Загружено фоток по ${addCount} ссылкам`
+        console.log( `Загружено фоток по ${addCount} ссылкам`)
+        return addCount
     } catch (error) {
         console.error('Error retrieving images from a_car table:', error.message);
         throw error;

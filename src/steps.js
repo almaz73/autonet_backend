@@ -43,9 +43,9 @@ for (let i in [1]) {
 
     // 4
     newLinksWithPhoto = await countNewPhoto(db)
-    text = '⚡ Удачно. Потребуется загрузить новые фото: ' + newLinksWithPhoto.length
+    text = '⚡ Удачно. Новые фото в базе: ' + newLinksWithPhoto.length
     report += `\n 4. ${text}`
-    reportForTelegram += ' 4. New:(' + newLinksWithPhoto.length + ' photo) '
+    reportForTelegram += ' 4. new:(' + newLinksWithPhoto.length + ' photo) '
     if (text.indexOf('Удачно') < 0) break
 
     // 5
@@ -53,6 +53,16 @@ for (let i in [1]) {
     reportForTelegram += ' 5. public '
     report += `\n 5. ${text}`
     if (text.indexOf('Удачно') < 0) break
+
+    text = await uploadPhotos(db)
+    report += '\n 6. ⚡ Удачно. Добавлены недостающие ' + text + ' фото'
+    reportForTelegram += ` 6. added missing ${text} photo`
+
+    text =  await clearDeprecatedPhotos(db)
+    report += '\n 7. ⚡ Удачно. Удалены неиспользуемые ' + text + ' фото'
+    reportForTelegram += ` 7. removed unnecessary ${text} photo`
+
+    if (text !== 0 && !text) break
 
     report += '\n  Все шаги пройдены успешно.'
     reportForTelegram += ' SUCCESS'
@@ -64,14 +74,16 @@ if (report.indexOf('успешно') < 0) {
 }
 
 console.log('\n' + report)
-sendTelegram(reportForTelegram)
 
-if (newLinksWithPhoto.length) {
-    console.log('Добавляем фотки isNeedAddNewPhoto = ')
-    let addedReport = await uploadPhotos(db)
-    sendTelegram(addedReport)
+console.log('### reportForTelegram = ', reportForTelegram)
+// sendTelegram(reportForTelegram)
 
-    console.log('Удаляем устаревние не нудные фотки')
-    let removedReport = await clearDeprecatedPhotos(db)
-    sendTelegram(removedReport)
-}
+// if (newLinksWithPhoto.length) {
+//     console.log('Добавляем фотки isNeedAddNewPhoto = ')
+//     let addedReport = await uploadPhotos(db)
+//     sendTelegram(addedReport)
+//
+//     console.log('Удаляем устаревшие не нужные фотки')
+//     let removedReport = await clearDeprecatedPhotos(db)
+//     sendTelegram(removedReport)
+// }

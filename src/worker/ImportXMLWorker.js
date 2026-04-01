@@ -52,7 +52,7 @@ let xmlNames = [
     'alfa5_gktm.xml',
     'alfa-trade.xml'
 ];
-if (devMode) xmlNames = ['alfa-trade.xml']
+if (devMode) xmlNames = ['AlfaAvto5_Tver.xml','alfa-trade.xml']
 
 
 
