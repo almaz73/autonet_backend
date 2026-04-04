@@ -112,7 +112,7 @@ export async function publicBD(db) {
         // Copy data from sections_table to a_section
         await copyTableData(db, 'sections_table', 'a_section');
 
-        return '⚡ Удачно. Таблицы опубликованы'
+        return '⚡. Таблицы опубликованы'
 
     } catch (error) {
         return 'Error copying data to info tables:' + error.message;

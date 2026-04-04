@@ -15,8 +15,7 @@ export async function copyXmlToFolder() {
 
         let URLS = xmlUrls
 
-        // if (devMode) URLS = ['https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml','https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml']
-        if (devMode) URLS = ['https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml']
+        if (devMode) URLS = ['https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml','https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml']
         for (const xmlUrl of URLS) {
             try {
                 const urlParts = xmlUrl.split('/');
@@ -44,7 +43,7 @@ export async function copyXmlToFolder() {
             }
         }
 
-        return `⚡ Удачно. Скопирован ${savedFiles.length} XML в папку`;
+        return `⚡. Скопирован ${savedFiles.length} XML в папку`;
     } catch (error) {
         return 'Ошибка копирования XML: ' + error.message;
     }

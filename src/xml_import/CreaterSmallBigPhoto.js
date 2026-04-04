@@ -16,7 +16,7 @@ class CreaterSmallBigPhoto {
 
             const uploadDir = path.join(__dirname, '../..', directory);
 
-            console.log('по ссылке:', imageUrl)
+            // console.log('по ссылке:', imageUrl)
 
             const urlObj = new URL(imageUrl);
             let originalFilename = path.basename(urlObj.pathname);

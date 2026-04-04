@@ -91,7 +91,7 @@ export async function clearTables(db) {
         )
     `);
 
-    return '⚡ Удачно. Таблицы очищены';
+    return '⚡. Таблицы очищены';
 
 }
 

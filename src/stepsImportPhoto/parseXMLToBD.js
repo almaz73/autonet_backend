@@ -163,7 +163,7 @@ async function processXmlData(parsedData, db) {
             await processSections(db)
 
             if (!sectionsCount || !carsCount) return `☹ Пустая Таблица sectionsCount: ${sectionsCount} carsCount: ${carsCount}`;
-            return `⚡ Удачно. Заполнены таблицы sectionsCount: ${sectionsCount} carsCount: ${carsCount}`;
+            return carsCount;
         }
     } else {
         // If catalog doesn't exist, try to find sections and cars anywhere in the structure
@@ -181,9 +181,9 @@ async function processXmlData(parsedData, db) {
 }
 
 export async function parseXMLToBD(db) {
+    let countCars = 0
     let ARR = xmlNames
-    // if (devMode) ARR = ['AlfaAvto5_Tver.xml','alfa-trade.xml']
-    if (devMode) ARR = ['AlfaAvto5_Tver.xml']
+    if (devMode) ARR = ['AlfaAvto5_Tver.xml','alfa-trade.xml']
     for (const xmlName of ARR) {
 
         // console.log('      Заполняем базу из', xmlName)
@@ -192,7 +192,7 @@ export async function parseXMLToBD(db) {
         const fileContent = fs.readFileSync(filePath, 'utf8');
         xmlData += fileContent; // Combine all XML files content
 
-        return await new Promise((resolve, reject) => {
+        countCars += await new Promise((resolve, reject) => {
             parseString(xmlData, {
                 explicitArray: false,
                 ignoreAttrs: false
@@ -210,4 +210,7 @@ export async function parseXMLToBD(db) {
         });
 
     }
+
+    return countCars
+    // return `⚡. ${countCars} авто в базе`
 }

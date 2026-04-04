@@ -14,7 +14,7 @@ export async function uploadPhotos(db) {
         // language=SQLite
         const cars = await db.all('SELECT images FROM a_car WHERE images IS NOT NULL AND images != ""');
 
-        if(devMode) cars.length = 2
+        if(devMode) cars.length = 3
 
         for (const car of cars) {
             if (car.images) {
@@ -22,7 +22,7 @@ export async function uploadPhotos(db) {
                 imageArray = car.images.split(',').map(url => url.trim());
 
 
-                if (devMode) imageArray.length = 2
+                if (devMode) imageArray.length = 3
 
                 let placeInLine = 0
                 for (const url of imageArray) {

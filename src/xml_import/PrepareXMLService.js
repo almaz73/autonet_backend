@@ -82,8 +82,8 @@ class PrepareXMLService {
             }
 
 
-            console.log(`⚡ Удачно сохранены ${savedFiles.length} XML файла из интернета в серверную папку`);
-            return `⚡ Удачно сохранены ${savedFiles.length} XML файла из интернета в серверную папку`;
+            console.log(`⚡. сохранены ${savedFiles.length} XML файла из интернета в серверную папку`);
+            return `⚡. сохранены ${savedFiles.length} XML файла из интернета в серверную папку`;
         } catch (error) {
             console.error('Error in saveXmlFilesToPublic:', error.message);
             throw error;
