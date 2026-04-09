@@ -4,10 +4,11 @@ import sqlite3 from "sqlite3";
 import {copyXmlToFolder} from './stepsImportPhoto/copyXmlToFolder.js'
 import {clearTables} from './stepsImportPhoto/clearTables.js'
 import {parseXMLToBD} from "./stepsImportPhoto/parseXMLToBD.js";
-import {countNewPhoto} from './stepsImportPhoto/countNewPhoto.js'
+import {countNewCars} from './stepsImportPhoto/countNewCars.js'
 import {publicBD} from "./stepsImportPhoto/publicBD.js";
 import {sendTelegram} from "./telegramReport.js";
 import {uploadPhotos} from './stepsImportPhoto/uploadPhotos.js'
+import {uploadNewPhotos} from './stepsImportPhoto/uploadNewPhotos.js'
 import {clearDeprecatedPhotos} from './stepsImportPhoto/clearDeprecatedPhotos.js'
 
 
@@ -20,7 +21,7 @@ let report = `:::::: ${getTime()} :::::: Отчет ${Version} ::::::`
 let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 
 let text = ''
-let newLinksWithPhoto = []
+let newCars = []
 
 for (let i in [1]) {
     // 1
@@ -37,27 +38,31 @@ for (let i in [1]) {
 
     // 3
     text = await parseXMLToBD(db)
-    report +=    `\n 3. ⚡. ${text} авто в базе`
-    reportForTelegram += ` ➜counter auto 👉 ${text} `
+    report +=    `\n 3. ⚡. ${text} автомобиля`
+    reportForTelegram += ` ➜counter auto ☰ ${text} `
     if (text < 1 ) break
 
     // 4
-    newLinksWithPhoto = await countNewPhoto(db)
-    text = '⚡. Новые фото в базе: ' + newLinksWithPhoto.length
+    newCars = await countNewCars(db)
+    text = '⚡. Новые авто в базе: ' + newCars.length
     report += `\n 4. ${text}`
-    reportForTelegram += ` ➜photo 👉 ${newLinksWithPhoto.length}`
+    reportForTelegram += ` ➜авто ☰ ${newCars.length}`
     if (text.indexOf('⚡') < 0) break
 
-    // 5
+    //5
+    let countPhotoInFolder = await uploadNewPhotos(db, newCars)
+    text = '⚡. Новые фото в папке: ' + countPhotoInFolder
+    report += `\n 5. ${text}`
+    reportForTelegram += ` ➜in folder ☰ ${countPhotoInFolder}`
+    if (text.indexOf('⚡') < 0) break
+
+    // 6
     text = await publicBD(db)
     reportForTelegram += ' ➜public BD '
-    report += `\n 5. ${text}`
+    report += `\n 6. ${text}`
     if (text.indexOf('⚡') < 0) break
 
-    text = await uploadPhotos(db)
-    report += '\n 6. ⚡. Добавлены недостающие ' + text + ' фото'
-    reportForTelegram += ` ➜added missing ${text} photo`
-
+    //7
     text = await clearDeprecatedPhotos(db)
     report += '\n 7. ⚡. Удалены неиспользуемые ' + text + ' фото'
     reportForTelegram += ` ➜removed unnecessary ${text} photo`
@@ -75,15 +80,6 @@ if (report.indexOf('успешно') < 0) {
 
 console.log('\n' + report)
 
-// console.log('### reportForTelegram = ', reportForTelegram)
 sendTelegram(reportForTelegram)
 
-// if (newLinksWithPhoto.length) {
-//     console.log('Добавляем фотки isNeedAddNewPhoto = ')
-//     let addedReport = await uploadPhotos(db)
-//     sendTelegram(addedReport)
-//
-//     console.log('Удаляем устаревшие не нужные фотки')
-//     let removedReport = await clearDeprecatedPhotos(db)
-//     sendTelegram(removedReport)
-// }
+
