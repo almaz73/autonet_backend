@@ -17,16 +17,15 @@ let report = `:::::: ${getTime()} :::::: Отчет ${Version} ::::::`
 let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 
 let text = ''
-let newLinksWithPhoto = []
 
 for (let i in [1]) {
     //7
     text = await clearDeprecatedPhotos(db)
-    report += '\n 7. ⚡. Удалены неиспользуемые ' + text + ' фото'
+    report += '\n 8. ⚡. Удалены неиспользуемые ' + text + ' фото'
     reportForTelegram += ` ➜removed unnecessary ${text} photo`
 
     text = await uploadPhotos(db)
-    report += '\n 8. ⚡. Добавлены недостающие ' + text + ' фото'
+    report += '\n 9. ⚡. Добавлены недостающие ' + text + ' фото'
     reportForTelegram += ` ➜added missing ${text} photo`
 
 
@@ -43,6 +42,6 @@ if (report.indexOf('успешно') < 0) {
 
 console.log('\n' + report)
 
-// sendTelegram(reportForTelegram)
+sendTelegram(reportForTelegram)
 
 

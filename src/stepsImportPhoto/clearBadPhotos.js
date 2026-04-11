@@ -1,3 +1,4 @@
+import {sendTelegram} from "../telegramReport.js";
 export async function clearBadPhotos(db) {
     try {
         // language=SQLite
@@ -14,10 +15,10 @@ export async function clearBadPhotos(db) {
 
         
         console.log('pdfFields = ',badFields)
-        const deleted =  deleteBadFields (db, badFields)
 
-        // You can add additional processing here, like logging or removing the records
+        if(badFields.length) sendTelegram(' Плохие ссылки на фото, удалены из базы '+JSON.stringify(badFields))
 
+        const deleted =  await deleteBadFields (db, badFields)
         return deleted && badFields.length
     } catch (error) {
         throw error;
@@ -26,6 +27,26 @@ export async function clearBadPhotos(db) {
     return '⚡. Плохие ссылки на фото удалены';
 }
 
-function deleteBadFields(db, badFields) {
+async function deleteBadFields(db, badFields) {
+    if (!badFields || badFields.length === 0) {
+        console.log('No bad fields to delete.');
+        return 0;
+    }
 
+    const idsToDelete = badFields.map(field => field.id);
+    const idsPlaceholder = idsToDelete.map((_, i) => `$${i + 1}`).join(', ');
+
+    // language=SQLite
+    const query = `        DELETE FROM cars_table
+        WHERE id IN (${idsPlaceholder})
+    `;
+
+    try {
+        const result = await db.run(query, idsToDelete);
+        console.log(`Deleted ${result.changes} record(s) from cars_table`);
+        return result.changes;
+    } catch (error) {
+        console.error('Error deleting bad fields:', error);
+        throw error;
+    }
 }
