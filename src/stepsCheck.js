@@ -20,17 +20,19 @@ let text = ''
 let newLinksWithPhoto = []
 
 for (let i in [1]) {
-    text = await uploadPhotos(db)
-    report += '\n 6. ⚡. Добавлены недостающие ' + text + ' фото'
-    reportForTelegram += ` ➜added missing ${text} photo`
-
+    //7
     text = await clearDeprecatedPhotos(db)
     report += '\n 7. ⚡. Удалены неиспользуемые ' + text + ' фото'
     reportForTelegram += ` ➜removed unnecessary ${text} photo`
 
+    text = await uploadPhotos(db)
+    report += '\n 8. ⚡. Добавлены недостающие ' + text + ' фото'
+    reportForTelegram += ` ➜added missing ${text} photo`
+
+
     if (text !== 0 && !text) break
 
-    report += '\n ⚡⚡⚡ Все шаги пройдены успешно.'
+    report += '\n ⚡⚡⚡ Ссылки проверены на наличие фоток.'
     reportForTelegram += ' SUCCESS'
 }
 

@@ -62,14 +62,10 @@ for (let i in [1]) {
     report += `\n 6. ${text}`
     if (text.indexOf('⚡') < 0) break
 
-    //7
-    text = await clearDeprecatedPhotos(db)
-    report += '\n 7. ⚡. Удалены неиспользуемые ' + text + ' фото'
-    reportForTelegram += ` ➜removed unnecessary ${text} photo`
 
     if (text !== 0 && !text) break
 
-    report += '\n ⚡⚡⚡ Все шаги пройдены успешно.'
+    report += '\n ⚡⚡⚡ Новая публикация прошла успешно.'
     reportForTelegram += ' SUCCESS'
 }
 
