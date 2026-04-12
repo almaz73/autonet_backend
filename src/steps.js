@@ -11,6 +11,7 @@ import {uploadPhotos} from './stepsImportPhoto/uploadPhotos.js'
 import {uploadNewPhotos} from './stepsImportPhoto/uploadNewPhotos.js'
 import {clearDeprecatedPhotos} from './stepsImportPhoto/clearDeprecatedPhotos.js'
 import {clearBadPhotos} from './stepsImportPhoto/clearBadPhotos.js'
+import {uploadPhotosFromLinksWithCheck} from "./stepsImportPhoto/uploadPhotosFromLinksWithCheck.js";
 
 
 
@@ -39,37 +40,45 @@ for (let i in [1]) {
     reportForTelegram += ' ➜clear BD'
     if (text.indexOf('⚡') < 0) break
 
-    // 3
+    3
     text = await parseXMLToBD(db)
     report +=    `\n 3. ⚡. ${text} автомобиля`
     reportForTelegram += ` ➜counter auto ⋲ ${text} `
     if (text < 1 ) break
 
     // 4
-    newCars = await countNewCars(db)
-    text = '⚡. Новые авто в базе: ' + newCars.length
-    report += `\n 4. ${text}`
-    reportForTelegram += ` ➜авто ⋲ ${newCars.length}`
-    if (text.indexOf('⚡') < 0) break
+    // newCars = await countNewCars(db)
+    // text = '⚡. Новые авто в базе: ' + newCars.length
+    // report += `\n 4. ${text}`
+    // reportForTelegram += ` ➜авто ⋲ ${newCars.length}`
+    // if (text.indexOf('⚡') < 0) break
 
     //5
-    let countPhotoInFolder = await uploadNewPhotos(db, newCars)
-    text = '⚡. Новые фото в папке: ' + countPhotoInFolder
-    report += `\n 5. ${text}`
-    reportForTelegram += ` ➜in folder ⋲ ${countPhotoInFolder}`
-    if (text.indexOf('⚡') < 0) break
+    // let countPhotoInFolder = await uploadNewPhotos(db, newCars)
+    // text = '⚡. Новые фото в папке: ' + countPhotoInFolder
+    // report += `\n 5. ${text}`
+    // reportForTelegram += ` ➜in folder ⋲ ${countPhotoInFolder}`
+    // if (text.indexOf('⚡') < 0) break
 
     //6
     text = await clearBadPhotos(db)
     reportForTelegram += ` ➜badLink ⋲ ${text} `
-    report += `\n ⚡. 6. Очищены плохие ссылки на ${text} фото`
+    report += `\n ⚡. 4. Очищены плохие ссылки на ${text} фото`
     console.log('text = ',text)
     if (text == undefined) break
+
+
+    //4 new
+    let newAddedCarsAndPhotos = await uploadPhotosFromLinksWithCheck(db)
+    text = newAddedCarsAndPhotos
+    report += `\n 5. ${text}`
+    reportForTelegram += ` ➜ ⋲ ${text}`
+    if (text.indexOf('⚡') < 0) break
 
     //7
     text = await publicBD(db)
     reportForTelegram += ' ➜public BD '
-    report += `\n 7. ${text}`
+    report += `\n 6. ${text}`
     if (text.indexOf('⚡') < 0) break
 
 
