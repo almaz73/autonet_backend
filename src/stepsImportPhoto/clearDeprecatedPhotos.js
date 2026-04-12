@@ -21,7 +21,7 @@ async function getListExistPhoto() {
         files.forEach(el=>{
             if(el.indexOf('_big.webp')!==-1) links[el.slice(0,-9)]=1
             else if(el.indexOf('_small.webp')!==-1) links[el.slice(0,-11)]=1
-            else links[el.slice(0,-5)]=1
+            else links[el.substring(0, el.lastIndexOf('.'))] = 1
         })
 
         return Object.keys(links);
@@ -116,7 +116,10 @@ export async function clearDeprecatedPhotos(db) {
         let listBD = await getAllImageLinksFromBD(db)
         console.log(' 👻 🚇 👻 Ссылок в базе', listBD.length)
 
-        listBD = listBD.map(el => el.split('/').pop().slice(0, -4))
+        listBD = listBD.map(el => {
+            const tt = el.split('/').pop()
+            return tt.substring(0, tt.lastIndexOf('.'))
+        })
 
         const deprecatedPhoto = unicalPhotName.filter(link => !listBD.includes(link));
 

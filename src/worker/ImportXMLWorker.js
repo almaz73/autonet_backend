@@ -118,7 +118,8 @@ async function getCountUplFilews(db) {
 
         if (linksBD) {
             for (const url of linksBD) {
-                const fileName = url.split('/').pop().slice(0, -4)
+                const tt = url.split('/').pop()
+                const fileName = tt.substring(0, tt.lastIndexOf('.'))
                 if (!ListExistPhoto.find(el => el === fileName)) count++
             }
             console.log('🐾🐾🐾 Теперь в базе ссылок:', linksBD.length)
@@ -142,7 +143,10 @@ async function unnecessaryPhoto(db) {
         let listBD = await getAllImageLinksFromBD(db)
         console.log(' 👻 👻 👻 Ссылок в базе', listBD.length)
 
-        listBD = listBD.map(el => el.split('/').pop().slice(0, -4))
+        listBD = listBD.map(el => {
+            const tt = el.split('/').pop()
+            return tt.substring(0, tt.lastIndexOf('.'))
+        })
         const deprecatedPhoto = linksFolder.filter(link => !listBD.includes(link));
 
         console.log(' 👻 👻 👻 Фоток, которых уже нет в базе, но лежат в папке', deprecatedPhoto.length)
