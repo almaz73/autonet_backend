@@ -14,7 +14,7 @@ export async function clearBadPhotos(db) {
         });
 
         
-        console.log('pdfFields = ',badFields)
+        // console.log('pdfFields = ', badFields)
 
         if(badFields.length) sendTelegram(' Плохие ссылки на фото, удалены из базы '+JSON.stringify(badFields))
 
@@ -29,7 +29,7 @@ export async function clearBadPhotos(db) {
 
 async function deleteBadFields(db, badFields) {
     if (!badFields || badFields.length === 0) {
-        console.log('No bad fields to delete.');
+        // console.log('No bad fields to delete.');
         return 0;
     }
 

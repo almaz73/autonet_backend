@@ -55,7 +55,7 @@ async function getListExistPhoto() { // список фоток в папке с
     }
 }
 async function addNonExistentPhoto(links_short_need, links_all) {
-    if (devMode) links_short_need.length = 2
+    if (devMode) links_short_need.length = 1
     console.time('🐾🐾🐾 Общее время размещения фоток')
     let count = 0
     for (const photo of links_short_need) {
@@ -132,6 +132,6 @@ export async function uploadPhotosFromLinksWithCheck(db) {
 
     let deletedCount = await deleteOldPhotos(links_for_delete, existPhotos) // Удяляем фотки, которых нет в новой базе
 
-    return `⚡. new cars:${links_short_need.length}  added photos:${count} removed:${deletedCount}`
+    return `⚡ new_cars: ${links_short_need.length}  added_photos: ${count} removed: ${deletedCount}`
 }
 

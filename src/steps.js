@@ -1,17 +1,18 @@
 import {Version, getTime} from "./constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
+import {uploadPhotosFromLinksWithCheck} from "./stepsImportPhoto/uploadPhotosFromLinksWithCheck.js";
+import {sendEmail} from "./post/sendEmail.js"
 import {copyXmlToFolder} from './stepsImportPhoto/copyXmlToFolder.js'
 import {clearTables} from './stepsImportPhoto/clearTables.js'
 import {parseXMLToBD} from "./stepsImportPhoto/parseXMLToBD.js";
-import {countNewCars} from './stepsImportPhoto/countNewCars.js'
+// import {countNewCars} from './stepsImportPhoto/countNewCars.js'
 import {publicBD} from "./stepsImportPhoto/publicBD.js";
 import {sendTelegram} from "./telegramReport.js";
-import {uploadPhotos} from './stepsImportPhoto/uploadPhotos.js'
-import {uploadNewPhotos} from './stepsImportPhoto/uploadNewPhotos.js'
-import {clearDeprecatedPhotos} from './stepsImportPhoto/clearDeprecatedPhotos.js'
+// import {uploadPhotos} from './stepsImportPhoto/uploadPhotos.js'
+// import {uploadNewPhotos} from './stepsImportPhoto/uploadNewPhotos.js'
+// import {clearDeprecatedPhotos} from './stepsImportPhoto/clearDeprecatedPhotos.js'
 import {clearBadPhotos} from './stepsImportPhoto/clearBadPhotos.js'
-import {uploadPhotosFromLinksWithCheck} from "./stepsImportPhoto/uploadPhotosFromLinksWithCheck.js";
 
 
 
@@ -31,61 +32,46 @@ for (let i in [1]) {
     // 1
     text = await copyXmlToFolder()
     report += `\n 1. ${text}`
-    reportForTelegram += ' ➜copy XML'
+    reportForTelegram += '  ➜  copy_XML'
     if (text.indexOf('⚡') < 0) break
 
     // 2
     text = await clearTables(db)
     report += `\n 2. ${text}`
-    reportForTelegram += ' ➜clear BD'
+    reportForTelegram += '  ➜  clear_BD'
     if (text.indexOf('⚡') < 0) break
 
-    3
+    // 3
     text = await parseXMLToBD(db)
     report +=    `\n 3. ⚡. ${text} автомобиля`
-    reportForTelegram += ` ➜counter auto ⋲ ${text} `
+    reportForTelegram += `  ➜  cars ⋲ ${text} `
     if (text < 1 ) break
 
-    // 4
-    // newCars = await countNewCars(db)
-    // text = '⚡. Новые авто в базе: ' + newCars.length
-    // report += `\n 4. ${text}`
-    // reportForTelegram += ` ➜авто ⋲ ${newCars.length}`
-    // if (text.indexOf('⚡') < 0) break
+    //4
+    text = await publicBD(db)
+    reportForTelegram += '  ➜  public_BD '
+    report += `\n 4. ${text}`
+    if (text.indexOf('⚡') < 0) break
 
     //5
-    // let countPhotoInFolder = await uploadNewPhotos(db, newCars)
-    // text = '⚡. Новые фото в папке: ' + countPhotoInFolder
-    // report += `\n 5. ${text}`
-    // reportForTelegram += ` ➜in folder ⋲ ${countPhotoInFolder}`
-    // if (text.indexOf('⚡') < 0) break
-
-    //6
     text = await clearBadPhotos(db)
-    reportForTelegram += ` ➜badLink ⋲ ${text} `
-    report += `\n ⚡. 4. Очищены плохие ссылки на ${text} фото`
-    console.log('text = ',text)
+    reportForTelegram += `  ➜  badLinks ⋲ ${text} `
+    report += `\n 5. ⚡. Очищены плохие ссылки на ${text} фото`
     if (text == undefined) break
 
 
-    //4 new
+    //6
     let newAddedCarsAndPhotos = await uploadPhotosFromLinksWithCheck(db)
     text = newAddedCarsAndPhotos
-    report += `\n 5. ${text}`
-    reportForTelegram += ` ➜ ⋲ ${text}`
-    if (text.indexOf('⚡') < 0) break
-
-    //7
-    text = await publicBD(db)
-    reportForTelegram += ' ➜public BD '
     report += `\n 6. ${text}`
+    reportForTelegram += `  ➜  ${text}`
     if (text.indexOf('⚡') < 0) break
 
 
     if (text !== 0 && !text) break
 
     report += '\n ⚡⚡⚡ Новая публикация прошла успешно.'
-    reportForTelegram += ' SUCCESS'
+    reportForTelegram += ' \nSUCCESS'
 }
 
 if (report.indexOf('успешно') < 0) {
@@ -95,6 +81,12 @@ if (report.indexOf('успешно') < 0) {
 
 console.log('\n' + report)
 
-sendTelegram(reportForTelegram)
+sendEmail('ОБНОВЛЕНО:\n '+ report) // на почту
+
+try {
+    sendTelegram(reportForTelegram)
+} catch (e) {
+    console.log('e = ',e)
+}
 
 
