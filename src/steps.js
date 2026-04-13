@@ -84,7 +84,7 @@ console.log('\n' + report)
 sendEmail('ОБНОВЛЕНО:\n '+ report) // на почту
 
 try {
-    sendTelegram(reportForTelegram)
+    setTimeout(() => sendTelegram(reportForTelegram))
 } catch (e) {
     console.log('e = ',e)
 }

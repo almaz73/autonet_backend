@@ -294,7 +294,7 @@ class Controllers {
             // Prepare email with attachment
             let mailOptions = {
                 from: 'autoset_info@cartat.ru',
-                to: 'autoset_info@cartat.ru',
+                to: 'info@cartat.ru',
                 subject: receivedData.subject || 'Email with attachment',
                 text: receivedData.text || 'Email with attachment',
                 html: receivedData.html || '<p>Email with attachment</p>',

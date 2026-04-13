@@ -58,6 +58,7 @@ async function addNonExistentPhoto(links_short_need, links_all) {
     if (devMode) links_short_need.length = 1
     console.time('🐾🐾🐾 Общее время размещения фоток')
     let count = 0
+    console.log('>>> length = ',links_short_need.length)
     for (const photo of links_short_need) {
         await PhotoSaver.savePhotoToServer(photo, 1, FolderPhoto);
         count += 2
@@ -71,6 +72,7 @@ async function addNonExistentPhoto(links_short_need, links_all) {
             await PhotoSaver.savePhotoToServer(url, placeInLine, FolderPhoto);
             if (placeInLine < 6) count++
         }
+        console.log('>>> count = ',count)
     }
     console.timeEnd('🐾🐾🐾 Общее время размещения фоток')
     return count

@@ -10,7 +10,7 @@ class Post {
 
             let result = await transporterYandex.sendMail({
                 from: 'almaz73@yandex.ru',
-                to: 'autoset_info@cartat.ru, almaz73@yandex.ru',//'almaz73@gmail.com',
+                to: 'info@cartat.ru, almaz73@yandex.ru',//'almaz73@gmail.com',
                 subject: receivedDataTypes[receivedData.type],
                 text: receivedData.text
             });
@@ -44,7 +44,7 @@ class Post {
             // Prepare email with attachment
             let mailOptions = {
                 from: 'almaz73@yandex.ru',
-                to: 'autoset_info@cartat.ru, almaz73@yandex.ru',//'autoset_info@cartat.ru',
+                to: 'info@cartat.ru, almaz73@yandex.ru',//'autoset_info@cartat.ru',
                 subject: receivedDataTypes[receivedData.type],
                 text: receivedData.text,
                 attachments: [
