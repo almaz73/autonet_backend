@@ -8,6 +8,7 @@ class CityListService {
                 SELECT ac.id,
                        ac.price,
                        ac.prop_brand             as brand,
+                       ac.prop_model             as model,
                        sec.id                    as brandId,
                        ac.prop_city              as city,
                        ac.prop_milleage          as milleage,
