@@ -134,6 +134,6 @@ export async function uploadPhotosFromLinksWithCheck(db) {
 
     let deletedCount = await deleteOldPhotos(links_for_delete, existPhotos) // Удяляем фотки, которых нет в новой базе
 
-    return `⚡ new_cars: ${links_short_need.length}  added_photos: ${count} removed: ${deletedCount}`
+    return `⚡. New_cars:${links_short_need.length} Added_photos:${count} Removed:${deletedCount}`
 }
 

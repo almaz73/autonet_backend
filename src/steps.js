@@ -43,28 +43,27 @@ for (let i in [1]) {
 
     // 3
     text = await parseXMLToBD(db)
-    report +=    `\n 3. ⚡. ${text} автомобиля`
+    report +=    `\n 3. ⚡. В БД ${text} автомобиля`
     reportForTelegram += `  ➜  cars ⋲ ${text} `
     if (text < 1 ) break
 
     //4
-    text = await publicBD(db)
-    reportForTelegram += '  ➜  public_BD '
-    report += `\n 4. ${text}`
-    if (text.indexOf('⚡') < 0) break
-
-    //5
     text = await clearBadPhotos(db)
     reportForTelegram += `  ➜  badLinks ⋲ ${text} `
-    report += `\n 5. ⚡. Очищены плохие ссылки на ${text} фото`
+    report += `\n 4. ⚡. Удалены ${text} авто с плохими фото-ссылками`
     if (text == undefined) break
 
-
-    //6
+    //5
     let newAddedCarsAndPhotos = await uploadPhotosFromLinksWithCheck(db)
     text = newAddedCarsAndPhotos
-    report += `\n 6. ${text}`
+    report += `\n 5. ${text}`
     reportForTelegram += `  ➜  ${text}`
+    if (text.indexOf('⚡') < 0) break
+
+    //6
+    text = await publicBD(db)
+    reportForTelegram += '  ➜  public_BD '
+    report += `\n 6. ${text}`
     if (text.indexOf('⚡') < 0) break
 
 

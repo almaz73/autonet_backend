@@ -43,7 +43,7 @@ export async function copyXmlToFolder() {
             }
         }
 
-        return `⚡. Скопирован ${savedFiles.length} XML в папку`;
+        return `⚡. Скопированы ${savedFiles.length} XML`;
     } catch (error) {
         return 'Ошибка копирования XML: ' + error.message;
     }
