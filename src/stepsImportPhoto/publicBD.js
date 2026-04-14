@@ -59,7 +59,6 @@ async function copyTableData(db, sourceTable, targetTable) {
 }
 export async function publicBD(db) {
     console.log('⚡ Публикуем обновленную базу ')
-    console.log('⚡ ====================================')
     try {
         await deleteFromTableIfExists(db, 'a_car');
         await deleteFromTableIfExists(db, 'a_section');
@@ -112,7 +111,7 @@ export async function publicBD(db) {
         // Copy data from sections_table to a_section
         await copyTableData(db, 'sections_table', 'a_section');
 
-        return '⚡. Данные опубликованы'
+        return '⚡. Опубликовано'
 
     } catch (error) {
         return 'Error copying data to info tables:' + error.message;

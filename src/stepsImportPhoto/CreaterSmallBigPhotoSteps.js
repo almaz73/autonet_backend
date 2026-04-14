@@ -20,6 +20,8 @@ class CreaterSmallBigPhoto {
             let originalFilename = path.basename(urlObj.pathname);
             const baseName = path.parse(originalFilename).name;
 
+            console.log(' ⚡ добавим фотки для = ', baseName)
+
             if (placeInLine < 6) await createSmallPhoto(baseName, uploadDir, imageUrl);
             await createBigPhoto(baseName, uploadDir, imageUrl)
 
@@ -48,7 +50,7 @@ async function createSmallPhoto(baseName, uploadDir, imageUrl) {
         .toBuffer();
 
     await fs.promises.writeFile(filePath, processedBuffer);
-    // console.log('  ⚡ ::: small >>>')
+    console.log('  ⚡ ::: small >>>')
 }
 
 async function createBigPhoto(baseName, uploadDir, imageUrl) {

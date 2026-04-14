@@ -47,23 +47,22 @@ for (let i in [1]) {
     reportForTelegram += `  ➜  cars ⋲ ${text} `
     if (text < 1 ) break
 
-    //4
-    text = await clearBadPhotos(db)
-    reportForTelegram += `  ➜  badLinks ⋲ ${text} `
-    report += `\n 4. ⚡. Удалены ${text} авто с плохими фото-ссылками`
-    if (text == undefined) break
-
-    //5
-    let newAddedCarsAndPhotos = await uploadPhotosFromLinksWithCheck(db)
-    text = newAddedCarsAndPhotos
-    report += `\n 5. ${text}`
-    reportForTelegram += `  ➜  ${text}`
-    if (text.indexOf('⚡') < 0) break
-
     //6
     text = await publicBD(db)
     reportForTelegram += '  ➜  public_BD '
+    report += `\n ^4. ${text}`
+    if (text.indexOf('⚡') < 0) break
+
+    //4
+    text = await clearBadPhotos(db)
+    reportForTelegram += `  ➜  badLinks ⋲ ${text} `
+    report += `\n 5. ⚡. Удалены ${text} авто с плохими фото-ссылками`
+    if (text == undefined) break
+
+    //5
+    text = await uploadPhotosFromLinksWithCheck(db)
     report += `\n 6. ${text}`
+    reportForTelegram += `  ➜  ${text}`
     if (text.indexOf('⚡') < 0) break
 
 
@@ -80,12 +79,17 @@ if (report.indexOf('успешно') < 0) {
 
 console.log('\n' + report)
 
-sendEmail('ОБНОВЛЕНО:\n '+ report) // на почту
+try {
+    setTimeout(() => sendEmail('ОБНОВЛЕНО:\n ' + report), 100)
+} catch (e) {
+    console.log('e1 = ', e)
+}
+
 
 try {
-    setTimeout(() => sendTelegram(reportForTelegram))
+    setTimeout(() => sendTelegram(reportForTelegram), 2000)
 } catch (e) {
-    console.log('e = ',e)
+    console.log('e2 = ', e)
 }
 
 

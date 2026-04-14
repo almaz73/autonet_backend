@@ -65,14 +65,14 @@ async function getNewCars(db) {
 
         return results
     } catch (error) {
-        return 'Error counting image links in a_car table: ' + error.message;
+        return 'Error counting image links in cars_table table: ' + error.message;
     }
 }
 
 async function getOldCars(db) {
     try {
         // Проверка наличия
-        const tableInfo = await db.all("PRAGMA table_info(a_car)");
+        const tableInfo = await db.all("PRAGMA table_info(cars_table)");
         const hasImagesColumn = tableInfo.some(column => column.name === 'images');
 
         // language=SQLite
@@ -80,7 +80,7 @@ async function getOldCars(db) {
         if (hasImagesColumn) {
             results = await db.all(`
                 SELECT id, images
-                FROM a_car
+                FROM cars_table
                 WHERE images IS NOT NULL
                   AND images != ''
             `);
@@ -88,7 +88,7 @@ async function getOldCars(db) {
 
         return results
     } catch (error) {
-        return 'Error counting image links in a_car table: ' + error.message;
+        return 'Error counting image links in cars_table table: ' + error.message;
     }
 }
 

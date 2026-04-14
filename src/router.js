@@ -57,11 +57,11 @@ router.post('/postEmailWithAttachement', upload.single('file'), Post.postEmailWi
 router.get('/test', Controllers.test)
 router.get('/import-xml', Controllers.importXML) // загрузка xml в папку, заполнение БД, добавление фоток по ссылкам, удаление лишних фоток
 router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние фотки в папке, которых уже нет в базе
-router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
-router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
-router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
-router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
-router.get('/getListExistPhoto', Controllers.getListExistPhoto) // получить список фоток из папки с файлами
+// router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
+// router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
+// router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
+// router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
+// router.get('/getListExistPhoto', Controllers.getListExistPhoto) // получить список фоток из папки с файлами
 
 router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке, Обновления БАЗ
 router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
