@@ -6,7 +6,7 @@ import {addFirstPhotos} from "./neatFilling/addFirstPhotos.js"
 
 
 
-let report = `:::::: ${getTime()} :::::: Отчет ${Version} ::::::`
+let report = `:::::: ${getTime()} ::::::`
 let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 
 let text = ''
@@ -23,7 +23,7 @@ for (let i in [1]) {
 console.log('\n' + report)
 
 try {
-    setTimeout(() => sendEmail('ОБНОВЛЕНО:\n ' + report), 100)
+    setTimeout(() => sendEmail(report), 100)
 } catch (e) {
     console.log('e1 = ', e)
 }

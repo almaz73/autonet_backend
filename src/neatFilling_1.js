@@ -13,7 +13,7 @@ const db = await open({
     driver: sqlite3.Database
 });
 
-let report = `:::::: ${getTime()} :::::: Отчет ${Version} ::::::`
+let report = `:::::: ${getTime()} ::::::`
 let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 
 let text = ''
@@ -30,21 +30,23 @@ for (let i in [1]) {
         links_short_need,
         links_all,
         allCarsWitnPhoto,
-        existPhotoslength
+        existPhotoslength,
+        links_unnecessary
     } = await getAllNewCarsWithPhoto(db)
 
     await saveLinks('links_short_need.js', links_short_need)
     await saveLinks('links_all.js', links_all)
     await saveLinks('allCarsWitnPhoto.js', allCarsWitnPhoto)
+    await saveLinks('links_unnecessary.js', links_unnecessary)
 
-    report += `\n 6, ⚡. ссылки ${links_short_need.length} подготовлены. в папке ${existPhotoslength} фоток.`
-    reportForTelegram += `  ➜  newLinks ${links_short_need.length} ➜ inFolder now: ${existPhotoslength}`
+    report += `\n 6, ⚡. Новые ${links_short_need.length} фото-ссылки подготовлены. В папке ${existPhotoslength} фоток. На удаление  ${links_unnecessary.length}`
+    reportForTelegram += `  ➜  newLinks ${links_short_need.length} ➜ inFolder now: ${existPhotoslength} ➜ unnecessary: ${links_unnecessary.length}`
 }
 
 console.log('\n' + report)
 
 try {
-    setTimeout(() => sendEmail('ОБНОВЛЕНО:\n ' + report), 100)
+    setTimeout(() => sendEmail(report), 100)
 } catch (e) {
     console.log('e1 = ', e)
 }

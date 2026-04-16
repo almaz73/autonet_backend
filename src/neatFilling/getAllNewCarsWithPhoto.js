@@ -30,6 +30,7 @@ export async function getAllNewCarsWithPhoto(db) {
 
         let links_short = [] // список первых фоток из БД (Если его нет, и других значит нет)
         let links_all = {} // список всех фоток для авто
+        let links_without_first = [] // все ссылки подряд из базы
         allCarsWitnPhoto.forEach(car => {
             if (car.images && typeof car.images === 'string') {
                 let urls = car.images.split(/, /)
@@ -43,17 +44,26 @@ export async function getAllNewCarsWithPhoto(db) {
                         else links_all[firstLink].push(el)
                     }
 
+                    let tt = el.split('/').pop()
+                    let link = tt.substring(0, tt.lastIndexOf('.'))
+                    links_without_first.push(link)
                 })
             }
         });
 
         let existPhotos = await getListExistPhoto()
-
-        console.log(`\n\n⚡⚡⚡⚡⚡ В папке всего ${existPhotos.length} фоток ⚡⚡⚡⚡⚡ ( обработка ...)`)
-
-
         let links_short_need = []
+        let links_unnecessary =[]
 
+        existPhotos.forEach(el=>{
+            if (el.indexOf('_big.webp') !== -1 && !links_without_first.includes(el.slice(0, -9))) links_unnecessary.push(el)
+            else if (el.indexOf('_small.webp') !== -1 && !links_without_first.includes(el.slice(0, -11))) links_unnecessary.push(el)
+            if (el.indexOf('_big.webp') == -1 && el.indexOf('_small.webp') == -1) links_unnecessary.push(el)
+        })
+
+        console.log(' 👻 👻 👻 Фоток в папке', existPhotos.length)
+        console.log(' 👻 👻 👻 Ссылок в базе', links_without_first.length)
+        console.log(' 👻 👻 👻 Фоток, которых уже нет в базе, но лежат в папке', links_unnecessary.length)
 
         links_short.forEach(el => {
             let tt = el.split('/').pop()
@@ -61,16 +71,7 @@ export async function getAllNewCarsWithPhoto(db) {
             if (!existPhotos.includes(link + '_small.webp')) links_short_need.push(el)
         })
 
-        
-
-        // console.log('? links_short.length = ',links_short.length)
-
-
-        // let count = await addNonExistentPhoto(links_short_need, links_all) // списки машин без первых фоток, нужно фотки скачать в папку
-
-        // return `⚡. New_cars:${links_short_need.length} Added_photos:${count} Removed:${deletedCount}`
-
-        return {links_short_need, links_all, allCarsWitnPhoto, existPhotoslength:existPhotos.length}
+        return {links_short_need, links_all, allCarsWitnPhoto, existPhotoslength:existPhotos.length, links_unnecessary}
     } catch (e) {
         console.log('!!!!!! проблемы обновления фоток ')
         return `⚡. -------- no updated `
