@@ -6,8 +6,8 @@ export const transporterYandex = nodemailer.createTransport({
     port: 465,
     secure: true, // Используем SSL
     auth: {
-        user: process.env.SMTP_USER_YA,
-        pass: process.env.SMTP_PASS_YA,
+        user: 'almaz73@yandex.ru',
+        pass: 'ehmyphfngojaocwx',
     }
 });
 
