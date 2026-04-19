@@ -5,6 +5,9 @@ export const devMode = false // для тестирования
 export const FolderPhoto = '../front/pub_auto'
 export const FolderXML = '../front/XML'
 export const FolderLINKS = '../front/LINKS' // тут ссылки для новых фоток, ссылки существующих фоток и ссылки фоток для удаления
+export const FolderPhotoForPromoActions = '../front/pub_promo'
+
+
 export const receivedDataTypes = {
     '1': 'Обратный звонок',
     '2': 'Забронировать автомобиль',

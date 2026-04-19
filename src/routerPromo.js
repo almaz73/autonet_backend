@@ -4,6 +4,20 @@ import * as promoService from './clientBaza/promoService.js';
 // Promo routes
 const router = new Router()
 
+// Simple authentication middleware
+const authMiddleware = (req, res, next) => {
+    // In a real application, this would check for a valid session/token
+    // For now, we'll just check if the user is logged in (you would replace this with your actual authentication logic)
+    if (req.session && req.session.user) {
+        next();
+    } else {
+        res.status(401).json({ error: 'Unauthorized' });
+    }
+};
+
+// Apply auth middleware to all promo routes
+router.use(authMiddleware);
+
 
 // Get all promo items
 router.get('/promo', async (req, res) => {
