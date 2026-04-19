@@ -80,8 +80,4 @@ router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно
     router.post('/email/postEmailWithAttachement', Controllers.postEmailWithAttachement)
 */
 
-router.get('*', (req, res) => {
-    console.log('404 404 404 404 404')
-    res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
-})
-export default router;
+ export default router;

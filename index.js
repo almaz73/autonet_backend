@@ -3,6 +3,7 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
 import routerPromo  from "./src/routerPromo.js";
+import routerAuth  from "./src/routerAuth.js";
 
 // const HOST = '127.0.0.1'; // Привязка
 const PORT = 3000;
@@ -14,13 +15,18 @@ app.use(express.json())
 app.use(express.static('static'))
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    const allowedOrigin = 'http://localhost:9173';
+    res.header('Access-Control-Allow-Origin', allowedOrigin);
+    res.header('Access-Control-Allow-Credentials', true);
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     next();
 });
-app.use('/api', routerPromo)
+
+app.use('/api/auth', routerAuth)
 app.use('/api', router)
+app.use('/api', routerPromo)
+
 
 async function startApp() {
     try {
