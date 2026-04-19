@@ -2,7 +2,7 @@ import express from 'express'
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
-
+import routerPromo  from "./src/routerPromo.js";
 
 // const HOST = '127.0.0.1'; // Привязка
 const PORT = 3000;
@@ -16,8 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     next();
 });
+app.use('/api', routerPromo)
 app.use('/api', router)
 
 async function startApp() {
