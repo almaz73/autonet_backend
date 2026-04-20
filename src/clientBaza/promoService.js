@@ -78,11 +78,32 @@ function deletePromo(id) {
     });
 }
 
+// Save promo photo
+function savePromoPhoto(id, photoData) {
+    return new Promise((resolve, reject) => {
+        // console.log('Saving promo photo for ID:', id);
+        // console.log('Photo data size:', photoData.length, 'bytes');
+        // console.log('Photo data type:', Buffer.isBuffer(photoData) ? 'Buffer' : typeof photoData);
+        // console.log('Photo data buffer length:', Buffer.isBuffer(photoData) ? photoData.length : 'Not a buffer');
+        // console.log('Photo data buffer:', photoData);
+
+
+        promoDAO.savePromoPhoto(id, photoData, (err, photoUrl) => {
+            if (err) {
+                console.error('Error saving promo photo', err);
+                return reject(err);
+            }
+            resolve(photoUrl);
+        });
+    });
+}
+
 export {
     getAllPromo,
     getActivePromo,
     getPromoById,
     createPromo,
     updatePromo,
-    deletePromo
+    deletePromo,
+    savePromoPhoto
 };

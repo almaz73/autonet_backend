@@ -1,5 +1,9 @@
 // Promo data access module
 import {getDB} from './db.js';
+import fs from 'fs';
+import path from 'path';
+import {fileURLToPath} from 'url';
+import {FolderPhotoForPromoActions} from '../constants.js';
 
 function getAllPromo(callback) {
     const db = getDB();
@@ -144,11 +148,38 @@ function deletePromo(id, callback) {
     });
 }
 
+// Save promo photo
+function savePromoPhoto(fileName, photo, callback) {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    // Ensure the promo photos directory exists
+    const promoPhotoDir = path.resolve(__dirname, '../..', FolderPhotoForPromoActions);
+    
+    // Create directory if it doesn't exist
+    fs.mkdirSync(promoPhotoDir, { recursive: true });
+    
+    // Define the file path
+    const filePath = path.join(promoPhotoDir, `${fileName}`);
+
+    // Save the photo data to file
+    fs.writeFile(filePath, photo, function(err) {
+        if (err) {
+            console.error('Error saving promo photo to disk:', err.message);
+            return callback(err, null);
+        }
+
+        callback(null, `/promo-photos/${fileName}`);
+
+    });
+}
+
 export  {
     getAllPromo,
     getActivePromo,
     getPromoById,
     createPromo,
     updatePromo,
-    deletePromo
+    deletePromo,
+    savePromoPhoto
 };

@@ -7,6 +7,24 @@ const router = new Router()
 // Import auth middleware from authController
 import { authMiddleware } from './authController.js';
 
+// Import multer for handling multipart/form-data
+import multer from 'multer';
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage(); // Store files in memory
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit
+    fileFilter: (req, file, cb) => {
+        // Accept images only
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'));
+        }
+    }
+});
+
 // Apply auth middleware to all promo routes
 router.use(authMiddleware);
 
@@ -114,6 +132,39 @@ router.delete('/promo/:id', async (req, res) => {
     } catch (error) {
         console.error('Error deleting promo item:', error);
         res.status(500).json({ error: 'Failed to delete promo item' });
+    }
+});
+
+// router.post('/promo/upload', upload.single('photoData'), async (req, res) => { ... })
+
+
+// Upload promo photo
+// Upload promo photo
+router.post('/promo/upload', upload.single('photo'), async (req, res) => {
+    try {
+        // console.log('Request received at /promo/upload');
+        // console.log('111331 req.body = ', req.body);
+        // console.log('1111331 req.file = ', req.file);
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const id = req.body.id;
+        const photoData = req.file.buffer; // Get the binary data from the upload
+
+        // console.log('Saving photo for id:', id);
+        // console.log('Photo data size:', photoData.length, 'bytes');
+        // console.log('Photo data buffer:', Buffer.isBuffer(photoData) ? 'Buffer' : typeof photoData);
+        // console.log('Photo data buffer length:', photoData ? photoData.length : 'No data');
+        // console.log('Photo data buffer type:', Buffer.isBuffer(photoData) ? 'Buffer' : 'Not a buffer');
+        // console.log('Photo data buffer length:', photoData ? photoData.length : 'No data');
+
+        const photoUrl = await promoService.savePromoPhoto(id, photoData);
+        res.json({ photoUrl });
+    } catch (error) {
+        console.error('Error uploading promo photo:', error);
+        res.status(500).json({ error: 'Failed to upload promo photo' });
     }
 });
 

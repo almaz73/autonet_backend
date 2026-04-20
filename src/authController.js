@@ -81,12 +81,7 @@ export async function verifyToken(req, res) {
 
 // Middleware to protect routes
 export function authMiddleware(req, res, next) {
-    
-    console.log('23344 = ',23344)
-    // Get token from header
     const authHeader = req.headers.authorization;
-    
-    console.log('authHeader = ',authHeader)
 
     if (!authHeader) {
         return res.status(401).json({ error: 'No token provided' });
@@ -94,8 +89,6 @@ export function authMiddleware(req, res, next) {
 
     // Extract token from header
     const token = authHeader.split(' ')[1];
-    
-    console.log('token = ',token)
 
     // Verify token
     try {
