@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'url';
 import {FolderPhotoForPromoActions} from '../constants.js';
+import sharp from "sharp";
 
 function getAllPromo(callback) {
     const db = getDB();
@@ -148,30 +149,69 @@ function deletePromo(id, callback) {
     });
 }
 
+async function createPromoPhotos278х402(fileName, photo, promoPhotoDir) {
+    const name =  `${fileName+'_v_b'}.webp`
+    const filePath = path.join(promoPhotoDir,name);
+    let processedBuffer = await sharp(photo)
+        .webp({quality: 92})
+        .resize(500, 723, {fit: 'cover', withoutEnlargement: true})
+        .toBuffer();
+    await fs.promises.writeFile(filePath, processedBuffer);
+
+    const filePath2 = path.join(promoPhotoDir,  `${fileName+'_v_l'}.webp`);
+    processedBuffer = await sharp(photo)
+        .webp({quality: 92})
+        .resize(345, 500, {fit: 'cover', withoutEnlargement: true})
+        .toBuffer();
+    await fs.promises.writeFile(filePath2, processedBuffer);
+    return name
+}
+
+async function createPromoPhotos1200х501(fileName, photo, promoPhotoDir) {
+    const name =`${fileName+'_h_m'}.webp`
+    const filePath = path.join(promoPhotoDir, name);
+    const processedBuffer = await sharp(photo)
+        .webp({quality: 92})
+        .resize(1201, 501, {fit: 'cover', withoutEnlargement: true})
+        .toBuffer();
+    await fs.promises.writeFile(filePath, processedBuffer);
+    return name
+}
+
+async function createPromoPhotos585х200(fileName, photo, promoPhotoDir) {
+    const name = `${fileName+'_h_b'}.webp`
+    const filePath = path.join(promoPhotoDir, name);
+    let processedBuffer = await sharp(photo)
+        .webp({quality: 92})
+        .resize(1200, 410, {fit: 'cover', withoutEnlargement: true})
+        .toBuffer();
+    await fs.promises.writeFile(filePath, processedBuffer);
+
+    const filePath2 = path.join(promoPhotoDir, `${fileName+'_h_l'}.webp`);
+    processedBuffer = await sharp(photo)
+        .webp({quality: 92})
+        .resize(585, 200, {fit: 'cover', withoutEnlargement: true})
+        .toBuffer();
+    await fs.promises.writeFile(filePath2, processedBuffer);
+    return name
+}
+
+
 // Save promo photo
 function savePromoPhoto(fileName, photo, callback) {
+
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-
-    // Ensure the promo photos directory exists
     const promoPhotoDir = path.resolve(__dirname, '../..', FolderPhotoForPromoActions);
-    
-    // Create directory if it doesn't exist
+
     fs.mkdirSync(promoPhotoDir, { recursive: true });
-    
-    // Define the file path
-    const filePath = path.join(promoPhotoDir, `${fileName}`);
 
-    // Save the photo data to file
-    fs.writeFile(filePath, photo, function(err) {
-        if (err) {
-            console.error('Error saving promo photo to disk:', err.message);
-            return callback(err, null);
-        }
+    let newFileName = fileName.split('_')[1]
 
-        callback(null, `/promo-photos/${fileName}`);
+    if (fileName.includes('278х402')) createPromoPhotos278х402(newFileName, photo, promoPhotoDir).then(res => callback(null, res))
+    if (fileName.includes('585х200')) createPromoPhotos585х200(newFileName, photo, promoPhotoDir).then(res => callback(null, res))
+    if (fileName.includes('1200х501')) createPromoPhotos1200х501(newFileName, photo, promoPhotoDir).then(res => callback(null, res))
 
-    });
 }
 
 export  {

@@ -142,25 +142,13 @@ router.delete('/promo/:id', async (req, res) => {
 // Upload promo photo
 router.post('/promo/upload', upload.single('photo'), async (req, res) => {
     try {
-        // console.log('Request received at /promo/upload');
-        // console.log('111331 req.body = ', req.body);
-        // console.log('1111331 req.file = ', req.file);
-
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        const id = req.body.id;
+        const fileName = req.body.fileName;
         const photoData = req.file.buffer; // Get the binary data from the upload
-
-        // console.log('Saving photo for id:', id);
-        // console.log('Photo data size:', photoData.length, 'bytes');
-        // console.log('Photo data buffer:', Buffer.isBuffer(photoData) ? 'Buffer' : typeof photoData);
-        // console.log('Photo data buffer length:', photoData ? photoData.length : 'No data');
-        // console.log('Photo data buffer type:', Buffer.isBuffer(photoData) ? 'Buffer' : 'Not a buffer');
-        // console.log('Photo data buffer length:', photoData ? photoData.length : 'No data');
-
-        const photoUrl = await promoService.savePromoPhoto(id, photoData);
+        const photoUrl = await promoService.savePromoPhoto(fileName, photoData);
         res.json({ photoUrl });
     } catch (error) {
         console.error('Error uploading promo photo:', error);

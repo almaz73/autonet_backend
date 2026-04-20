@@ -6,8 +6,8 @@ import { promisify } from 'util';
 const users = [
     {
         id: 1,
-        username: 'admin',
-        password: 'admin',
+        username: 'almaz',
+        password: 'almaz',
         role: 'admin'
     }
 ];
@@ -27,8 +27,6 @@ export async function login(req,res) {
     try {
         const { username, password } = req.body;
         
-        console.log('222 username, password  = ', username, password )
-
         // Find user by username
         const user = users.find(u => u.username === username);
 

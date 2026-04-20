@@ -16,10 +16,11 @@ app.use(express.static('static'))
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     const allowedOrigin = 'http://localhost:9173';
+    const allowedOrigin2 = 'http://localhost:4173';
     const origin = req.headers.origin;
     
     // Allow requests from the allowed origin
-    if (origin && origin === allowedOrigin) {
+    if (origin && (origin === allowedOrigin || origin === allowedOrigin2)) {
         res.header('Access-Control-Allow-Origin', origin);
         res.header('Access-Control-Allow-Credentials', true);
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
