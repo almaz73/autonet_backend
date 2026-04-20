@@ -69,18 +69,17 @@ router.get('/promo/:id', async (req, res) => {
 // Create new promo item
 router.post('/promo', async (req, res) => {
     try {
-        const { name, onMain, priority, active, photoBig, photoMiddle, photoSmall, photoSM_ver, photoSM_hor } = req.body;
+        const { name, onMain, priority, active, description, photo278, photo585, photo1200 } = req.body;
 
         const promo = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
             priority: parseInt(priority) || 0,
             active: active === 'true' ? true : (active === 'false' ? false : active),
-            photoBig,
-            photoMiddle,
-            photoSmall,
-            photoSM_ver,
-            photoSM_hor
+            description,
+            photo278,
+            photo585,
+            photo1200
         };
 
         const newPromoId = await promoService.createPromo(promo);
@@ -94,18 +93,17 @@ router.post('/promo', async (req, res) => {
 // Update promo item
 router.put('/promo/:id', async (req, res) => {
     try {
-        const { name, onMain, priority, active, photoBig, photoMiddle, photoSmall, photoSM_ver, photoSM_hor } = req.body;
+        const { name, onMain, priority, active, description, photo278, photo585, photo1200} = req.body;
 
         const promo = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
             priority: parseInt(priority) || 0,
             active: active === 'true' ? true : (active === 'false' ? false : active),
-            photoBig,
-            photoMiddle,
-            photoSmall,
-            photoSM_ver,
-            photoSM_hor
+            description,
+            photo278,
+            photo585,
+            photo1200
         };
 
         console.log('promo = ',promo)

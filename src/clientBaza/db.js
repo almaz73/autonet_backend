@@ -35,11 +35,10 @@ function createTables(db) {
             onMain      BOOLEAN NOT NULL DEFAULT 1,
             priority    INTEGER NOT NULL DEFAULT 0,
             active      BOOLEAN NOT NULL DEFAULT 1,
-            photoBig    TEXT,
-            photoMiddle TEXT,
-            photoSmall  TEXT,
-            photoSM_ver TEXT,
-            photoSM_hor TEXT
+            description TEXT,
+            photo278    TEXT,
+            photo585    TEXT,
+            photo1200   TEXT
         )
     `;
 

@@ -63,12 +63,11 @@ function createPromo(promo, callback) {
                            onMain,
                            priority,
                            active,
-                           photoBig,
-                           photoMiddle,
-                           photoSmall,
-                           photoSM_ver,
-                           photoSM_hor)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                           description,
+                           photo278,
+                           photo585,
+                           photo1200)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -76,11 +75,10 @@ function createPromo(promo, callback) {
         promo.onMain ? 1 : 0,
         promo.priority || 0,
         promo.active !== undefined ? (promo.active ? 1 : 0) : 1,
-        promo.photoBig || null,
-        promo.photoMiddle || null,
-        promo.photoSmall || null,
-        promo.photoSM_ver || null,
-        promo.photoSM_hor || null
+        promo.description || null,
+        promo.photo278 || null,
+        promo.photo585 || null,
+        promo.photo1200 || null
     ];
 
     db.run(sql, values, function (err) {
@@ -102,11 +100,10 @@ function updatePromo(id, promo, callback) {
             onMain      = ?,
             priority    = ?,
             active      = ?,
-            photoBig    = ?,
-            photoMiddle = ?,
-            photoSmall  = ?,
-            photoSM_ver = ?,
-            photoSM_hor = ?
+            description = ?,
+            photo278    = ?,
+            photo585    = ?,
+            photo1200   = ?
         WHERE id = ?
     `;
 
@@ -115,11 +112,10 @@ function updatePromo(id, promo, callback) {
         promo.onMain ? 1 : 0,
         promo.priority,
         promo.active !== undefined ? (promo.active ? 1 : 0) : 1,
-        promo.photoBig || null,
-        promo.photoMiddle || null,
-        promo.photoSmall || null,
-        promo.photoSM_ver || null,
-        promo.photoSM_hor || null,
+        promo.description || null,
+        promo.photo278 || null,
+        promo.photo585 || null,
+        promo.photo1200 || null,
         id
     ];
 
