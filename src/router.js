@@ -66,6 +66,17 @@ router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние ф
 router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке, Обновления БАЗ
 router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
 
+// Get active promo banners (public route)
+router.get('/main_banners', async (req, res) => {
+    try {
+        const promoItems = await Controllers.getActivePromoBanners();
+        res.json(promoItems);
+    } catch (error) {
+        console.error('Error getting promo banners:', error);
+        res.status(500).json({ error: 'Failed to get promo banners' });
+    }
+});
+
 /*
  // Интервал цен
     router.get('/getPriceGap', Controllers.getPriceGap)

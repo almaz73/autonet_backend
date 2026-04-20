@@ -2,6 +2,7 @@ import ImportService from "./ImportService.js";
 import A_section from "../API/A_section.js";
 import A_car from "../API/A_car.js";
 import GetListService from "../API/GetListService.js";
+import {getDB} from '../clientBaza/db.js';
 
 import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
@@ -10,6 +11,30 @@ import {Worker} from 'worker_threads';
 import {Version} from "../constants.js";
 
 class Controllers {
+    async getActivePromoBanners() {
+        try {
+            const db = getDB();
+            // language=SQLite
+            const sql = `SELECT name, photo278, photo585, photo1200, description
+                         FROM promo
+                         WHERE active = 1
+                         ORDER BY priority ASC`;
+
+            return new Promise((resolve, reject) => {
+                db.all(sql, [], (err, rows) => {
+                    if (err) {
+                        console.error('Error getting active promo banners:', err.message);
+                        reject(err);
+                    } else {
+                        resolve(rows);
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error in getActivePromoBanners:', error);
+            throw error;
+        }
+    }
 
     async test(req, res) {
         try {

@@ -106,8 +106,6 @@ router.put('/promo/:id', async (req, res) => {
             photo1200
         };
 
-        console.log('promo = ',promo)
-
         const changes = await promoService.updatePromo(req.params.id, promo);
         if (changes === 0) {
             return res.status(404).json({ error: 'Promo item not found' });
