@@ -2,8 +2,10 @@ import Router from 'express'
 import Controllers from "./xml_import/Controllers.js";
 import Post from './post/Post.js'
 import multer from "multer";
+import NodeCache from "node-cache";
 
 const router = new Router()
+const myCache = new NodeCache({ stdTTL: 1000000}) // 1000000 секунд
 
 // Configure multer for file uploads with appropriate limits
 class MulterConfig {
@@ -69,7 +71,11 @@ router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно
 // Get active promo banners (public route)
 router.get('/main_banners', async (req, res) => {
     try {
+        const cachedData = myCache.get('/main_banners')
+        if (cachedData)  return res.json(cachedData); // Отправка из кэша
+
         const promoItems = await Controllers.getActivePromoBanners();
+        myCache.set('/main_banners', promoItems);
         res.json(promoItems);
     } catch (error) {
         console.error('Error getting promo banners:', error);
