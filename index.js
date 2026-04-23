@@ -40,6 +40,16 @@ app.use('/api', router)
 app.use('/api', routerPromo)
 
 
+app.use((req, res, next) => {
+
+    console.log('$$$$$$$$$$$ req = ')
+    console.log('res.status = ',res.status(404))
+
+    res.status(404).render('404', {
+        requestedUrl: req.originalUrl // Передаем динамические данные
+    });
+});
+
 async function startApp() {
     try {
         // Open SQLite database

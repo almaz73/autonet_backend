@@ -66,6 +66,36 @@ router.get('/promo/:id', async (req, res) => {
     }
 });
 
+// Get promo item by number and return HTML page with <h1>number</h1>
+router.get('/promo/:number', async (req, res) => {
+    
+    console.log('898989898998989 = ',898989898998989)
+    
+    try {
+        const promoItem = await promoService.getPromoByNumber(req.params.number);
+        
+        if (!promoItem) {
+            return res.status(404).json({ error: 'Promo item not found' });
+        }
+        
+        // Generate simple HTML page with the number
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Promo</title>
+</head>
+<body>
+    <h1>${req.params.number}</h1>
+</body>
+</html>`;
+        
+        res.send(html);
+    } catch (error) {
+        console.error('Error getting promo item by number:', error);
+        res.status(500).json({ error: 'Failed to get promo item' });
+    }
+});
+
 // Create new promo item
 router.post('/promo', async (req, res) => {
     try {
