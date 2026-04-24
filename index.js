@@ -4,14 +4,21 @@ import { open } from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
 import routerPromo  from "./src/routerPromo.js";
 import routerAuth  from "./src/routerAuth.js";
+import {fileURLToPath} from 'url';
+import path from "path";
+
+const app = express()
 
 // const HOST = '127.0.0.1'; // Привязка
 const PORT = 3000;
 const DB_PATH = './database.sqlite'; // Local SQLite file
 
-const app = express()
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendPath = path.join(__dirname, '..', 'front');
 
 app.use(express.json())
+app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use(express.static('static'))
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
@@ -39,6 +46,11 @@ app.use('/api/auth', routerAuth)
 app.use('/api', router)
 app.use('/api', routerPromo)
 
+app.use((req, res, next) => {
+    // тут динамические страницы будем прикручивать
+    console.log('тут динамические страницы будем прикручивать ')
+    res.status(404).sendFile(path.join(__dirname, '../front', '404.html'));
+});
 
 async function startApp() {
     try {
