@@ -2,10 +2,11 @@ import express from 'express'
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
-import routerPromo  from "./src/routerPromo.js";
-import routerAuth  from "./src/routerAuth.js";
+// import routerPromo  from "./src/routerPromo.js";
+// import routerAuth  from "./src/routerAuth.js";
 import {fileURLToPath} from 'url';
 import path from "path";
+import fileUpload from 'express-fileupload';
 
 const app = express()
 
@@ -19,8 +20,9 @@ const frontendPath = path.join(__dirname, '..', 'front');
 
 app.use(express.json())
 app.use(express.static(frontendPath)); // 2. Раздаем статику
-app.use(express.static('static'))
+app.use(fileUpload({}))
 app.use(express.urlencoded({ extended: true }));
+app.use('/api', router)
 app.use((req, res, next) => {
     const allowedOrigin = 'http://localhost:9173';
     const allowedOrigin2 = 'http://localhost:4173';
@@ -38,18 +40,7 @@ app.use((req, res, next) => {
             return res.sendStatus(200);
         }
     }
-    
-    next();
-});
-
-app.use('/api/auth', routerAuth)
-app.use('/api', router)
-app.use('/api', routerPromo)
-
-app.use((req, res, next) => {
-    // тут динамические страницы будем прикручивать
-    console.log('тут динамические страницы будем прикручивать ')
-    res.status(404).sendFile(path.join(__dirname, '../front', '404.html'));
+    return res.status(404).sendFile(path.join(frontendPath, '404.html'));
 });
 
 async function startApp() {
