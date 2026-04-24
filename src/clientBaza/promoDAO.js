@@ -55,6 +55,23 @@ function getPromoById(id, callback) {
     });
 }
 
+// Get promo item by number
+function getPromoByNumber(number, callback) {
+    const db = getDB();
+    // language=SQLite
+    const sql = `SELECT *
+                 FROM promo
+                 WHERE description = ?`;
+
+    db.get(sql, [number], (err, row) => {
+        if (err) {
+            console.error('Error getting promo item by number', err.message);
+            return callback(err, null);
+        }
+        callback(null, row);
+    });
+}
+
 function createPromo(promo, callback) {
     const db = getDB();
     // language=SQLite

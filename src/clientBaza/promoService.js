@@ -39,6 +39,19 @@ function getPromoById(id) {
     });
 }
 
+// Get promo item by number
+function getPromoByNumber(number) {
+    return new Promise((resolve, reject) => {
+        promoDAO.getPromoByNumber(number, (err, promoItem) => {
+            if (err) {
+                console.error('Error getting promo item by number', err);
+                return reject(err);
+            }
+            resolve(promoItem);
+        });
+    });
+}
+
 // Create new promo item
 function createPromo(promo) {
     return new Promise((resolve, reject) => {
@@ -95,6 +108,7 @@ export {
     getAllPromo,
     getActivePromo,
     getPromoById,
+    getPromoByNumber,
     createPromo,
     updatePromo,
     deletePromo,
