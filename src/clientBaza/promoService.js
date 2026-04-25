@@ -1,4 +1,5 @@
 import * as promoDAO from './promoDAO.js'
+import {clearPromoCache} from "./promo/generationPagesForPromo.js";
 
 // Get all promo items
 function getAllPromo() {
@@ -60,6 +61,7 @@ function createPromo(promo) {
                 console.error('Error creating promo item', err);
                 return reject(err);
             }
+            clearPromoCache()
             resolve(lastID);
         });
     });
@@ -73,6 +75,7 @@ function updatePromo(id, promo) {
                 console.error('Error updating promo item', err);
                 return reject(err);
             }
+            clearPromoCache()
             resolve(changes);
         });
     });
@@ -86,6 +89,7 @@ function deletePromo(id) {
                 console.error('Error deleting promo item', err);
                 return reject(err);
             }
+            clearPromoCache()
             resolve(changes);
         });
     });
@@ -99,6 +103,7 @@ function savePromoPhoto(id, photoData) {
                 console.error('Error saving promo photo', err);
                 return reject(err);
             }
+            clearPromoCache()
             resolve(photoUrl);
         });
     });

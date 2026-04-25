@@ -17,7 +17,7 @@ class Controllers {
             // language=SQLite
             const sql = `SELECT name, photo278, photo585, photo1200, description
                          FROM promo
-                         WHERE active = 1
+                         WHERE active = 1 AND onMain = 1
                          ORDER BY priority ASC`;
 
             return new Promise((resolve, reject) => {

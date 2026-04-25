@@ -2,10 +2,9 @@ import Router from 'express'
 import Controllers from "./xml_import/Controllers.js";
 import Post from './post/Post.js'
 import multer from "multer";
-import NodeCache from "node-cache";
+import {getMainBanners} from './clientBaza/promo/generationPagesForPromo.js'
 
 const router = new Router()
-const myCache = new NodeCache({ stdTTL: 1000000}) // 1000000 секунд
 
 // Configure multer for file uploads with appropriate limits
 class MulterConfig {
@@ -20,7 +19,7 @@ class MulterConfig {
 
         // Set file size limits
         const limits = {
-            fileSize: 30 * 1024 * 1024, // 30MB limit
+            fileSize: 5 * 1024 * 1024, // 5MB limit
             fieldSize: 10 * 1024 * 1024, // 10MB field size
             fields: 10, // Max number of non-file fields
             parts: 100 // Max number of parts (files + fields)
@@ -55,6 +54,8 @@ router.get('/getYearGap', Controllers.getYearGap)
 
 router.post('/postEmail', Post.postEmailYa)
 router.post('/postEmailWithAttachement', upload.single('file'), Post.postEmailWithAttachementYa)
+router.get('/getMainBanners', getMainBanners) // баннеры карусели на главном
+
 
 router.get('/test', Controllers.test)
 router.get('/import-xml', Controllers.importXML) // загрузка xml в папку, заполнение БД, добавление фоток по ссылкам, удаление лишних фоток
@@ -68,20 +69,6 @@ router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние ф
 router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке, Обновления БАЗ
 router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
 
-// Get active promo banners (public route)
-router.get('/main_banners', async (req, res) => {
-    try {
-        const cachedData = myCache.get('/main_banners')
-        if (cachedData)  return res.json(cachedData); // Отправка из кэша
-
-        const promoItems = await Controllers.getActivePromoBanners();
-        myCache.set('/main_banners', promoItems);
-        res.json(promoItems);
-    } catch (error) {
-        console.error('Error getting promo banners:', error);
-        res.status(500).json({ error: 'Failed to get promo banners' });
-    }
-});
 
 /*
  // Интервал цен
