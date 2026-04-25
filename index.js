@@ -6,7 +6,8 @@ import router from "./src/router.js"; // Updated path to reflect router.js being
 // import routerAuth  from "./src/routerAuth.js";
 import {fileURLToPath} from 'url';
 import path from "path";
-import fileUpload from 'express-fileupload';
+import routerAuth from "./src/routerAuth.js";
+import routerPromo from "./src/routerPromo.js";
 
 const app = express()
 
@@ -20,13 +21,18 @@ const frontendPath = path.join(__dirname, '..', 'front');
 
 app.use(express.json())
 app.use(express.static(frontendPath)); // 2. Раздаем статику
-app.use(fileUpload({}))
 app.use(express.urlencoded({ extended: true }));
+
+app.use('/api/auth', routerAuth)
 app.use('/api', router)
+app.use('/api', routerPromo)
+
 app.use((req, res, next) => {
     const allowedOrigin = 'http://localhost:9173';
     const allowedOrigin2 = 'http://localhost:4173';
     const origin = req.headers.origin;
+
+    console.log('req = ',req.url) // вот тут динамические страницы
     
     // Allow requests from the allowed origin
     if (origin && (origin === allowedOrigin || origin === allowedOrigin2)) {
@@ -36,9 +42,7 @@ app.use((req, res, next) => {
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         
         // Handle preflight requests
-        if (req.method === 'OPTIONS') {
-            return res.sendStatus(200);
-        }
+        if (req.method === 'OPTIONS') return res.sendStatus(200)
     }
     return res.status(404).sendFile(path.join(frontendPath, '404.html'));
 });

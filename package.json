@@ -11,7 +11,6 @@
     "axios": "^1.13.6",
     "ejs": "^5.0.2",
     "express": "^4.22.1",
-    "express-fileupload": "^1.4.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "node-cache": "^5.1.2",
