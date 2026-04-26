@@ -2,12 +2,11 @@ import express from 'express'
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
-// import routerPromo  from "./src/routerPromo.js";
-// import routerAuth  from "./src/routerAuth.js";
 import {fileURLToPath} from 'url';
 import path from "path";
 import routerAuth from "./src/routerAuth.js";
 import routerPromo from "./src/routerPromo.js";
+import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 
 const app = express()
 
@@ -19,6 +18,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendPath = path.join(__dirname, '..', 'front');
 
+
+app.set('view engine', 'ejs');// Установка EJS как движка шаблонов
 app.use(express.json())
 app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use(express.urlencoded({ extended: true }));
@@ -32,8 +33,9 @@ app.use((req, res, next) => {
     const allowedOrigin2 = 'http://localhost:4173';
     const origin = req.headers.origin;
 
-    console.log('req = ',req.url) // вот тут динамические страницы
-    
+    //console.log('req = ',req.url) // вот тут динамические страницы
+    if (req.url.includes('/promo/') && !req.url.includes('/st/')) return  generationPagesForPromo(res, req.url)
+
     // Allow requests from the allowed origin
     if (origin && (origin === allowedOrigin || origin === allowedOrigin2)) {
         res.header('Access-Control-Allow-Origin', origin);

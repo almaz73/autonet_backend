@@ -1,5 +1,5 @@
 import * as promoDAO from './promoDAO.js'
-import {clearPromoCache} from "./promo/generationPagesForPromo.js";
+import {clearPromoCache} from "./generationPagesForPromo.js";
 
 // Get all promo items
 function getAllPromo() {

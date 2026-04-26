@@ -1,5 +1,5 @@
 import Router  from 'express'
-import * as promoService from './clientBaza/promoService.js';
+import * as promoService from './clientBaza/promo/promoService.js';
 
 // Promo routes
 const router = new Router()

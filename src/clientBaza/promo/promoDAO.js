@@ -1,9 +1,9 @@
 // Promo data access module
-import {getDB} from './db.js';
+import {getDB} from '../db.js';
 import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'url';
-import {FolderPhotoForPromoActions} from '../constants.js';
+import {FolderPhotoForPromoActions} from '../../constants.js';
 import sharp from "sharp";
 
 function getAllPromo(callback) {
@@ -45,6 +45,23 @@ function getPromoById(id, callback) {
     const sql = `SELECT *
                  FROM promo
                  WHERE id = ?`;
+
+    db.get(sql, [id], (err, row) => {
+        if (err) {
+            console.error('Error getting promo item', err.message);
+            return callback(err, null);
+        }
+        callback(null, row);
+    });
+}
+
+function getPromoByCode(id, callback) {
+    const db = getDB();
+    // language=SQLite
+    const sql = `SELECT *
+                 FROM promo
+                 WHERE description = ?
+                   AND active = 1`;
 
     db.get(sql, [id], (err, row) => {
         if (err) {
@@ -215,7 +232,7 @@ function savePromoPhoto(fileName, photo, callback) {
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    const promoPhotoDir = path.resolve(__dirname, '../..', FolderPhotoForPromoActions);
+    const promoPhotoDir = path.resolve(__dirname, '../../..', FolderPhotoForPromoActions);
 
     fs.mkdirSync(promoPhotoDir, { recursive: true });
 
@@ -231,6 +248,7 @@ export  {
     getAllPromo,
     getActivePromo,
     getPromoById,
+    getPromoByCode,
     createPromo,
     updatePromo,
     deletePromo,
