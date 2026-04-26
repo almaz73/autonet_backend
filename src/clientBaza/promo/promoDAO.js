@@ -125,30 +125,31 @@ function deletePromo(id, callback) {
             console.error('Error deleting promo item', err.message);
             return callback(err, null);
         }
+        deletePromoPhoto(id)
         callback(null, this.changes);
     });
 }
 
 async function createPromoPhotos278х402(fileName, photo, promoPhotoDir) {
-    const name =  `${fileName+'_v_b'}.webp`
-    const filePath = path.join(promoPhotoDir,name);
+    const name = `${fileName + '_v_b'}.webp`
+    const filePath = path.join(promoPhotoDir, name);
     let processedBuffer = await sharp(photo)
         .webp({quality: 92})
         .resize(500, 723, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
     await fs.promises.writeFile(filePath, processedBuffer);
 
-    const filePath2 = path.join(promoPhotoDir,  `${fileName+'_v_l'}.webp`);
+    const filePath2 = path.join(promoPhotoDir, `${fileName + '_v_l'}.webp`);
     processedBuffer = await sharp(photo)
         .webp({quality: 92})
-        .resize(345, 500, {fit: 'cover', withoutEnlargement: true})
+        .resize(278, 402, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
     await fs.promises.writeFile(filePath2, processedBuffer);
     return name
 }
 
 async function createPromoPhotos1200х501(fileName, photo, promoPhotoDir) {
-    const name =`${fileName+'_h_m'}.webp`
+    const name = `${fileName + '_h_m'}.webp`
     const filePath = path.join(promoPhotoDir, name);
     const processedBuffer = await sharp(photo)
         .webp({quality: 92})
@@ -159,7 +160,7 @@ async function createPromoPhotos1200х501(fileName, photo, promoPhotoDir) {
 }
 
 async function createPromoPhotos585х200(fileName, photo, promoPhotoDir) {
-    const name = `${fileName+'_h_b'}.webp`
+    const name = `${fileName + '_h_b'}.webp`
     const filePath = path.join(promoPhotoDir, name);
     let processedBuffer = await sharp(photo)
         .webp({quality: 92})
@@ -167,7 +168,7 @@ async function createPromoPhotos585х200(fileName, photo, promoPhotoDir) {
         .toBuffer();
     await fs.promises.writeFile(filePath, processedBuffer);
 
-    const filePath2 = path.join(promoPhotoDir, `${fileName+'_h_l'}.webp`);
+    const filePath2 = path.join(promoPhotoDir, `${fileName + '_h_l'}.webp`);
     processedBuffer = await sharp(photo)
         .webp({quality: 92})
         .resize(585, 200, {fit: 'cover', withoutEnlargement: true})
@@ -176,25 +177,40 @@ async function createPromoPhotos585х200(fileName, photo, promoPhotoDir) {
     return name
 }
 
-
-// Save promo photo
 function savePromoPhoto(fileName, photo, callback) {
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const promoPhotoDir = path.resolve(__dirname, '../../..', FolderPhotoForPromoActions);
 
-    fs.mkdirSync(promoPhotoDir, { recursive: true });
+    fs.mkdirSync(promoPhotoDir, {recursive: true});
 
     let newFileName = fileName.split('_')[1]
 
     if (fileName.includes('278х402')) createPromoPhotos278х402(newFileName, photo, promoPhotoDir).then(res => callback(null, res))
     if (fileName.includes('585х200')) createPromoPhotos585х200(newFileName, photo, promoPhotoDir).then(res => callback(null, res))
     if (fileName.includes('1200х501')) createPromoPhotos1200х501(newFileName, photo, promoPhotoDir).then(res => callback(null, res))
-
 }
 
-export  {
+async function deletePromoPhoto(id) {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const uploadDir = path.resolve(__dirname, '../../..', FolderPhotoForPromoActions);
+
+    let names = ['_h_b', '_h_l', '_h_m', '_v_b', '_v_l']
+    for (let name of names) {
+        let filename = id + name + '.webp'
+        try {
+            const filePath = path.join(uploadDir, filename)
+            if (fs.existsSync(filePath)) await fs.promises.unlink(filePath);
+        } catch (error) {
+            console.log('Error deleting file:', error.message)
+            return {error: error.message};
+        }
+    }
+}
+
+export {
     getAllPromo,
     getPromoByCode,
     createPromo,
