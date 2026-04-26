@@ -40,62 +40,6 @@ router.get('/promo', async (req, res) => {
     }
 });
 
-// Get active promo items
-// router.get('' +
-//     '', async (req, res) => {
-//     try {
-//         console.log('33333333 = ',33333333)
-//         const promoItems = await promoService.getActivePromo();
-//         res.json(promoItems);
-//     } catch (error) {
-//         console.error('Error getting active promo items:', error);
-//         res.status(500).json({ error: 'Failed to get active promo items' });
-//     }
-// });
-
-// Get promo item by ID
-// router.get('/promo/:id', async (req, res) => {
-//     try {
-//         const promoItem = await promoService.getPromoById(req.params.id);
-//         if (!promoItem) {
-//             return res.status(404).json({ error: 'Promo item not found' });
-//         }
-//         res.json(promoItem);
-//     } catch (error) {
-//         console.error('Error getting promo item:', error);
-//         res.status(500).json({ error: 'Failed to get promo item' });
-//     }
-// });
-
-// Get promo item by number and return HTML page with <h1>number</h1>
-// router.get('/promo/:number', async (req, res) => {
-//
-//     console.log('898989898998989 = ',898989898998989)
-//
-//     try {
-//         const promoItem = await promoService.getPromoByNumber(req.params.number);
-//
-//         if (!promoItem) {
-//             return res.status(404).json({ error: 'Promo item not found' });
-//         }
-//
-//         // Generate simple HTML page with the number
-//         const html = `<!DOCTYPE html>
-// <html>
-// <head>
-//     <title>Promo</title>
-// </head>
-// <body>
-//     <h1>${req.params.number}</h1>
-// </body>
-// </html>`;
-//
-//         res.send(html);
-//     } catch (error) {
-//         console.error('Error getting promo item by number:', error);
-//         res.status(500).json({ error: 'Failed to get promo item' });
-//     }
-// });
 
 // Create new promo item
 router.post('/promo', async (req, res) => {
