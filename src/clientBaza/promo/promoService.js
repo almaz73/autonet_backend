@@ -14,44 +14,6 @@ function getAllPromo() {
     });
 }
 
-// Get active promo items
-function getActivePromo() {
-    return new Promise((resolve, reject) => {
-        promoDAO.getActivePromo((err, promoItems) => {
-            if (err) {
-                console.error('Error getting active promo items', err);
-                return reject(err);
-            }
-            resolve(promoItems);
-        });
-    });
-}
-
-// Get promo item by ID
-function getPromoById(id) {
-    return new Promise((resolve, reject) => {
-        promoDAO.getPromoById(id, (err, promoItem) => {
-            if (err) {
-                console.error('Error getting promo item by ID', err);
-                return reject(err);
-            }
-            resolve(promoItem);
-        });
-    });
-}
-
-// Get promo item by number
-function getPromoByNumber(number) {
-    return new Promise((resolve, reject) => {
-        promoDAO.getPromoByNumber(number, (err, promoItem) => {
-            if (err) {
-                console.error('Error getting promo item by number', err);
-                return reject(err);
-            }
-            resolve(promoItem);
-        });
-    });
-}
 
 // Create new promo item
 function createPromo(promo) {
@@ -111,9 +73,6 @@ function savePromoPhoto(id, photoData) {
 
 export {
     getAllPromo,
-    getActivePromo,
-    getPromoById,
-    getPromoByNumber,
     createPromo,
     updatePromo,
     deletePromo,

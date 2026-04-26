@@ -6,9 +6,15 @@ import { promisify } from 'util';
 const users = [
     {
         id: 1,
-        username: 'almaz',
-        password: 'almaz',
+        username: 'promo_almaz',
+        password: 'D&fibyunjy_77',
         role: 'admin'
+    },
+    {
+        id: 1,
+        username: 'promo_editor',
+        password: 'Cv^frneyjdcrbq_9',
+        role: 'editor'
     }
 ];
 
@@ -46,37 +52,6 @@ export async function login(req,res) {
     }
 }
 
-// Verify endpoint - check if a token is valid
-export async function verifyToken(req, res) {
-    try {
-        // Get token from header
-        const authHeader = req.headers.authorization;
-
-       if (!authHeader) {
-            return res.status(401).json({ error: 'No token provided' });
-        }
-
-       // Extract token from header
-        const token =authHeader.split(' ')[1];
-
-        // Verify token
-        const decoded = await verifyAsync(token, 'secret_key');
-
-        // Check if user exists
-        const user = users.find(u => u.id === decoded.id);
-
-        if (!user) {
-            return res.status(404).json({ error:'User not found' });
-       }
-
-       // Return user info (without password)
-        const { password, ...userWithoutPassword } = user;
-        res.json(userWithoutPassword);
-    } catch (error) {
-        res.status(401).json({ error: 'Invalid token' });
-    }
-}
-
 // Middleware to protect routes
 export function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -85,19 +60,13 @@ export function authMiddleware(req, res, next) {
         return res.status(401).json({ error: 'No token provided' });
     }
 
-    // Extract token from header
     const token = authHeader.split(' ')[1];
 
-    // Verify token
     try {
         const decoded = jwt.verify(token, 'secret_key');
-
-        // Find user by decoded id
         const user = users.find(u => u.id === decoded.id);
 
-        if (!user) {
-            return res.status(404).json({ error:'User not found' });
-       }
+        if (!user)   return res.status(404).json({ error:'User not found' });
 
        // Adduser to request
         req.user = user;

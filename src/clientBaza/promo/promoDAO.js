@@ -22,39 +22,6 @@ function getAllPromo(callback) {
     });
 }
 
-function getActivePromo(callback) {
-    const db = getDB();
-    // language=SQLite
-    const sql = `SELECT *
-                 FROM promo
-                 WHERE active = 1
-                 ORDER BY priority ASC`;
-
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            console.error('Error getting active promo items', err.message);
-            return callback(err, null);
-        }
-        callback(null, rows);
-    });
-}
-
-function getPromoById(id, callback) {
-    const db = getDB();
-    // language=SQLite
-    const sql = `SELECT *
-                 FROM promo
-                 WHERE id = ?`;
-
-    db.get(sql, [id], (err, row) => {
-        if (err) {
-            console.error('Error getting promo item', err.message);
-            return callback(err, null);
-        }
-        callback(null, row);
-    });
-}
-
 function getPromoByCode(id, callback) {
     const db = getDB();
     // language=SQLite
@@ -66,23 +33,6 @@ function getPromoByCode(id, callback) {
     db.get(sql, [id], (err, row) => {
         if (err) {
             console.error('Error getting promo item', err.message);
-            return callback(err, null);
-        }
-        callback(null, row);
-    });
-}
-
-// Get promo item by number
-function getPromoByNumber(number, callback) {
-    const db = getDB();
-    // language=SQLite
-    const sql = `SELECT *
-                 FROM promo
-                 WHERE description = ?`;
-
-    db.get(sql, [number], (err, row) => {
-        if (err) {
-            console.error('Error getting promo item by number', err.message);
             return callback(err, null);
         }
         callback(null, row);
@@ -246,8 +196,6 @@ function savePromoPhoto(fileName, photo, callback) {
 
 export  {
     getAllPromo,
-    getActivePromo,
-    getPromoById,
     getPromoByCode,
     createPromo,
     updatePromo,
