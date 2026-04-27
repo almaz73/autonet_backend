@@ -36,6 +36,7 @@ function createTables(db) {
             priority    INTEGER NOT NULL DEFAULT 0,
             active      BOOLEAN NOT NULL DEFAULT 1,
             description TEXT,
+            code        TEXT,
             photo278    TEXT,
             photo585    TEXT,
             photo1200   TEXT

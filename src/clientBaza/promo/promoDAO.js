@@ -27,7 +27,7 @@ function getPromoByCode(id, callback) {
     // language=SQLite
     const sql = `SELECT *
                  FROM promo
-                 WHERE description = ?
+                 WHERE code = ?
                    AND active = 1`;
 
     db.get(sql, [id], (err, row) => {
@@ -47,7 +47,7 @@ function createPromo(promo, callback) {
                            onMain,
                            priority,
                            active,
-                           description,
+                           code,
                            photo278,
                            photo585,
                            photo1200)
@@ -59,7 +59,7 @@ function createPromo(promo, callback) {
         promo.onMain ? 1 : 0,
         promo.priority || 0,
         promo.active !== undefined ? (promo.active ? 1 : 0) : 1,
-        promo.description || null,
+        promo.code || null,
         promo.photo278 || null,
         promo.photo585 || null,
         promo.photo1200 || null
@@ -84,7 +84,7 @@ function updatePromo(id, promo, callback) {
             onMain      = ?,
             priority    = ?,
             active      = ?,
-            description = ?,
+            code = ?,
             photo278    = ?,
             photo585    = ?,
             photo1200   = ?
@@ -96,7 +96,7 @@ function updatePromo(id, promo, callback) {
         promo.onMain ? 1 : 0,
         promo.priority,
         promo.active !== undefined ? (promo.active ? 1 : 0) : 1,
-        promo.description || null,
+        promo.code || null,
         promo.photo278 || null,
         promo.photo585 || null,
         promo.photo1200 || null,

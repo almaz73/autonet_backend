@@ -44,14 +44,14 @@ router.get('/promo', async (req, res) => {
 // Create new promo item
 router.post('/promo', async (req, res) => {
     try {
-        const { name, onMain, priority, active, description, photo278, photo585, photo1200 } = req.body;
+        const { name, onMain, priority, active, code, photo278, photo585, photo1200 } = req.body;
 
         const promo = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
             priority: parseInt(priority) || 0,
             active: active === 'true' ? true : (active === 'false' ? false : active),
-            description,
+            code,
             photo278,
             photo585,
             photo1200
@@ -68,14 +68,14 @@ router.post('/promo', async (req, res) => {
 // Update promo item
 router.put('/promo/:id', async (req, res) => {
     try {
-        const { name, onMain, priority, active, description, photo278, photo585, photo1200} = req.body;
+        const { name, onMain, priority, active, code, photo278, photo585, photo1200} = req.body;
 
         const promo = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
             priority: parseInt(priority) || 0,
             active: active === 'true' ? true : (active === 'false' ? false : active),
-            description,
+            code,
             photo278,
             photo585,
             photo1200
