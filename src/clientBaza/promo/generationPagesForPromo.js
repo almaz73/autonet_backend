@@ -5,41 +5,26 @@ import fs from "fs";
 import path from "path";
 import {fileURLToPath} from "url";
 import * as promoDAO from "./promoDAO.js";
-import {getDB} from '../db.js'
-
-
-async function getActivePromoBanners() {
-    try {
-        const db = getDB();
-        // language=SQLite
-        const sql = `SELECT name, photo278, photo585, photo1200, description, code
-                     FROM promo
-                     WHERE active = 1
-                       AND onMain = 1
-                     ORDER BY priority ASC`;
-
-        return new Promise((resolve, reject) => {
-            db.all(sql, [], (err, rows) => {
-                if (err) {
-                    console.error('Error getting active promo banners:', err.message);
-                    reject(err);
-                } else {
-                    resolve(rows);
-                }
-            });
-        });
-    } catch (error) {
-        console.error('Error in getActivePromoBanners:', error);
-        throw error;
-    }
-}
 
 export async function getMainBanners(req, res) {
     try {
         const cachedData = myPromoCache.get('/getMainBanners')
         if (cachedData) return res.json(cachedData); // Отправка из кэша
-        const promoItems = await getActivePromoBanners();
+        const promoItems = await promoDAO.getMainPromoBanners();
         myPromoCache.set('/getMainBanners', promoItems);
+        res.json(promoItems);
+    } catch (error) {
+        console.error('Error getting promo banners:', error);
+        res.status(500).json({error: 'Failed to get promo banners'});
+    }
+}
+
+export async function getActiveBanners(req, res) {
+    try {
+        const cachedData = myPromoCache.get('/getActiveBanners')
+        if (cachedData) return res.json(cachedData); // Отправка из кэша
+        const promoItems = await promoDAO.getActivePromoBanners();
+        myPromoCache.set('/getActiveBanners', promoItems);
         res.json(promoItems);
     } catch (error) {
         console.error('Error getting promo banners:', error);
@@ -83,10 +68,10 @@ export async function generationPagesForPromo(res, url) {
             data.title = promoItem.name
             data.photo278 = promoItem.photo278
             data.photo1200 = promoItem.photo1200
-            res.render('promo', data);
+            res.render('promo', data);  // шаблон из бакендной папки VIEWS
         } else {
             data.title = 'Данная акция неактивна'
-            res.render('no_promo', data);
+            res.render('no_promo', data); // шаблон из бакендной папки VIEWS
         }
     });
 

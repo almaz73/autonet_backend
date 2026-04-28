@@ -210,11 +210,64 @@ async function deletePromoPhoto(id) {
     }
 }
 
+async function getMainPromoBanners() {
+    try {
+        const db = getDB();
+        // language=SQLite
+        const sql = `SELECT name, photo278, photo585, photo1200, description, code
+                     FROM promo
+                     WHERE active = 1
+                       AND onMain = 1
+                     ORDER BY priority ASC`;
+
+        return new Promise((resolve, reject) => {
+            db.all(sql, [], (err, rows) => {
+                if (err) {
+                    console.error('Error getting active promo banners:', err.message);
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error in getMainPromoBanners:', error);
+        throw error;
+    }
+}
+
+async function getActivePromoBanners() {
+    try {
+        const db = getDB();
+        // language=SQLite
+        const sql = `SELECT *
+                     FROM promo
+                     WHERE active = 1
+                     ORDER BY priority ASC`;
+
+        return new Promise((resolve, reject) => {
+            db.all(sql, [], (err, rows) => {
+                if (err) {
+                    console.error('Error getting active promo banners:', err.message);
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error in getMainPromoBanners:', error);
+        throw error;
+    }
+}
+
 export {
     getAllPromo,
     getPromoByCode,
     createPromo,
     updatePromo,
     deletePromo,
-    savePromoPhoto
+    savePromoPhoto,
+    getMainPromoBanners,
+    getActivePromoBanners
 };

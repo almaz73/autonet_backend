@@ -2,7 +2,7 @@ import Router from 'express'
 import Controllers from "./xml_import/Controllers.js";
 import Post from './post/Post.js'
 import multer from "multer";
-import {getMainBanners} from './clientBaza/promo/generationPagesForPromo.js'
+import {getActiveBanners, getMainBanners} from './clientBaza/promo/generationPagesForPromo.js'
 
 const router = new Router()
 
@@ -55,6 +55,7 @@ router.get('/getYearGap', Controllers.getYearGap)
 router.post('/postEmail', Post.postEmailYa)
 router.post('/postEmailWithAttachement', upload.single('file'), Post.postEmailWithAttachementYa)
 router.get('/getMainBanners', getMainBanners) // баннеры карусели на главном
+router.get('/getActiveBanners', getActiveBanners) // все активные промо-баннеры
 
 
 router.get('/test', Controllers.test)
@@ -84,4 +85,4 @@ router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно
     router.post('/email/postEmailWithAttachement', Controllers.postEmailWithAttachement)
 */
 
- export default router;
+export default router;
