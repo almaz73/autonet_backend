@@ -15,6 +15,12 @@ const users = [
         username: 'promo_editor',
         password: 'Cv^frneyjdcrbq_9',
         role: 'editor'
+    },
+    {
+        id: 1,
+        username: 'articles_edit_007',
+        password: 'Rfghbpysq_Jktu',
+        role: 'editor'
     }
 ];
 
@@ -43,6 +49,8 @@ export async function login(req,res) {
 
         // Generate token
         const token = generateToken(user);
+
+        console.log('token = ',token)
 
         // Return token
         res.json({ token });
