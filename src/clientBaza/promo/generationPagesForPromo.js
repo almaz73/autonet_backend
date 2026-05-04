@@ -55,7 +55,7 @@ export async function generationPagesForPromo(res, url) {
         for (let manifestKey in manifest) {
             if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
             if (manifestKey.includes('_promo-') && manifestKey.includes('.css')) css2 = manifestKey.slice(1)
-            if (manifestKey.includes('_promo-random-')) js3 = manifestKey.slice(1)
+            if (manifestKey.includes('_promo-')) js3 = manifestKey.slice(1)
         }
 
         const data = {
