@@ -146,14 +146,32 @@ class Controllers {
     }
 
 
-    async getBrandList(req, res) {
-        try {
-            const list = await A_section.getBrandList()
-            res.json(list);
-        } catch (error) {
-            console.error('Error getBrandList:', error);
-            res.status(500).json({error: error.message});
+    // async getBrandList(req, res) {
+    //     try {
+    //         const list = await A_section.getBrandList()
+    //         res.json(list);
+    //     } catch (error) {
+    //         console.error('Error getBrandList:', error);
+    //         res.status(500).json({error: error.message});
+    //     }
+    // }
+
+    async getListBrands() {
+        return await A_section.getBrandList()
+    }
+
+    listBrands = []
+
+    async redirectBrand(val, res) {
+        if (!this.listBrands.length) {
+            this.listBrands = await this.getListBrands()
+            this.listBrands = this.listBrands.map(item => item.name.toUpperCase())
         }
+
+        let brand = this.listBrands.find(el => val.toUpperCase().includes(el))
+        if (brand) return res.redirect(`/cars/?brand=${brand}`);
+
+        if (val.toUpperCase().includes('CARS')) return res.redirect(`/cars/`);
     }
 
     async getModelList(req, res) {

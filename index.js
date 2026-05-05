@@ -1,12 +1,13 @@
 import express from 'express'
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import {open} from 'sqlite';
 import router from "./src/router.js"; // Updated path to reflect router.js being inside src
 import {fileURLToPath} from 'url';
 import path from "path";
 import routerAuth from "./src/routerAuth.js";
 import routerPromo from "./src/routerPromo.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
+import Controllers from "./src/xml_import/Controllers.js";
 
 const app = express()
 
@@ -22,27 +23,25 @@ const frontendPath = path.join(__dirname, '..', 'front');
 app.set('view engine', 'ejs');// Установка EJS как движка шаблонов
 app.use(express.json())
 app.use(express.static(frontendPath)); // 2. Раздаем статику
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 
 app.use('/api/auth', routerAuth)
 app.use('/api', router)
 app.use('/api', routerPromo)
 
 app.use((req, res, next) => {
-    const allowedOrigin = 'http://localhost:9173';
-    const allowedOrigin2 = 'http://localhost:4173';
     const origin = req.headers.origin;
 
-    //console.log('req = ',req.url) // вот тут динамические страницы
-    if (req.url.includes('/promo/') && !req.url.includes('/st/')) return  generationPagesForPromo(res, req.url)
+    // console.log('req = ', req.url) // вот тут динамические страницы
+    if (req.url.includes('/promo/') && !req.url.includes('/st/')) return generationPagesForPromo(res, req.url)      // отдаем промоакции
+    if (!req.url.includes('/pub_auto/')) Controllers.redirectBrand(req.url, res)                                    // открываем страницу cars или бренды
 
     // Allow requests from the allowed origin
-    if (origin && (origin === allowedOrigin || origin === allowedOrigin2)) {
+    if (origin) {
         res.header('Access-Control-Allow-Origin', origin);
         res.header('Access-Control-Allow-Credentials', true);
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        
         // Handle preflight requests
         if (req.method === 'OPTIONS') return res.sendStatus(200)
     }
@@ -60,16 +59,18 @@ async function startApp() {
         // Create sections and cars tables if they don't exist
         // language=SQLite
         await db.exec(`
-            CREATE TABLE IF NOT EXISTS sections (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+            CREATE TABLE IF NOT EXISTS sections
+            (
+                id   INTEGER PRIMARY KEY AUTOINCREMENT,
                 data TEXT NOT NULL
             )
         `);
 
         // language=SQLite
         await db.exec(`
-            CREATE TABLE IF NOT EXISTS cars (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+            CREATE TABLE IF NOT EXISTS cars
+            (
+                id   INTEGER PRIMARY KEY AUTOINCREMENT,
                 data TEXT NOT NULL
             )
         `);
