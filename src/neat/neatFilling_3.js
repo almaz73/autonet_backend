@@ -1,8 +1,7 @@
-import {Version, getTime} from "./constants.js";
-import {sendEmail} from "./post/sendEmail.js"
-import {sendTelegram} from "./telegramReport.js";
-import {addFirstPhotos} from "./neatFilling/addFirstPhotos.js"
-import {addAllPhotos} from "./neatFilling/addAllPhotos.js"
+import {getTime} from "../constants.js";
+import {sendEmail} from "../post/sendEmail.js"
+import {sendTelegram} from "../telegramReport.js";
+import {addAllPhotos} from "./services/addAllPhotos.js"
 
 
 

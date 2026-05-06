@@ -1,5 +1,5 @@
 import path from "path";
-import {devMode, FolderLINKS, FolderPhoto} from "../constants.js";
+import {devMode, FolderLINKS, FolderPhoto} from "../../constants.js";
 import fs from "fs";
 import PhotoSaver from "./CreaterSmallBigPhotoSteps.js";
 

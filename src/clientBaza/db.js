@@ -19,6 +19,7 @@ export function getDB() {
         }
         console.log(`Connected to database at ${DB_FILE}`);
     });
+    // createTables(db);
     if (!dbExists) createTables(db);
 
     return db;
@@ -44,10 +45,31 @@ function createTables(db) {
     `;
 
     db.run(createPromoTable, (err) => {
-        if (err) {
-            console.error('Error creating promo table', err.message);
-        } else {
-            console.log('Promo table created successfully');
-        }
+        if (err) console.error('Error creating promo table', err.message);
+        else console.log('Promo table created successfully');
+    });
+
+
+    // language=SQLite
+    const createArticleTable = `
+        CREATE TABLE IF NOT EXISTS article
+        (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            name         TEXT    NOT NULL,
+            onMain       BOOLEAN NOT NULL DEFAULT 1,
+            priority     INTEGER NOT NULL DEFAULT 0,
+            active       BOOLEAN NOT NULL DEFAULT 1,
+            description  TEXT,
+            code         TEXT,
+            shortContent TEXT,
+            content      TEXT,
+            photo278    TEXT,
+            photo1200   TEXT
+        )
+    `;
+
+    db.run(createArticleTable, (err) => {
+        if (err) console.error('Error creating promo table', err.message);
+        else console.log('Promo table created successfully');
     });
 }

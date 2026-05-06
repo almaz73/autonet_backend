@@ -1,11 +1,11 @@
-import {Version, getTime} from "./constants.js";
+import {Version, getTime} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
-import {sendEmail} from "./post/sendEmail.js"
-import {sendTelegram} from "./telegramReport.js";
-import {copyXmlToFolder} from './stepsImportPhoto/copyXmlToFolder.js'
-import {clearTables} from './stepsImportPhoto/clearTables.js'
-import {parseXMLToBD} from "./stepsImportPhoto/parseXMLToBD.js";
+import {sendEmail} from "../post/sendEmail.js"
+import {sendTelegram} from "../telegramReport.js";
+import {copyXmlToFolder} from '../stepsImportPhoto/copyXmlToFolder.js'
+import {clearTables} from '../stepsImportPhoto/clearTables.js'
+import {parseXMLToBD} from "../stepsImportPhoto/parseXMLToBD.js";
 
 const db = await open({
     filename: './database.sqlite',

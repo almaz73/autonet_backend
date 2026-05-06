@@ -1,11 +1,11 @@
-import {Version, getTime} from "./constants.js";
+import {Version, getTime} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
-import {sendEmail} from "./post/sendEmail.js"
-import {sendTelegram} from "./telegramReport.js";
-import {clearBadPhotos} from './neatFilling/clearBadPhotos.js'
-import {getAllNewCarsWithPhoto} from "./neatFilling/getAllNewCarsWithPhoto.js"
-import {saveLinks} from "./neatFilling/saveLinks.js"
+import {sendEmail} from "../post/sendEmail.js"
+import {sendTelegram} from "../telegramReport.js";
+import {clearBadPhotos} from './services/clearBadPhotos.js'
+import {getAllNewCarsWithPhoto} from "./services/getAllNewCarsWithPhoto.js"
+import {saveLinks} from "./services/saveLinks.js"
 
 
 const db = await open({

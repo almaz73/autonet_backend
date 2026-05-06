@@ -1,4 +1,4 @@
-import {FolderPhoto} from "../constants.js";
+import {FolderPhoto} from "../../constants.js";
 import fs from "fs";
 
 async function getListExistPhoto() { // список фоток в папке сервера

@@ -1,7 +1,7 @@
-import {getTime} from "./constants.js";
-import {removeUnNecessary} from "./neatFilling/removeUnNecessary.js"
-import {sendEmail} from "./post/sendEmail.js"
-import {sendTelegram} from "./telegramReport.js";
+import {getTime} from "../constants.js";
+import {removeUnNecessary} from "./services/removeUnNecessary.js"
+import {sendEmail} from "../post/sendEmail.js"
+import {sendTelegram} from "../telegramReport.js";
 
 
 let report = `:::::: ${getTime()} ::::::`

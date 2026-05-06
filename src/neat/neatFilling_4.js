@@ -1,7 +1,7 @@
-import {Version, getTime} from "./constants.js";
-import {sendEmail} from "./post/sendEmail.js"
-import {sendTelegram} from "./telegramReport.js";
-import {publicBD} from "./neatFilling/publicBD.js"
+import {Version, getTime} from "../constants.js";
+import {sendEmail} from "../post/sendEmail.js"
+import {sendTelegram} from "../telegramReport.js";
+import {publicBD} from "./services/publicBD.js"
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 

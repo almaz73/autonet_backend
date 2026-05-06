@@ -1,7 +1,7 @@
 import Router  from 'express'
-import * as promoService from './clientBaza/promo/promoService.js';
+import * as articleService from './clientBaza/article/articleService.js';
 
-// Promo routes
+// Article routes
 const router = new Router()
 
 // Import auth middleware from authController
@@ -25,28 +25,28 @@ const upload = multer({
     }
 });
 
-// Apply auth middleware to all promo routes
+// Apply auth middleware to all article routes
 router.use(authMiddleware);
 
 
-// Get all promo items
-router.get('/promo', async (req, res) => {
+// Get all article items
+router.get('/article', async (req, res) => {
     try {
-        const promoItems = await promoService.getAllPromo();
-        res.json(promoItems);
+        const articleItems = await articleService.getAllArticle();
+        res.json(articleItems);
     } catch (error) {
-        console.error('Error getting promo items:', error);
-        res.status(500).json({ error: 'Failed to get promo items' });
+        console.error('Error getting article items:', error);
+        res.status(500).json({ error: 'Failed to get article items' });
     }
 });
 
 
-// Create new promo item
-router.post('/promo', async (req, res) => {
+// Create new article item
+router.post('/article', async (req, res) => {
     try {
         const { name, onMain, priority, active, code, photo278, photo585, photo1200 } = req.body;
 
-        const promo = {
+        const article = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
             priority: parseInt(priority) || 0,
@@ -57,20 +57,20 @@ router.post('/promo', async (req, res) => {
             photo1200
         };
 
-        const newPromoId = await promoService.createPromo(promo);
-        res.status(201).json({ id: newPromoId });
+        const newArticleId = await articleService.createArticle(article);
+        res.status(201).json({ id: newArticleId });
     } catch (error) {
-        console.error('Error creating promo item:', error);
-        res.status(500).json({ error: 'Failed to create promo item' });
+        console.error('Error creating article item:', error);
+        res.status(500).json({ error: 'Failed to create article item' });
     }
 });
 
-// Update promo item
-router.put('/promo/:id', async (req, res) => {
+// Update article item
+router.put('/article/:id', async (req, res) => {
     try {
         const { name, onMain, priority, active, code, photo278, photo585, photo1200} = req.body;
 
-        const promo = {
+        const article = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
             priority: parseInt(priority) || 0,
@@ -81,33 +81,33 @@ router.put('/promo/:id', async (req, res) => {
             photo1200
         };
 
-        const changes = await promoService.updatePromo(req.params.id, promo);
+        const changes = await articleService.updateArticle(req.params.id, article);
         if (changes === 0) {
-            return res.status(404).json({ error: 'Promo item not found' });
+            return res.status(404).json({ error: 'Article item not found' });
         }
-        res.json({ message: 'Promo item updated successfully' });
+        res.json({ message: 'Article item updated successfully' });
     } catch (error) {
-        console.error('Error updating promo item:', error);
-        res.status(500).json({ error: 'Failed to update promo item' });
+        console.error('Error updating article item:', error);
+        res.status(500).json({ error: 'Failed to update article item' });
     }
 });
 
-// Delete promo item
-router.delete('/promo/:id', async (req, res) => {
+// Delete article item
+router.delete('/article/:id', async (req, res) => {
     try {
-        const changes = await promoService.deletePromo(req.params.id);
+        const changes = await articleService.deleteArticle(req.params.id);
         if (changes === 0) {
-            return res.status(404).json({ error: 'Promo item not found' });
+            return res.status(404).json({ error: 'Article item not found' });
         }
-        res.json({ message: 'Promo item deleted successfully' });
+        res.json({ message: 'Article item deleted successfully' });
     } catch (error) {
-        console.error('Error deleting promo item:', error);
-        res.status(500).json({ error: 'Failed to delete promo item' });
+        console.error('Error deleting article item:', error);
+        res.status(500).json({ error: 'Failed to delete article item' });
     }
 });
 
-// Upload promo photo
-router.post('/promo/upload', upload.single('photo'), async (req, res) => {
+// Upload article photo
+router.post('/article/upload', upload.single('photo'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
@@ -115,17 +115,17 @@ router.post('/promo/upload', upload.single('photo'), async (req, res) => {
 
         const fileName = req.body.fileName;
         const photoData = req.file.buffer; // Get the binary data from the upload
-        const photoUrl = await promoService.savePromoPhoto(fileName, photoData);
+        const photoUrl = await articleService.saveArticlePhoto(fileName, photoData);
         res.json({ photoUrl });
     } catch (error) {
-        console.error('Error uploading promo photo:', error);
-        res.status(500).json({ error: 'Failed to upload promo photo' });
+        console.error('Error uploading article photo:', error);
+        res.status(500).json({ error: 'Failed to upload article photo' });
     }
 });
 
-// router.get('*', (req, res) => {
-//     console.log('404 404 404 404 404')
-//     res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
-// })
+router.get('*', (req, res) => {
+    console.log('ART 404 404 404 404 404')
+    res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
+})
 
 export default router;

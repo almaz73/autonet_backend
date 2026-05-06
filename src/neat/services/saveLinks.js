@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {FolderLINKS} from "../constants.js";
+import {FolderLINKS} from "../../constants.js";
 
 
 export async function saveLinks(fileName, data) {

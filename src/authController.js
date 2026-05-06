@@ -2,7 +2,7 @@
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
 
-// Simple in-memory user database
+// логин привязывается с типом админки
 const users = [
     {
         id: 1,
@@ -18,7 +18,7 @@ const users = [
     },
     {
         id: 1,
-        username: 'articles_edit_007',
+        username: 'article_edit_007',
         password: 'Rfghbpysq_Jktu',
         role: 'editor'
     }
