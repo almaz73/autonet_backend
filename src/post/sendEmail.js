@@ -2,6 +2,7 @@ import {transporterYandex} from "../nodemailerYandex.js";
 import {transporter} from "../nodemailer.js";
 
 export async function sendEmail(text) {
+    console.log('sendEmail text= ',text)
     await transporterYandex.sendMail({
         from: 'almaz73@yandex.ru',
         to: 'almaz73@gmail.com',

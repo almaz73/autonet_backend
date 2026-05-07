@@ -5,6 +5,7 @@ import {receivedDataTypes} from "../constants.js";
 class Post {
 
     async postEmailYa(req, res) {
+        console.log('postEmailYa = ',99999 )
         try {
             const receivedData = req.body; // Данные находятся в req.body
 

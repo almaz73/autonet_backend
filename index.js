@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import express from 'express'
 import sqlite3 from 'sqlite3';
 import {open} from 'sqlite';
@@ -9,6 +10,10 @@ import routerPromo from "./src/routerPromo.js";
 import routerArticles from "./src/routerArticles.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
+
+
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express()
 
