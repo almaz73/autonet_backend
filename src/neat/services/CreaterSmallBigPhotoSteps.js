@@ -14,7 +14,7 @@ class CreaterSmallBigPhoto {
         try {
             if (!imageUrl) return {error: 'Image URL is required'};
 
-            const uploadDir = path.join(__dirname, '../..', directory);
+            const uploadDir = path.join(__dirname, '../../..', directory);
 
             const urlObj = new URL(imageUrl);
             let originalFilename = path.basename(urlObj.pathname);
@@ -48,7 +48,7 @@ async function createSmallPhoto(baseName, uploadDir, imageUrl) {
         .toBuffer();
 
     await fs.promises.writeFile(filePath, processedBuffer);
-    console.log('  ⚡ small')
+    // console.log('  ⚡ small')
 }
 
 async function createBigPhoto(baseName, uploadDir, imageUrl) {
@@ -65,7 +65,6 @@ async function createBigPhoto(baseName, uploadDir, imageUrl) {
         .webp({quality: 90})
         .resize(1200, 800, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
-
     await fs.promises.writeFile(filePath, processedBuffer);
     // console.log('  ⚡ big')
 }
