@@ -19,7 +19,7 @@ export function getDB() {
         }
         console.log(`Connected to database at ${DB_FILE}`);
     });
-    // createTables(db);
+    createTables(db);
     if (!dbExists) createTables(db);
 
     return db;
@@ -59,12 +59,11 @@ function createTables(db) {
             onMain       BOOLEAN NOT NULL DEFAULT 1,
             priority     INTEGER NOT NULL DEFAULT 0,
             active       BOOLEAN NOT NULL DEFAULT 1,
-            description  TEXT,
+            data         TEXT,
             code         TEXT,
             shortContent TEXT,
             content      TEXT,
-            photo278    TEXT,
-            photo1200   TEXT
+            photo        TEXT
         )
     `;
 

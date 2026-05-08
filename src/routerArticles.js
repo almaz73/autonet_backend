@@ -44,17 +44,17 @@ router.get('/article', async (req, res) => {
 // Create new article item
 router.post('/article', async (req, res) => {
     try {
-        const { name, onMain, priority, active, code, photo278, photo585, photo1200 } = req.body;
+        const { name, onMain, priority, active, code, photo, shortContent, content } = req.body;
 
         const article = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
-            priority: parseInt(priority) || 0,
+            priority: parseInt(priority) || 10,
             active: active === 'true' ? true : (active === 'false' ? false : active),
             code,
-            photo278,
-            photo585,
-            photo1200
+            photo,
+            shortContent,
+            content
         };
 
         const newArticleId = await articleService.createArticle(article);
@@ -68,17 +68,17 @@ router.post('/article', async (req, res) => {
 // Update article item
 router.put('/article/:id', async (req, res) => {
     try {
-        const { name, onMain, priority, active, code, photo278, photo585, photo1200} = req.body;
+        const { name, onMain, priority, active, code, photo, shortContent, content} = req.body;
 
         const article = {
             name,
             onMain: onMain === 'true' ? true : (onMain === 'false' ? false : onMain),
-            priority: parseInt(priority) || 0,
+            priority: parseInt(priority) || 10,
             active: active === 'true' ? true : (active === 'false' ? false : active),
             code,
-            photo278,
-            photo585,
-            photo1200
+            photo,
+            shortContent,
+            content
         };
 
         const changes = await articleService.updateArticle(req.params.id, article);

@@ -44,13 +44,14 @@ function createArticle(article, callback) {
     // language=SQLite
     const sql = `
         INSERT INTO article (name,
-                           onMain,
-                           priority,
-                           active,
-                           code,
-                           photo278,
-                           photo1200)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+                             onMain,
+                             priority,
+                             active,
+                             code,
+                             photo,
+                             shortContent,
+                             content)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -59,8 +60,9 @@ function createArticle(article, callback) {
         article.priority || 0,
         article.active !== undefined ? (article.active ? 1 : 0) : 1,
         article.code || null,
-        article.photo278 || null,
-        article.photo1200 || null
+        article.photo || null,
+        article.shortCcontent || null,
+        article.content || null
     ];
 
     db.run(sql, values, function (err) {
@@ -78,13 +80,14 @@ function updateArticle(id, article, callback) {
     // language=SQLite
     const sql = `
         UPDATE article
-        SET name        = ?,
-            onMain      = ?,
-            priority    = ?,
-            active      = ?,
-            code = ?,
-            photo278    = ?,
-            photo1200   = ?
+        SET name         = ?,
+            onMain       = ?,
+            priority     = ?,
+            active       = ?,
+            code         = ?,
+            photo        = ?,
+            shortContent = ?,
+            content      = ?
         WHERE id = ?
     `;
 
@@ -94,8 +97,9 @@ function updateArticle(id, article, callback) {
         article.priority,
         article.active !== undefined ? (article.active ? 1 : 0) : 1,
         article.code || null,
-        article.photo278 || null,
-        article.photo1200 || null,
+        article.photo || null,
+        article.shortContent || null,
+        article.content || null,
         id
     ];
 
@@ -127,54 +131,25 @@ function deleteArticle(id, callback) {
 }
 
 async function createArticlePhotos278х402(fileName, photo, articlePhotoDir) {
-    const name = `${fileName + '_v_b'}.webp`
+    const name = `${fileName + '_big'}.webp`
     const filePath = path.join(articlePhotoDir, name);
     let processedBuffer = await sharp(photo)
         .webp({quality: 92})
-        .resize(500, 723, {fit: 'cover', withoutEnlargement: true})
+        .resize(1200, 673, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
     await fs.promises.writeFile(filePath, processedBuffer);
 
-    const filePath2 = path.join(articlePhotoDir, `${fileName + '_v_l'}.webp`);
+    const filePath2 = path.join(articlePhotoDir, `${fileName + '_small'}.webp`);
     processedBuffer = await sharp(photo)
         .webp({quality: 92})
-        .resize(278, 402, {fit: 'cover', withoutEnlargement: true})
+        .resize(382, 214, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
     await fs.promises.writeFile(filePath2, processedBuffer);
     return name
 }
 
-async function createArticlePhotos1200х501(fileName, photo, articlePhotoDir) {
-    const name = `${fileName + '_h_m'}.webp`
-    const filePath = path.join(articlePhotoDir, name);
-    const processedBuffer = await sharp(photo)
-        .webp({quality: 92})
-        .resize(1201, 501, {fit: 'cover', withoutEnlargement: true})
-        .toBuffer();
-    await fs.promises.writeFile(filePath, processedBuffer);
-    return name
-}
-
-async function createArticlePhotos585х200(fileName, photo, articlePhotoDir) {
-    const name = `${fileName + '_h_b'}.webp`
-    const filePath = path.join(articlePhotoDir, name);
-    let processedBuffer = await sharp(photo)
-        .webp({quality: 92})
-        .resize(1200, 410, {fit: 'cover', withoutEnlargement: true})
-        .toBuffer();
-    await fs.promises.writeFile(filePath, processedBuffer);
-
-    const filePath2 = path.join(articlePhotoDir, `${fileName + '_h_l'}.webp`);
-    processedBuffer = await sharp(photo)
-        .webp({quality: 92})
-        .resize(585, 200, {fit: 'cover', withoutEnlargement: true})
-        .toBuffer();
-    await fs.promises.writeFile(filePath2, processedBuffer);
-    return name
-}
 
 function saveArticlePhoto(fileName, photo, callback) {
-
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const articlePhotoDir = path.resolve(__dirname, '../../..', FolderPhotoForArticle);
@@ -183,9 +158,7 @@ function saveArticlePhoto(fileName, photo, callback) {
 
     let newFileName = fileName.split('_')[1]
 
-    if (fileName.includes('278х402')) createArticlePhotos278х402(newFileName, photo, articlePhotoDir).then(res => callback(null, res))
-    if (fileName.includes('585х200')) createArticlePhotos585х200(newFileName, photo, articlePhotoDir).then(res => callback(null, res))
-    if (fileName.includes('1200х501')) createArticlePhotos1200х501(newFileName, photo, articlePhotoDir).then(res => callback(null, res))
+    createArticlePhotos278х402(newFileName, photo, articlePhotoDir).then(res => callback(null, res))
 }
 
 async function deleteArticlePhoto(id) {
@@ -193,7 +166,7 @@ async function deleteArticlePhoto(id) {
     const __dirname = path.dirname(__filename);
     const uploadDir = path.resolve(__dirname, '../../..', FolderPhotoForArticle);
 
-    let names = ['_h_b', '_h_l', '_h_m', '_v_b', '_v_l']
+    let names = ['_big', '_small']
     for (let name of names) {
         let filename = id + name + '.webp'
         try {
@@ -210,7 +183,7 @@ async function getMainArticleBanners() {
     try {
         const db = getDB();
         // language=SQLite
-        const sql = `SELECT name, photo278, photo1200, description, code
+        const sql = `SELECT name, photo, content, shortContent, data, code
                      FROM article
                      WHERE active = 1
                        AND onMain = 1
