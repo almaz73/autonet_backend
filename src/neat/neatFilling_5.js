@@ -26,9 +26,9 @@ try {
 }
 
 
-try {
-    setTimeout(() => sendTelegram(reportForTelegram), 2000)
-} catch (e) {
-}
+// try {
+//     setTimeout(() => sendTelegram(reportForTelegram), 2000)
+// } catch (e) {
+// }
 
 

@@ -34,10 +34,10 @@ try {
 }
 
 
-try {
-    setTimeout(() => sendTelegram(reportForTelegram), 2000)
-} catch (e) {
-    console.log('e2 = ', e)
-}
+// try {
+//     setTimeout(() => sendTelegram(reportForTelegram), 2000)
+// } catch (e) {
+//     console.log('e2 = ', e)
+// }
 
 
