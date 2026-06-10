@@ -72,7 +72,7 @@ function addEmailToDatabase(receivedData) {
     let email = data['Email'] || data['email'] || '-'
     let phone = data['Телефон'] || '-'
     let fio = data['Имя']
-    let credit = data['Сумма кредита']
+    let credit = data['Сумма кредита'] || '-'
     let type_form = TYPES[data.type]
     let city =  data['Город'] || '-'
     let mark_model_year = ((data['Марка']||'-')  + ' ' + (data['Модель']||'')  + ' ' + (data['Год']||''))
@@ -101,28 +101,25 @@ function addEmailToDatabase(receivedData) {
     });
 }
 
-// New method to accept explicit parameters and store in DB
-function addClientEmail(email = "", phone = "", city = "", mark_model_year = "", advertising = true, concent = true) {
+
+// Method to get all client emails
+function getAllClientEmails(callback) {
     const db = getDB();
 
-    // Ensure table exists
-    createEmailsTable(db);
-
-    // Convert boolean values to integers (SQLite BOOLEAN emulation)
-    const advertisingInt = advertising ? 1 : 0;
-    const concentInt = concent ? 1 : 0;
-
-    // language=SQLite
-    const insertEmailSQL = `
-        INSERT INTO clientEmails (email, phone, created_at, city, mark_model_year, advertising, concent)
-        VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?)
+    // Language=SQLite
+    const selectAllEmailsSQL = `
+        SELECT *
+        FROM clientEmails
+        ORDER BY created_at DESC
     `;
 
-    db.run(insertEmailSQL, [email, phone, city, mark_model_year, advertisingInt, concentInt], function (err) {
+    db.all(selectAllEmailsSQL, [], (err, rows) => {
         if (err) {
-            console.error('Error adding client email to database', err.message);
+            console.error('Error fetching client emails', err.message);
+            return callback(err, null);
         }
+        callback(null, rows);
     });
 }
 
-export { addEmailToDatabase, addClientEmail };
+export { addEmailToDatabase, getAllClientEmails };

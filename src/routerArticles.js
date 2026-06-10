@@ -123,9 +123,6 @@ router.post('/article/upload', upload.single('photo'), async (req, res) => {
     }
 });
 
-router.get('*', (req, res) => {
-    console.log('ART 404 404 404 404 404')
-    res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
-})
+
 
 export default router;

@@ -1,28 +1,7 @@
 //authController.js
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
-
-// логин привязывается с типом админки
-const users = [
-    {
-        id: 1,
-        username: 'promo_almaz',
-        password: 'D&fibyunjy_77',
-        role: 'admin'
-    },
-    {
-        id: 1,
-        username: 'promo_editor',
-        password: 'Cv^frneyjdcrbq_9',
-        role: 'editor'
-    },
-    {
-        id: 1,
-        username: 'article_edit_007',
-        password: 'Rfghbpysq_Jktu',
-        role: 'editor'
-    }
-];
+import {users} from "./env_secrets.js";
 
 // Promisify jwt.verify for easier use
 const verifyAsync = promisify(jwt.verify).bind(jwt);

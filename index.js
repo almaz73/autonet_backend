@@ -7,6 +7,7 @@ import path from "path";
 import routerAuth from "./src/routerAuth.js";
 import routerPromo from "./src/routerPromo.js";
 import routerArticles from "./src/routerArticles.js";
+import router_bd from "./src/router_bd.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
 
@@ -30,6 +31,7 @@ app.use('/api/auth', routerAuth)
 app.use('/api', router)
 app.use('/api', routerPromo)
 app.use('/api', routerArticles)
+app.use('/api', router_bd)
 
 app.use((req, res, next) => {
     const origin = req.headers.origin;
