@@ -1,6 +1,7 @@
 import {transporter} from "../nodemailer.js";
 import {transporterYandex} from "../nodemailerYandex.js";
 import {receivedDataTypes} from "../constants.js";
+import {addEmailToDatabase} from "../clientBaza/listEmailsFromForms/listClientEmails.js"
 
 class Post {
 
@@ -20,6 +21,9 @@ class Post {
                 message: 'Данные успешно получены',
                 data: result
             });
+
+            // сохраняю список почты и телефонов из форм в базу
+            addEmailToDatabase(receivedData);
         } catch (error) {
             console.error('Error postEmail:', error);
             res.status(500).json({error: error.message});

@@ -33,9 +33,15 @@ export async function getActiveBanners(req, res) {
 }
 
 
-const manifest = JSON.parse( // чтобы обновленные ссылки сообщить шаблонизатору
-    fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../../../front/.vite/manifest.json'), 'utf-8')
-);
+let manifest
+try {
+    manifest = JSON.parse( // чтобы обновленные ссылки сообщить шаблонизатору
+        fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../../../front/.vite/manifest.json'), 'utf-8')
+    )
+} catch (e) {
+    console.log('динамические страницы акций не будут работать, нет файла манифеста = ')
+}
+
 
 
 const myPromoCache = new NodeCache({stdTTL: 1000000}) // 1000000 секунд

@@ -46,7 +46,7 @@ function createTables(db) {
 
     db.run(createPromoTable, (err) => {
         if (err) console.error('Error creating promo table', err.message);
-        else console.log('Promo table created successfully');
+        else console.log('created successfully');
     });
 
 
