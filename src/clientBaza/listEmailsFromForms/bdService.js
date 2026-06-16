@@ -1,15 +1,21 @@
-import* as articleDAO from './bdDAO.js'
+import* as bdDAO from './bdDAO.js'
 
 // Get all article items withoptional pagination and city filter
 function getAll_bd(page = 1, pageSize = 10, city = null) {
     return new Promise((resolve, reject) => {
-        articleDAO.getAllbd((err, bdItems) => {
+        bdDAO.getAllbd((err, data) => {
             if (err) {
-                console.error('Error getting all article items',err);
+                console.error('Error getting article items', err);
                 return reject(err);
             }
-            resolve(bdItems);
-        },page, pageSize, city);
+            resolve({
+                items: data.items,
+                total: data.total,
+                page: page,
+                pageSize: pageSize,
+                totalPages: Math.ceil(data.total / pageSize)
+            });
+        }, page, pageSize, city);
     });
 }
 
