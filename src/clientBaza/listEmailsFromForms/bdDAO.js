@@ -1,3 +1,5 @@
+import {getDB} from '../db.js';
+
 function getAllbd(callback, page = 1, pageSize = 10, city = null) {
     const db = getDB();
     const offset = (page - 1) * pageSize;
