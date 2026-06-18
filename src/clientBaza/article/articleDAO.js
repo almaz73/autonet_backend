@@ -11,7 +11,7 @@ function getAllArticle(callback) {
     // language=SQLite
     const sql = `SELECT *
                  FROM article
-                 ORDER BY priority ASC`;
+                 ORDER BY id DESC`;
 
     db.all(sql, [], (err, rows) => {
         if (err) {
