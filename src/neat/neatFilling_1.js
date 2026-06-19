@@ -22,7 +22,7 @@ for (let i in [1]) {
     //4 удаление плохих ссылок
     text = await clearBadPhotos(db)
     reportForTelegram += `  ➜  badLinks ⋲ ${text} `
-    report += `\n 5. ⚡. Удалены ${text} авто с плохими фото-ссылками`
+    report += `\n 5. ⚡. Отредактированы ${text} авто, удалены плохие фото-ссылки`
     if (text == undefined) break
 
     // 5. получение ссылок для обновления
