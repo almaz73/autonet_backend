@@ -1,9 +1,10 @@
-export const Version = 'ver.2.904'
+export const Version = 'ver.2.905'
 
 export const devMode = false // для тестирования
 
 export const FolderPhoto = '../front/pub_auto'
 export const FolderXML = '../front/XML'
+export const FolderForSitemap = '../front'
 export const FolderLINKS = '../front/LINKS' // тут ссылки для новых фоток, ссылки существующих фоток и ссылки фоток для удаления
 export const FolderPhotoForPromoActions = '../front/pub_promo'
 export const FolderPhotoForArticle = '../front/pub_article'

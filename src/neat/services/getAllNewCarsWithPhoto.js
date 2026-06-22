@@ -1,4 +1,5 @@
 import {FolderPhoto} from "../../constants.js";
+import {makeSitemap} from "./createSitemap.js"
 import fs from "fs";
 
 async function getListExistPhoto() { // список фоток в папке сервера
@@ -94,6 +95,7 @@ export async function getAllNewCarsWithPhoto(db) {
         console.log(' 👻 👻 👻 Фоток, которых уже нет в базе, но лежат в папке', links_unnecessary.length)
 
         console.log('links_short = ',links_short)
+        makeSitemap(links_short)
         
         links_short.forEach(el => {
             let tt = el.firstLink.split('/').pop()
