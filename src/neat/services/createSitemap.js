@@ -1,11 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import {FolderForSitemap} from "../../constants.js";
+import { open } from 'sqlite';
+import sqlite3 from 'sqlite3';
 
 export function makeSitemap(links_short) {
     let urls = ''
+    let frendlies = []
 
     links_short && links_short.forEach(link => {
+        frendlies.push(link.forSitemap)
         urls += `<url>
             <loc>https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&id=${link.id}</loc>
             <lastmod>${new Date().toISOString()}</lastmod>
@@ -18,7 +22,46 @@ export function makeSitemap(links_short) {
 
     try {
         saveFileSitemap(sitemap)
+        saveLinksInBD(frendlies)
     } catch (e) {
+    }
+}
+
+
+
+async function saveLinksInBD(frendlies) {
+    try {
+        // Connect to SQLite database
+        const db = await open({
+            filename: './database.sqlite',
+            driver: sqlite3.Database
+        });
+        
+        // Create history table if it doesn't exist
+        // language=SQLite
+        await db.run(`
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                count INTEGER NOT NULL,
+                carsPerDay TEXT NOT NULL
+            )
+        `);
+        
+        const count = frendlies.length;
+        const carsPerDay = frendlies.join(',');
+
+        // language=SQLite
+        const stmt = await db.prepare(`
+            INSERT INTO history (date, count, carsPerDay) VALUES (CURRENT_TIMESTAMP, ?, ?)
+        `);
+
+        await stmt.run( count, carsPerDay);
+        // await db.close();
+        
+    } catch (error) {
+        console.error('Error saving links in database:', error);
+        throw error;
     }
 }
 

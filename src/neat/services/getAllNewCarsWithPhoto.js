@@ -94,7 +94,6 @@ export async function getAllNewCarsWithPhoto(db) {
         console.log(' 👻 👻 👻 Ссылок в базе', links_without_first.length)
         console.log(' 👻 👻 👻 Фоток, которых уже нет в базе, но лежат в папке', links_unnecessary.length)
 
-        console.log('links_short = ',links_short)
         makeSitemap(links_short)
         
         links_short.forEach(el => {
