@@ -11,7 +11,7 @@ export function makeSitemap(links_short) {
     links_short && links_short.forEach(link => {
         frendlies.push(link.forSitemap)
         urls += `<url>
-            <loc>https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&id=${link.id}</loc>
+            <loc>https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&amp;id=${link.id}</loc>
             <lastmod>${new Date().toISOString()}</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.8</priority>
