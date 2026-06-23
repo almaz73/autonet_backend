@@ -31,9 +31,9 @@ export function makeSitemap(links_short) {
 
 async function saveLinksInBD(frendlies) {
     try {
-        // Connect to SQLite database
+        // Connect to SQLite client
         const db = await open({
-            filename: './database.sqlite',
+            filename: './client.sqlite',
             driver: sqlite3.Database
         });
         
@@ -60,7 +60,7 @@ async function saveLinksInBD(frendlies) {
         // await db.close();
         
     } catch (error) {
-        console.error('Error saving links in database:', error);
+        console.error('Error saving links in client:', error);
         throw error;
     }
 }

@@ -45,7 +45,7 @@ export async function getAllNewCarsWithPhoto(db) {
     try {
         // language=SQLite
         const allCarsWitnPhoto = await db.all(`
-            SELECT id, images, prop_city as sity, prop_year as year, prop_brand as brand, prop_model as model, price
+            SELECT id, images, prop_city as sity, prop_year as year, prop_brand as brand, prop_model as model, price, prop_milleage as milleage
             FROM cars_table
             WHERE images IS NOT NULL
               AND images != ''
@@ -60,7 +60,7 @@ export async function getAllNewCarsWithPhoto(db) {
                 let urls = car.images.split(/, /)
                 let firstLink = ''
 
-                let forSitemap = car.brand + '-' + car.model + '-' + car.year + '-' + car.sity + '-' + car.price
+                let forSitemap = car.brand + '-' + car.model + '-' + car.year + '-' + car.sity + '-' + car.price + '-' + car.milleage+'km'
                 forSitemap = transliterate(forSitemap)
                 forSitemap = forSitemap.replaceAll(" ", "");
 
@@ -87,12 +87,12 @@ export async function getAllNewCarsWithPhoto(db) {
         existPhotos.forEach(el=>{
             if (el.indexOf('_big.webp') !== -1 && !links_without_first.includes(el.slice(0, -9))) links_unnecessary.push(el)
             else if (el.indexOf('_small.webp') !== -1 && !links_without_first.includes(el.slice(0, -11))) links_unnecessary.push(el)
-            if (el.indexOf('_big.webp') == -1 && el.indexOf('_small.webp') == -1) links_unnecessary.push(el)
+            if (el.indexOf('_big.webp') === -1 && el.indexOf('_small.webp') === -1) links_unnecessary.push(el)
         })
 
-        console.log(' 👻 👻 👻 Фоток в папке', existPhotos.length)
-        console.log(' 👻 👻 👻 Ссылок в базе', links_without_first.length)
-        console.log(' 👻 👻 👻 Фоток, которых уже нет в базе, но лежат в папке', links_unnecessary.length)
+        console.log(' 👻  Фоток в папке', existPhotos.length)
+        console.log(' 👻  Ссылок в базе', links_without_first.length)
+        console.log(' 👻  Фоток, которых уже нет в базе, но лежат в папке', links_unnecessary.length)
 
         makeSitemap(links_short)
         
