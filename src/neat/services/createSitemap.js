@@ -7,6 +7,7 @@ import sqlite3 from 'sqlite3';
 export function makeSitemap(links_short_need_frendly) {
     let urls = ''
     let frendlies = []
+    let newLinks = []
 
     links_short_need_frendly && links_short_need_frendly.forEach(link => {
         frendlies.push(link.forSitemap)
@@ -16,6 +17,7 @@ export function makeSitemap(links_short_need_frendly) {
             <changefreq>daily</changefreq>
             <priority>0.8</priority>
         </url>`
+        newLinks.push(`https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&id=${link.id}`)
     })
 
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -24,6 +26,7 @@ export function makeSitemap(links_short_need_frendly) {
     try {
         saveFileSitemap(sitemap)
         saveLinksInBD(frendlies)
+        saveNewLinks(newLinks)
     } catch (e) {
     }
 }
@@ -70,4 +73,10 @@ function saveFileSitemap(xmlContent) {
     const filePath = path.join(FolderForSitemap, 'sitemap2.xml');
     fs.mkdirSync(FolderForSitemap, {recursive: true});
     fs.writeFileSync(filePath, xmlContent);
+}
+
+function saveNewLinks(newLinks) {
+    const filePath = path.join(FolderForSitemap, 'newLinks.txt');
+    fs.mkdirSync(FolderForSitemap, {recursive: true});
+    fs.writeFileSync(filePath, newLinks.join('\n'));
 }
