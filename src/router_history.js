@@ -1,24 +1,24 @@
 import Router from 'express'
-import * as bdService from './clientBaza/listEmailsFromForms/bdService.js';
+import * as historyService from './clientBaza/history/historyService.js';
 
-// bd routes
+// history routes
 const router = new Router()
 
 // Import auth middleware from authController
 import {authMiddleware} from './authController.js';
 
-// Apply auth middleware to all bd routes
+// Apply auth middleware to all history routes
 router.use(authMiddleware);
 
-// Get all bd items with optionalpagination and city filter
-router.get('/bd', async (req, res) => {
+// Get all history items with optionalpagination and city filter
+router.get('/history', async (req, res) => {
     try {
         // Get query parameters
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
         const city = req.query.city || null;
 // Get data with filters
-        const paginationData = await bdService.getAll_bd(page, pageSize, city);
+        const paginationData = await historyService.getAll_history(page, pageSize, city);
 
         // Send response with pagination metadata
         res.json({
@@ -29,11 +29,14 @@ router.get('/bd', async (req, res) => {
             totalPages: paginationData.totalPages
         });
     } catch (error) {
-        console.error('Error getting bd items:', error);
-        res.status(500).json({error: 'Failed to get bd items'});
+        console.error('Error getting history items:', error);
+        res.status(500).json({error: 'Failed to get history items'});
     }
 });
 
-
+router.get('*', (req, res) => {
+    console.log('ART 404 404 404 404 404')
+    res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
+})
 
 export default router;
