@@ -4,11 +4,11 @@ import {FolderForSitemap} from "../../constants.js";
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
-export function makeSitemap(links_short) {
+export function makeSitemap(links_short_need_frendly) {
     let urls = ''
     let frendlies = []
 
-    links_short && links_short.forEach(link => {
+    links_short_need_frendly && links_short_need_frendly.forEach(link => {
         frendlies.push(link.forSitemap)
         urls += `<url>
             <loc>https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&amp;id=${link.id}</loc>

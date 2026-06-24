@@ -82,6 +82,7 @@ export async function getAllNewCarsWithPhoto(db) {
 
         let existPhotos = await getListExistPhoto()
         let links_short_need = []
+        let links_short_need_frendly = []
         let links_unnecessary =[]
 
         existPhotos.forEach(el=>{
@@ -94,15 +95,16 @@ export async function getAllNewCarsWithPhoto(db) {
         console.log(' 👻  Ссылок в базе', links_without_first.length)
         console.log(' 👻  Фоток, которых уже нет в базе, но лежат в папке', links_unnecessary.length)
 
-        makeSitemap(links_short)
-        
         links_short.forEach(el => {
             let tt = el.firstLink.split('/').pop()
             let link = tt.substring(0, tt.lastIndexOf('.'))
             if (!existPhotos.includes(link + '_small.webp')) {
                 links_short_need.push(el.firstLink)
+                links_short_need_frendly.push(el)
             }
         })
+
+        if (links_short_need_frendly.length) makeSitemap(links_short_need_frendly)
 
         return {links_short_need, links_all, allCarsWitnPhoto, existPhotoslength:existPhotos.length, links_unnecessary}
     } catch (e) {
