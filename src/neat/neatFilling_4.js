@@ -17,10 +17,10 @@ let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 let text = ''
 
 for (let i in [1]) {
-    // 8
+    // 9
     text = await publicBD(db)
     reportForTelegram += '  ➜  public_BD '
-    report += `\n 8. ${text}`
+    report += `\n 9. ${text}`
     if (text.indexOf('⚡') < 0) break
 
 }

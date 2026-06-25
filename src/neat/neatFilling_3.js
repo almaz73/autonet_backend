@@ -12,10 +12,10 @@ let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 let text = ''
 
 for (let i in [1]) {
-    // 7 добавление первых фоток
+    // 8 добавление остальных фоток
     text = await addAllPhotos()
     reportForTelegram += `  ➜  addedAllPhoto ⋲ ${text} `
-    report += `\n 7. ⚡. Добавление остальных фоток автомобиля: ${text}`
+    report += `\n 8. ⚡. Добавление остальных фоток автомобиля: ${text}`
     if (text == undefined) break
 
 }
