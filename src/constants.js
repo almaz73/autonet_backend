@@ -1,4 +1,4 @@
-export const Version = 'ver.2.910'
+export const Version = 'ver.2.911'
 
 export const devMode = false // для тестирования
 
@@ -49,4 +49,27 @@ export function getTime() {
         hour: "2-digit",
         minute: "2-digit"
     }) + ' '
+}
+
+export function transliterate(text) {
+    const converter = {
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+        'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+        'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+        'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+        'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+    };
+
+    return text.split('').map(char => {
+        // Проверяем регистр, чтобы сохранить его в латинице
+        const isUpperCase = char === char.toUpperCase();
+        const lowerChar = char.toLowerCase();
+
+        if (converter[lowerChar] !== undefined) {
+            const converted = converter[lowerChar];
+            return isUpperCase ? converted.charAt(0).toUpperCase() + converted.slice(1) : converted;
+        }
+
+        return char; // Оставляем без изменений (например, цифры или знаки)
+    }).join('');
 }

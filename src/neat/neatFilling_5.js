@@ -10,10 +10,10 @@ let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 let text = ''
 
 for (let i in [1]) {
-    // 10 удаление ненужных фоток
+    // 11 удаление ненужных фоток
     text = await removeUnNecessary()
     reportForTelegram += `  ➜  remodev unNecessary ⋲ ${text} `
-    report += `\n 10. ⚡. Удалены лишние фотки: ${text}`
+    report += `\n 11. ⚡. Удалены лишние фотки: ${text}`
     if (text == undefined) break
 
 }
@@ -26,9 +26,9 @@ try {
 }
 
 
-// try {
-//     setTimeout(() => sendTelegram(reportForTelegram), 2000)
-// } catch (e) {
-// }
+try {
+    setTimeout(() => sendTelegram(reportForTelegram), 2000)
+} catch (e) {
+}
 
 
