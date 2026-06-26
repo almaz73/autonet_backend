@@ -16,9 +16,31 @@ router.get('/history', async (req, res) => {
         // Get query parameters
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
-        const city = req.query.city || null;
 // Get data with filters
-        const paginationData = await historyService.getAll_history(page, pageSize, city);
+        const paginationData = await historyService.getAll_history(page, pageSize);
+
+        // Send response with pagination metadata
+        res.json({
+            items: paginationData.items,
+            total: paginationData.total,
+            page: paginationData.page,
+            pageSize: paginationData.pageSize,
+            totalPages: paginationData.totalPages
+        });
+    } catch (error) {
+        console.error('Error getting history items:', error);
+        res.status(500).json({error: 'Failed to get history items'});
+    }
+});
+
+// Get all history items with optionalpagination and city filter
+router.get('/history_period', async (req, res) => {
+    try {
+        // Get query parameters
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+// Get data with filters
+        const paginationData = await historyService.get_history_period(page, pageSize);
 
         // Send response with pagination metadata
         res.json({
