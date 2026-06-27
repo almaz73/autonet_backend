@@ -10,7 +10,7 @@ import fs from "fs";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 
-let links_short_need = []
+let links_unnecessary = [] // список удаляемых фоток
 let foundedBeforeDelete = [] // здесь список frendly удаляемых с витрины авто
 let historyPeriodSell = []
 
@@ -35,7 +35,7 @@ const allOldCars = await dbOld.all(`
            prop_model    as model,
            price,
            prop_milleage as milleage
-    FROM cars_table
+    FROM a_car
     WHERE images IS NOT NULL
       AND images != ''
 `);
@@ -46,6 +46,9 @@ const allAddedCars = await dbClient.all(`
     WHERE date >= date('now', '-1 month')
     ORDER BY date ASC
 `);
+
+console.log('allOldCars.length = ', allOldCars.length)
+console.log('allAddedCars.length = ', allAddedCars.length)
 
 
 async function findCarinTable(link) {
@@ -59,18 +62,18 @@ async function findCarinTable(link) {
     return true
 }
 
-async function repeater() {
+async function siclicSearchInOldBD() {
     // пробежимся по старой базе, найдем удаляемые авто
-    await findCarinTable(links_short_need.pop().replaceAll('_small.webp', '').replaceAll('_big.webp', ''))
-    if (links_short_need.length) await repeater()
+    await findCarinTable(links_unnecessary.pop().replaceAll('_small.webp', '').replaceAll('_big.webp', ''))
+    if (links_unnecessary.length) await siclicSearchInOldBD()
 }
 
-function findCreatedTime() {
-    // пробежимся по списку добавления авто
-    for (var i = 0; i < foundedBeforeDelete.length - 1; i++) {
+async function findCreatedTime() {
+    // пробежимся по списку ранее сохраненной истории по добавлению авто
+    for (var i = 0; i < foundedBeforeDelete.length; i++) {
         let car = foundedBeforeDelete[i]
         let started = allAddedCars.find(el => el.carsPerDay && el.carsPerDay.includes(car))
-        historyPeriodSell.push({car, startDate: started.date})
+        if (started) historyPeriodSell.push({car, startDate: started.date})
     }
 }
 
@@ -112,11 +115,12 @@ export async function collectDeletedCars() {
     try {
         const filePath = path.join(FolderLINKS, 'links_unnecessary.js');
         const fileContent = fs.readFileSync(filePath, 'utf8');
-        links_short_need = JSON.parse(fileContent)
+        links_unnecessary = JSON.parse(fileContent)
 
-        await repeater(links_short_need)
-
-        findCreatedTime()
+        await siclicSearchInOldBD(links_unnecessary)
+        await findCreatedTime()
+        console.log(':: foundedBeforeDelete.length = ', foundedBeforeDelete.length)
+        console.log(':::: historyPeriodSell.length = ', historyPeriodSell.length)
 
         await savePeriodInBD()
 

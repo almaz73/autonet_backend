@@ -15,7 +15,7 @@ for (let i in [1]) {
     text = await collectDeletedCars()
     reportForTelegram += '  ➜  public_BD '
     report += `\n 9. ${text}`
-    if (text.indexOf('⚡') < 0) break
+    if (text && text.indexOf('⚡') < 0) break
 
 }
 
