@@ -74,6 +74,7 @@ async function findCreatedTime() {
         let car = foundedBeforeDelete[i]
         let started = allAddedCars.find(el => el.carsPerDay && el.carsPerDay.includes(car))
         if (started) historyPeriodSell.push({car, startDate: started.date})
+        else historyPeriodSell.push({car, startDate: null})
     }
 }
 
