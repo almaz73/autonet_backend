@@ -56,6 +56,26 @@ router.get('/history_period', async (req, res) => {
     }
 });
 
+router.get('/history_period_days', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const paginationData = await historyService.get_history_period_days(page, pageSize);
+
+        // Send response with pagination metadata
+        res.json({
+            items: paginationData.items,
+            total: paginationData.total,
+            page: paginationData.page,
+            pageSize: paginationData.pageSize,
+            totalPages: paginationData.totalPages
+        });
+    } catch (error) {
+        console.error('Error getting history items:', error);
+        res.status(500).json({error: 'Failed to get history items'});
+    }
+});
+
 router.get('*', (req, res) => {
     console.log('ART 404 404 404 404 404')
     res.status(404).json({message: ' !!! НЕ НАЙДЕН ENDPOINT'})
