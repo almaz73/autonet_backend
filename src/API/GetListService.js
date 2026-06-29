@@ -259,7 +259,7 @@ class GetListService {
                         uniqueBrands.add(brandKey);
                         uniqueResults.push(el);
 
-                        if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity / 1000)
+                        if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)
                         if (el.gearboxType) {
                             if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
                             if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
