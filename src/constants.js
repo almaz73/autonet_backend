@@ -1,4 +1,4 @@
-export const Version = 'ver.2.914'
+export const Version = 'ver.3.000'
 
 export const devMode = false // для тестирования
 
@@ -72,4 +72,10 @@ export function transliterate(text) {
 
         return char; // Оставляем без изменений (например, цифры или знаки)
     }).join('');
+}
+
+// чтобы привязать динамические сслыки к html прямо на сервере
+export let manifest_links = {}
+export function set_manifest(val) {
+    manifest_links = val
 }

@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import {fileURLToPath} from "url";
 import * as promoDAO from "./promoDAO.js";
+import {set_manifest} from '../../constants.js';
 
 export async function getMainBanners(req, res) {
     try {
@@ -38,6 +39,7 @@ try {
     manifest = JSON.parse( // чтобы обновленные ссылки сообщить шаблонизатору
         fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../../../front/.vite/manifest.json'), 'utf-8')
     )
+    set_manifest(manifest)
 } catch (e) {
     console.log('динамические страницы акций не будут работать, нет файла манифеста = ')
 }
@@ -63,6 +65,9 @@ export async function generationPagesForPromo(res, url) {
             if (manifestKey.includes('_promo-') && manifestKey.includes('.css')) css2 = manifestKey.slice(1)
             if (manifestKey.includes('_promo-')) js3 = manifestKey.slice(1)
         }
+
+        // по какой-то причине перестал _promo.css добавляться в манифест
+        if (!css2) css2 = manifest['promo/index.html'].file
 
         const data = {
             js1: manifest['work-in-autosite/index.html'].imports && manifest['work-in-autosite/index.html'].imports[0].slice(1),

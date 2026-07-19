@@ -2,8 +2,7 @@ import Router from 'express'
 import Controllers from "./xml_import/Controllers.js";
 import Post from './post/Post.js'
 import multer from "multer";
-import {getActiveBanners, getMainBanners} from './clientBaza/promo/generationPagesForPromo.js';
-import A_car from "./API/A_car.js";
+import {getActiveBanners, getMainBanners} from './clientBaza/promo/generationPagesForPromo.js'
 
 const router = new Router()
 
@@ -62,41 +61,6 @@ router.get('/getActiveBanners', getActiveBanners) // все активные п�
 router.get('/test', Controllers.test)
 router.get('/import-xml', Controllers.importXML) // загрузка xml в папку, заполнение БД, добавление фоток по ссылкам, удаление лишних фоток
 router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние фотки в папке, которых уже нет в базе
-
-// Route for car details page
-router.get('/cars', async (req, res) => {
-    
-    console.log('4444 = ',4444)
-    
-    try {
-        const carId = req.query.id;
-        console.log('carId = ',carId)
-        const carData = await new A_car().getFullAutoInfo(carId);
-        console.log('carData = ',carData)
-        
-        if (!carData) {
-            return res.status(404).send('Car not found');
-        }
-        
-        // Generate title and description based on car data
-        const title = `${carData.brand} ${carData.model} ${carData.yearReleased} - ${carData.prop_address}`;
-        const description = `Купить ${carData.brand} ${carData.model} ${carData.yearReleased} года выпуска с пробегом в ${carData.city} за ${carData.price} рублей. Характеристики: ${carData.engineType} двигатель, ${carData.enginePower} л.с., ${carData.gearboxType} коробка передач, ${carData.driveType} привод.`;
-        
-        console.log('title = ',title)
-        console.log('description = ',description)
-        
-        
-        // Render the car template with car data
-        res.render('car', {
-            title,
-            description,
-            car: carData
-        });
-    } catch (error) {
-        console.error('Error rendering car page:', error);
-        res.status(500).send('Internal Server Error');
-    }
-});
 // router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
 // router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
 // router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.

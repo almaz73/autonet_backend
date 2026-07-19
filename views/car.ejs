@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <meta charset='UTF-8'/>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title><%= title %></title>
+    <meta property='og:type' content='website'>
+    <meta property='og:title' content='<%= title %>'>
+    <meta property='og:image' content='https://xn--80aej9aped4f.xn--p1ai/st/auto.webp'>
+    <meta property='og:url' content='https://автосеть.рф/cars/'>
+    <meta property='og:locale' content='ru_RU'>
+    <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='index, follow'>
+    <meta name='keywords'
+          content='лада гранта, лада веста, купить ваз, лада цены, лада приора, лада веста кросс, лада гранта купить, купить ладо гранта, купить лада веста, лада нива, lada vesta, lada granta, лада гранта цена, лада веста цена, купить ваз бу, lada niva, лад нива спорт, lada priora, lada цены, купить ваз цены, купить лада приора, купить лада нива, купить ваз с пробегом, купить ваз лада, lada 4x4, lada ваз granta, lada vesta цена, lada granta цены, купить ваз лада гранта, купить ваз лада калина'>
+    <meta name='description' content='<%= description %>'>
+
+    <link rel='stylesheet' href='../src/css/style.css'/>
+    <link rel='stylesheet' href='../src/css/alone.css'/>
+    <link rel='stylesheet' href='../src/css/swiper-bundle.min.css'/>
+    <link rel='stylesheet' href='../src/css/swiper.css'/>
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap2.xml">
+
+    <script src='/st/swiper-bundle.min.js'></script>
+    <script type='module' src='../src/js/main.js'></script>
+    <script type='module' src='../src/js/swiper-starter.js'></script>
+    <script type='module' src='../src/js/car.js'></script>
+
+    {{> verbox_chat}}
+</head>
+<body>
+{{> 'header/header' }}
+<main>
+    <div class='page_padding_20'>
+        <div class='bread_cranbs'>
+            <a href='/'>Главная</a> /
+            <a href='/cars/'>Автомобили</a> /
+            <span id='auto-brand-path'>
+                <!-- <a href='/cars/'>
+                  Автомобили ВАЗ (LADA) с пробегом
+                </a>-->
+            </span> /
+            <span class='auto-name'>
+              <!--ВАЗ (LADA) 2106-->
+            </span>
+        </div>
+    </div>
+
+    <div class='container'>
+        <div class='alone'>
+            <div class='left'>
+                {{> 'alone/big-photo'}}
+
+                {{> 'alone/address'}}
+
+                <div class='sticky-left'>
+                    {{> 'alone/charaсteristiс'}}
+                </div>
+
+                {{> 'alone/equipment'}}
+                <abdul></abdul>
+                {{> 'alone/cred'}}
+            </div>
+            <div class='right'>
+                <div class='sticky'>
+                    {{> 'alone/charaсteristiс'}}
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+{{> 'footer/footer' }}
+
+</body>
+</html>

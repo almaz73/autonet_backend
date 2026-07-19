@@ -8,6 +8,7 @@ import routerAuth from "./src/routerAuth.js";
 import routerPromo from "./src/routerPromo.js";
 import routerArticles from "./src/routerArticles.js";
 import router_bd from "./src/router_bd.js";
+import router_alone_car from "./src/router_ssr.js";
 import router_history from "./src/router_history.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
@@ -25,6 +26,7 @@ const frontendPath = path.join(__dirname, '..', 'front');
 
 app.set('view engine', 'ejs');// Установка EJS как движка шаблонов
 app.use(express.json())
+app.use('/', router_alone_car)
 app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use(express.urlencoded({extended: true}));
 

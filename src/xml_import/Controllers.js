@@ -10,7 +10,6 @@ import {Version} from "../constants.js";
 
 class Controllers {
     async test(req, res) {
-        console.log('332232 = ',332232)
         try {
             console.log(`   ⚡ test ⚡ test ⚡ Есть связь с сервером !!! ${Version}`)
             res.json(` ⚡ ⚡ ⚡ Есть связь с сервером!!! ⚡ ⚡ ⚡ ${Version}`);
