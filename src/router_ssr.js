@@ -15,14 +15,23 @@ const router = new Router()
 
 // тут нужно будет отдавать страницу ыеликом собранную на сервере.. для индексации
 // Route for car details page
-router.get('/cars/car_.html', async (req, res) => {
+router.get('/cars/car____.html', async (req, res) => {
     console.log('43444 = ',4444)
 
     let manifest = manifest_links['cars/index.html']
-    // console.log('manifest = ',manifest)
+    console.log('manifest = ',manifest)
+    
+    let js1 = manifest.imports && manifest.imports[0].slice(1)
+    let js2 = manifest.imports && manifest.imports[1].slice(1)
+    let js3 = manifest.imports && manifest.imports[2].slice(1)
+    let js4 = manifest.imports && manifest.imports[3].slice(1)
+    let js5 = manifest.imports && manifest.imports[4].slice(1)
+    let js6 = manifest.imports && manifest.imports[5].slice(1)
+    let js7 = manifest.imports && manifest.imports[6].slice(1)
 
-    
-    
+    let css1 = manifest.css && manifest.css[0]
+    let css2 = manifest.css && manifest.css[1]
+
 
     try {
         const carId = req.query.id;
@@ -38,16 +47,19 @@ router.get('/cars/car_.html', async (req, res) => {
         // Generate title and description based on car data
         const title = `${carData.brand} ${carData.model} ${carData.yearReleased}  ${carData.prop_address?' - '+carData.prop_address:''}`;
         const description = `Купить ${carData.brand} ${carData.model} ${carData.yearReleased} года выпуска с пробегом в ${carData.city} за ${carData.price} рублей. Характеристики: ${carData.engineType} двигатель, ${carData.enginePower} л.с., ${carData.gearboxType} коробка передач, ${carData.driveType} привод.`;
-
+        const keywords = carData.configuration;
         console.log('title = ',title)
-        console.log('description = ',description)
-
+        // console.log('description = ',description)
+        // console.log('keywords = ',keywords)
 
         // Render the car template with car data
         res.render('car', {
             title,
             description,
-            car: carData
+            keywords,
+            car: carData,
+            js1, js2, js3, js4, js5, js6, js7,
+            css1, css2
         });
     } catch (error) {
         console.error('Error rendering car page:', error);
