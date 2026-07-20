@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Страница не найдена (404) - Автосеть.РФ</title>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='index, follow'>
+    <style>
+        body {
+            background: linear-gradient(gray, white);
+            text-align: center;
+            height: 100vh;
+            font-family: Gilroy, system-ui;
+            font-size: large;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (width < 600px) {
+            body {
+                height: 200vh;
+            }
+        }
+
+        .main-nav__nav, .main-nav__nav-item_little {
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            text-transform: uppercase;
+            justify-content: center;
+        }
+
+        .main-nav__nav-item, .main-nav__nav-item_little a {
+            padding: 8px 20px;
+        }
+
+        #modal {
+            padding: 60px;
+            box-shadow: black 0px 0px 40px;
+            border-radius: 10px;
+            background: white;
+            border: 15px solid pink;
+        }
+
+        .modal_button {
+            padding: 8px 20px;
+            cursor: pointer;
+            background: #d1d1d1;
+        }
+    </style>
+
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap2.xml">
+</head>
+<body>
+<img src='https://xn--80aej9aped4f.xn--p1ai/st/photo/404.jpg' style='height: 150px; width:295px' loading='lazy' alt=''>
+
+<% if (confirm) { %>
+    <div style="" id="modal">
+        <%- confirm %>
+        <br><br><span class="modal_button" onclick="window.history.back()">Вернуться назад</span>
+    </div>
+<% } %>
+
+
+<p>К сожалению, запрашиваемая страница не найдена.</p>
+<p>Перейти на <a href="/">главную страницу</a></p>
+
+<nav class='main-nav__nav' style='margin-top: 100px'>
+    <div class='main-nav__nav-item'>
+        <a href='/cars/'>Купить</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/services/vykup/'>Продать</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/services/autopodbor/'>Автоподбор</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/contacts/'>Контакты</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/promo/'>Акции</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/franshiza/'>Партнерам</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/about-the-company/'>О компании</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/news/'>Статьи</a>
+    </div>
+    <div class='main-nav__nav-item'>
+        <a href='/work-in-autosite/'>Вакансии</a>
+    </div>
+    <div class='main-nav__nav-item_little'>
+        <a class='item_little_big' href='/services/'>Услуги</a>
+        <a href='https://xn--80aaagleb8dfwikd4l.xn--p1ai/'>Аренда авто</a>
+        <a href='/services/crediting/'>Автокредитование</a>
+        <a href='/services/insurance/'>Страхование</a>
+        <a href='/services/shinnyy-сentr/'>Шинный центр</a>
+        <a href='/services/tehnicheskiy-osmotr/'>Техосмотр</a>
+        <a href='/services/servisnoe-obsluzhivanie/'>Сервисное обслуживание</a>
+        <a href='/services/remont-dvigatel/'>Ремонт двигателя</a>
+        <a href='/services/remont-akpp/'>Ремонт АКПП</a>
+        <a href='/services/zamena-masla/'>Замена масла</a>
+    </div>
+</nav>
+</body>
+</html>

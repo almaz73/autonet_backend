@@ -53,7 +53,7 @@ app.use((req, res, next) => {
         // Handle preflight requests
         if (req.method === 'OPTIONS') return res.sendStatus(200)
     }
-    return res.status(404).sendFile(path.join(frontendPath, '404.html'));
+    return res.render('404', {confirm: ''})
 });
 
 async function startApp() {

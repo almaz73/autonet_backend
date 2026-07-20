@@ -1,0 +1,120 @@
+<h1 class='right__title auto-name'>
+  <%- title  %>
+</h1>
+<div class='right__price'>
+  <div class='total auto-price'>
+    <%- carData.price  %> ₽
+  </div>
+  <div class='price__of auto-price-month'>
+  </div>
+</div>
+<div class='right__tech'>
+  <div class='title'>
+    Характеристики
+  </div>
+
+  <div class='right__tech--block'>
+    <div class='right__flex'>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/calendar-icon.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-year'>
+          <%- carData.yearReleased %>
+        </div>
+      </div>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/engine-icon.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-engine'>
+          <%- carData.engineCapacity/1000 %> л / <%- carData.enginePower  %> л.с / <%- carData.engineType  %>
+        </div>
+      </div>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/speed-icon.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-mill'>
+          <%- carData.milleage %> км
+        </div>
+      </div>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/transmission-icon.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-gear'>
+          <%- carData.gearboxType %>
+        </div>
+      </div>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/4wd.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-drive'>
+          <%- carData.driveType %>
+        </div>
+      </div>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/steering-wheel.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-rule'>
+          <%- carData.wheelType %>
+        </div>
+      </div>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/body.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-body'>
+          <%- carData.bodyType %>
+        </div>
+      </div>
+      <div class='right__tech--box'>
+        <div class='icon'>
+          <img src='/st/svg/color-palette.svg' alt='' class='mw-100 d-block'>
+        </div>
+
+        <div class='text auto-color'>
+          <%- carData.color %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class='right__bottom'>
+  <div class='right__flex'>
+    <div class='box'>
+      <span  class='page__btn page__btn--current select_show_date'
+             style='padding: 15px'>
+          Выбрать дату осмотра
+      </span>
+    </div>
+
+    <div class='box'>
+      <a href='https://telegram.me/Autoset_RF_bot?start=ВАЗ (LADA) 2106' target='_blank'
+         class='page__btn page__btn--main'>
+        <img src='/st/svg/telegram-icon-white.svg'>
+        Написать
+      </a>
+    </div>
+  </div>
+  <div class='right__bottom--button'>
+    <span class='page__btn page__btn--current reserving'>
+        Забронировать
+    </span>
+  </div>
+  <div class='right__bottom--button'>
+    <span class='page__btn page__btn--tr profitable'>
+        Выгоднее обменять свой автомобиль
+    </span>
+  </div>
+</div>
