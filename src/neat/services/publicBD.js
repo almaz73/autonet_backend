@@ -1,3 +1,6 @@
+import {transliterate} from "../../constants.js";
+
+
 async function deleteFromTableIfExists(db, tableName) {
     try {
         // Check if the table exists
@@ -57,6 +60,25 @@ async function copyTableData(db, sourceTable, targetTable) {
         // Don't throw the error, just log it to allow the process to continue
     }
 }
+
+async function makeLinkid(db) {
+    const rows = await db.all(`SELECT id, prop_brand, prop_model, prop_year, prop_city, price, prop_milleage FROM a_car`);
+    for (const row of rows) {
+        // Переводим кириллический город в латиницу (например, "Москва" -> "moskva")
+        const cityLat = transliterate(row.prop_city || '').replace(/\s+/g, '');
+
+        // Формируем остальные переменные без пробелов
+        const brand = String(row.prop_brand || '').replace(/\s+/g, '');
+        const model = String(row.prop_model || '').replace(/\s+/g, '');
+
+        // Собираем финальную строку linkId
+        const linkId = `${brand}-${model}-${row.prop_year}-${cityLat}-${Math.floor(row.price || 0)}-${row.prop_milleage}km`;
+
+        // 3. Записываем готовый linkId обратно в базу данных
+        await db.run(`UPDATE a_car SET linkId = ? WHERE id = ?`, [linkId, row.id]);
+    }
+}
+
 export async function publicBD(db) {
     console.log('⚡ Публикуем обновленную базу ')
     try {
@@ -69,6 +91,7 @@ export async function publicBD(db) {
             CREATE TABLE IF NOT EXISTS a_car
             (
                 id                     TEXT PRIMARY KEY,
+                linkId                 TEXT,
                 name                   TEXT,
                 section                TEXT,
                 price                  REAL,
@@ -84,7 +107,6 @@ export async function publicBD(db) {
                 prop_steering_wheel    TEXT,
                 prop_address           TEXT,
                 prop_options           TEXT,
-                prop_guarantee         TEXT,
                 prop_city              TEXT,
                 prop_brand             TEXT,
                 prop_model             TEXT,
@@ -110,6 +132,8 @@ export async function publicBD(db) {
 
         // Copy data from sections_table to a_section
         await copyTableData(db, 'sections_table', 'a_section');
+
+        makeLinkid(db)
 
         return '⚡. Публикация'
 
