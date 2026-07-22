@@ -62,20 +62,18 @@ async function copyTableData(db, sourceTable, targetTable) {
 }
 
 async function makeLinkid(db) {
+    // убираем пробелы, переводим в латиницу создаем ссылку
     const rows = await db.all(`SELECT id, prop_brand, prop_model, prop_year, prop_city, price, prop_milleage FROM a_car`);
     for (const row of rows) {
-        // Переводим кириллический город в латиницу (например, "Москва" -> "moskva")
         const cityLat = transliterate(row.prop_city || '').replace(/\s+/g, '');
+        // const brand = transliterate(String(row.prop_brand || '')).replace(/\s+/g, '');
+        // const model = transliterate(String(row.prop_model || '')).replace(/\s+/g, '');
+        const linkId = `${row.prop_year}-${cityLat}-${Math.floor(row.price || 0)}-${row.prop_milleage}km`;
 
-        // Формируем остальные переменные без пробелов
-        const brand = String(row.prop_brand || '').replace(/\s+/g, '');
-        const model = String(row.prop_model || '').replace(/\s+/g, '');
-
-        // Собираем финальную строку linkId
-        const linkId = `${brand}-${model}-${row.prop_year}-${cityLat}-${Math.floor(row.price || 0)}-${row.prop_milleage}km`;
-
-        // 3. Записываем готовый linkId обратно в базу данных
-        await db.run(`UPDATE a_car SET linkId = ? WHERE id = ?`, [linkId, row.id]);
+        // 3. Записываем обработанные поля
+        await db.run(`UPDATE a_car SET prop_guarantee = ? WHERE id = ?`, [linkId, row.id]);
+        // await db.run(`UPDATE a_car SET prop_brand = ? WHERE id = ?`, [brand, row.id]);
+        // await db.run(`UPDATE a_car SET prop_model = ? WHERE id = ?`, [model, row.id]);
     }
 }
 
@@ -91,7 +89,7 @@ export async function publicBD(db) {
             CREATE TABLE IF NOT EXISTS a_car
             (
                 id                     TEXT PRIMARY KEY,
-                linkId                 TEXT,
+                prop_guarantee         TEXT,
                 name                   TEXT,
                 section                TEXT,
                 price                  REAL,

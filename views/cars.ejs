@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <meta charset='UTF-8'/>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Каталог автомобилей с пробегом (БУ). Купить авто из наличия в автосалонах Казани и всей России -
+        Автосеть.РФ</title>
+    <meta property='og:type' content='website'>
+    <meta property='og:title'
+          content='Каталог автомобилей с пробегом (БУ). Купить авто из наличия в автосалонах Казани и всей России - Автосеть.РФ'>
+    <meta property='og:image' content='https://xn--80aej9aped4f.xn--p1ai/st/auto.webp'>
+    <meta property='og:url' content='https://автосеть.рф/cars'>
+    <meta property='og:locale' content='ru_RU'>
+    <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='index, follow'>
+    <meta name='keywords' content='Купить автомобили с пробегом, авто в Казани'>
+    <meta name='description'
+          content='Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Екатеринбурге, Уфе, Туле, Самаре и других городах России.
+          ✅ Купить автомобили с пробегом из каталога - иномарки, Lada в наличии. ☎ Звоните по телефону 8-800-500-11-56.'>
+
+    <link rel='stylesheet' href='../src/css/style.css'/>
+    <link rel='stylesheet' href='../src/css/filter-controls.css'/>
+
+    <link rel="stylesheet" crossorigin href="/assets/<%- css1 %>">
+    <link rel="stylesheet" crossorigin href="/<%- css2 %>">
+    <link rel="stylesheet" crossorigin href="/<%- css3 %>">
+
+    <script type="module" crossorigin src="/assets/<%- js1 %>"></script>
+    <script type="module" crossorigin src="/assets/<%- js2 %>"></script>
+    <script type="module" crossorigin src="/<%- carsjs %>"></script>
+
+
+    <link rel='stylesheet' href='../src/css/swiper-bundle.min.css'/>
+    <link rel='stylesheet' href='../src/css/swiper.css'/>
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap2.xml">
+
+</head>
+<body>
+
+<%- include('partials/verbox') %>
+<%- include('partials/ya_metrica') %>
+<%- include('partials/header') %>
+
+<main>
+
+    <div class='page_padding_20'>
+        <div class='bread_cranbs'>
+            <a href='/'>Главная</a> /
+            <a href='/cars/'>Автомобили</a> /
+            <div id='path'><%- brand %></div>
+        </div>
+    </div>
+
+    <!-- для cars и cars/?brand -->
+    <div id='filter_cars'></div>
+
+    <div id='brands_dynamic' class='container main__top--block'>
+        <div class='list_brands'>
+            <% carCount.forEach(function(el) { %>
+                <% if (el.count) { %>
+                    <div>
+                        <a href='/cars/0/<%= el.latBrand %>'>
+                            <span class='icon'></span>
+                            <span class='text'><%= el.name %></span>
+                            <span class='total'><%= el.count %></span>
+                        </a>
+                    </div>
+                <% } %>
+            <% }); %>
+        </div>
+    </div>
+
+    <div id='car-vitrina' class='container'>
+        <div class="car_vitrina"><h2 id="vitrina_name">Автомобили</h2></div>
+        <cards class="cards dot8">
+            <% carList.items.forEach(function(el) { %>
+                <%= el.items %>
+                <div class='cart' id='galery_${N}'>
+                    <div class='cart__slide'><img class='photo' alt='' src="<%- el.images[0] %>"></div>
+                    <a class="big_link" href="../<%= el.brand %>/<%= el.model %>/<%= el.linkId %>?id=<%= el.id %>">
+                        <div class='name'>
+                            <%= el.brand %> <%= el.model %> <%= el.yearReleased %>
+                        </div>
+                        <div class='cart__price'>
+                            <div class='total'><%= el.price %> ₽</div>
+                        </div>
+                        <div class='cart__info'>
+                            <%= el.milleage %>км, <%- el.engineCapacity %> <%- el.gearboxType %> (<%- el.enginePower %> л.с.)
+                            <%= el.bodyType %> <%= el.driveType %> <%= el.engineType %>
+                        </div>
+                    </a>
+                </div>
+
+            <% }); %>
+        </cards>
+
+        <div class="pager">Страницы:
+            <span id="pager">
+                <%- page  %>
+            </span>
+        </div>
+    </div>
+
+
+</main>
+
+<%- include('partials/footer') %>
+
+
+<script type="module" crossorigin src="/assets/<%- js3 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js4 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js5 %>"></script>
+
+
+</body>
+</html>

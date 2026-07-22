@@ -11,6 +11,7 @@ class GetListService {
             //  language=SQLite
             let baseQuery = `
                 SELECT ac.id,
+                       ac.prop_guarantee         as linkId,
                        ac.prop_brand             as brand,
                        ac.prop_model             as model,
                        ac.prop_year              as yearReleased,

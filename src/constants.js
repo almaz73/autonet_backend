@@ -1,4 +1,4 @@
-export const Version = 'ver.3.008'
+export const Version = 'ver.3.010'
 
 export const devMode = false // для тестирования
 
@@ -79,3 +79,6 @@ export let manifest_links = {}
 export function set_manifest(val) {
     manifest_links = val
 }
+
+export const RussianBrandsRus = ['ВАЗ (LADA)', 'ЗАЗ', 'УАЗ', 'ИЖ', 'Богдан', 'ГАЗ', 'Атом', 'Москвич', 'ЛуАЗ', 'ВИС', 'ЗиС']
+export const RussianBrandsLat = ['VAZ(LADA)', 'ZAZ', 'UAZ', 'IZH', 'Bogdan', 'GAZ', 'Atom', 'Moskvich', 'Luaz', 'VIS', 'ZiS']
