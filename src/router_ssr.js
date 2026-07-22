@@ -6,7 +6,8 @@ import GetListService from "./API/GetListService.js";
 
 const router = new Router()
 
-
+router.get('/cars', carsList);
+router.get('/cars/', carsList);
 router.get('/cars/:number(\\d+)', carsList);
 router.get('/cars/:number(\\d+)/:brand(\\D+)', carsList);
 // router.get('/cars/:number(\\d+)/:brand(\\D+)/:model(\\D+)', carsList);
@@ -94,6 +95,7 @@ async function carAlone(req, res) {
 async function carsList(req, res) {
     console.log('>>22>> carsList >> req.params = ', req.params)
     let {brand, number} = req.params
+    number = number || 0
 
     const manifest = manifest_links['cars/index.html']
     if (!manifest) return res.status(404).send('Vite manifest not found');
@@ -128,11 +130,18 @@ async function carsList(req, res) {
         else el.latBrand = el.name
     })
 
-    console.log('carList = ',carList)
+    carList.items.forEach(el => {
+        if (RussianBrandsRus.includes(el.brand)) el.latBrand = transliterate(el.brand).replaceAll(" ", "");
+        else el.latBrand = el.brand
+    })
+
+    // console.log('--carList = ',carList)
 
     let page = ''
-    for (let i = 1; i <= Math.ceil(carList.totalCount / 20); i++) {
-        page += `<a href="/cars/${i - 1}${brand ? '/' + brand : ''}">${i}</a><span> | </span>`;
+    if(carList.items.length) {
+        for (let i = 1; i <= Math.ceil(carList.totalCount / 20); i++) {
+            page += `<a href="/cars/${i - 1}${brand ? '/' + brand : ''}">${i}</a><span> | </span>`;
+        }
     }
 
     console.log('#########:::::::::: ')

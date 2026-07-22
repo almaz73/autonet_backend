@@ -49,8 +49,10 @@
     <div class='page_padding_20'>
         <div class='bread_cranbs'>
             <a href='/'>Главная</a> /
-            <a href='/cars/'>Автомобили</a> /
+            <a href='/cars'>Автомобили</a>
+            <% if (brand){ %>/
             <div id='path'><%- brand %></div>
+            <% } %>
         </div>
     </div>
 
@@ -80,7 +82,7 @@
                 <%= el.items %>
                 <div class='cart' id='galery_${N}'>
                     <div class='cart__slide'><img class='photo' alt='' src="<%- el.images[0] %>"></div>
-                    <a class="big_link" href="../<%= el.brand %>/<%= el.model %>/<%= el.linkId %>?id=<%= el.id %>">
+                    <a class="big_link" href="../<%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>?id=<%= el.id %>">
                         <div class='name'>
                             <%= el.brand %> <%= el.model %> <%= el.yearReleased %>
                         </div>
