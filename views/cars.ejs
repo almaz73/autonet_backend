@@ -36,7 +36,11 @@
     <link rel='stylesheet' href='../src/css/swiper-bundle.min.css'/>
     <link rel='stylesheet' href='../src/css/swiper.css'/>
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap2.xml">
-
+    <script>
+        var ssr_page = '<%- ssr_page %>';
+        var ssr_brandSearch = '<%- ssr_brandSearch %>'
+        var ssr_page_total = '<%- ssr_page_total %>'
+    </script>
 </head>
 <body>
 
@@ -82,7 +86,7 @@
                 <%= el.items %>
                 <div class='cart' id='galery_${N}'>
                     <div class='cart__slide'><img class='photo' alt='' src="<%- el.images[0] %>"></div>
-                    <a class="big_link" href="../<%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>?id=<%= el.id %>">
+                    <a class="big_link" href="../<% if (!brand){ %>cars/<% } %><%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>?id=<%= el.id %>">
                         <div class='name'>
                             <%= el.brand %> <%= el.model %> <%= el.yearReleased %>
                         </div>
@@ -104,6 +108,7 @@
                 <%- page  %>
             </span>
         </div>
+        <br><br>
     </div>
 
 
@@ -115,7 +120,8 @@
 <script type="module" crossorigin src="/assets/<%- js3 %>"></script>
 <script type="module" crossorigin src="/assets/<%- js4 %>"></script>
 <script type="module" crossorigin src="/assets/<%- js5 %>"></script>
-
+<script type="module" crossorigin src="/assets/<%- js6 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js7 %>"></script>
 
 </body>
 </html>

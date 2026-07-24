@@ -94,11 +94,13 @@ async function carAlone(req, res) {
 
 async function carsList(req, res) {
     console.log('>>22>> carsList >> req.params = ', req.params)
-    let {brand, number} = req.params
-    number = number || 0
+    let {brand, number: ssr_page} = req.params
+    ssr_page = ssr_page || 0
 
     const manifest = manifest_links['cars/index.html']
     if (!manifest) return res.status(404).send('Vite manifest not found');
+    
+    // console.log('manifest = ',manifest)
 
     const js1 = manifest.imports && manifest.imports[0].slice(1)
     const js2 = manifest.imports && manifest.imports[1].slice(1)
@@ -120,11 +122,11 @@ async function carsList(req, res) {
     const carCount = await A_car.getCarCount()
     carCount.length = 20
 
-    let brandSearch = brand
+    let ssr_brandSearch = brand
     let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
-    if (placeRusBrand != -1) brandSearch = RussianBrandsRus[placeRusBrand]
+    if (placeRusBrand != -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
 
-    const carList = await GetListService.getList({offset: number * 20, limit: 20, brand: brandSearch})
+    const carList = await GetListService.getList({offset: ssr_page * 20, limit: 20, brand: ssr_brandSearch})
     carCount.forEach(el => {
         if (RussianBrandsRus.includes(el.name)) el.latBrand = transliterate(el.name).replaceAll(" ", "");
         else el.latBrand = el.name
@@ -138,13 +140,14 @@ async function carsList(req, res) {
     // console.log('--carList = ',carList)
 
     let page = ''
+    let ssr_page_total = Math.ceil(carList.totalCount / 20)
     if(carList.items.length) {
-        for (let i = 1; i <= Math.ceil(carList.totalCount / 20); i++) {
+        for (let i = 1; i <= ssr_page_total; i++) {
             page += `<a href="/cars/${i - 1}${brand ? '/' + brand : ''}">${i}</a><span> | </span>`;
         }
     }
 
-    console.log('#########:::::::::: ')
+    console.log('#########::::brand:::::: ', brand)
 
     res.render('cars', {
         js1, js2, js3, js4, js5, js6, js7,
@@ -153,7 +156,8 @@ async function carsList(req, res) {
         carCount,
         carList,
         page,
-        brand
+        brand,
+        ssr_page, ssr_page_total, ssr_brandSearch,
     })
     return res
 }
