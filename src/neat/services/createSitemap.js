@@ -12,7 +12,7 @@ export function makeSitemap(links_short_need_frendly) {
     links_short_need_frendly && links_short_need_frendly.forEach(link => {
         frendlies.push(link.forSitemap)
         urls += `<url>
-            <loc>https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&amp;id=${link.id}</loc>
+            <loc>https://xn--80aej9aped4f.xn--p1ai/cars/${link.forSitemap}?id=${link.id}</loc>
             <lastmod>${new Date().toLocaleDateString('en-CA')}</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.8</priority>

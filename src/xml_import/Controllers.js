@@ -169,9 +169,9 @@ class Controllers {
         }
 
         let brand = this.listBrands.find(el => val.toUpperCase().includes(el))
-        if (brand) return res.redirect(`/cars/?brand=${brand}`);
+        if (brand) return res.redirect(`/cars/0/${brand}`);
 
-        if (val.toUpperCase().includes('CARS')) return res.redirect(`/cars/`);
+        if (val.toUpperCase().includes('CARS')) return res.redirect(`/cars`);
     }
 
     async getModelList(req, res) {

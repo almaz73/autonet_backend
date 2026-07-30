@@ -14,7 +14,11 @@
     <meta property='og:locale' content='ru_RU'>
     <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
     <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <% if (ssr_page>1){ %>/
+    <meta name='robots' content='noindex'>
+    <% } else { %>
     <meta name='robots' content='index, follow'>
+    <% } %>
     <meta name='keywords' content='Купить автомобили с пробегом, авто в Казани'>
     <meta name='description'
           content='Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Екатеринбурге, Уфе, Туле, Самаре и других городах России.

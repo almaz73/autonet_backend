@@ -7,7 +7,7 @@ import GetListService from "./API/GetListService.js";
 const router = new Router()
 
 router.get('/cars', carsList);
-router.get('/cars/', carsList);
+// router.get('/cars/', carsList);
 router.get('/cars/:number(\\d+)', carsList);
 router.get('/cars/:number(\\d+)/:brand(\\D+)', carsList);
 // router.get('/cars/:number(\\d+)/:brand(\\D+)/:model(\\D+)', carsList);
