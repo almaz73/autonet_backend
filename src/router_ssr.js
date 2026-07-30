@@ -137,7 +137,6 @@ async function carsList(req, res) {
         else el.latBrand = el.brand
     })
 
-    // console.log('--carList = ',carList)
 
     let page = ''
     let ssr_page_total = Math.ceil(carList.totalCount / 20)
@@ -147,7 +146,8 @@ async function carsList(req, res) {
         }
     }
 
-    console.log('#########::::brand:::::: ', brand)
+    let title = 'Авто с пробегом (БУ). Купить авто в автосалонах Казани и всей России - Автосеть.РФ'
+    if (brand) title = `Автомобили ${ssr_brandSearch} . Купить в автосалонах Казани и всей России`
 
     res.render('cars', {
         js1, js2, js3, js4, js5, js6, js7,
@@ -158,6 +158,7 @@ async function carsList(req, res) {
         page,
         brand,
         ssr_page, ssr_page_total, ssr_brandSearch,
+        title
     })
     return res
 }

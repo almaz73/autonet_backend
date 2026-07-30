@@ -37,7 +37,7 @@ export async function getAllNewCarsWithPhoto(db) {
                 let urls = car.images.split(/, /)
                 let firstLink = ''
 
-                let forSitemap = car.brand + '-' + car.model + '-' + car.year + '-' + car.sity + '-' + car.price + '-' + car.milleage+'km'
+                let forSitemap = car.brand + '/' + car.model + '/' + car.year + '-' + car.sity + '-' + car.price + '-' + car.milleage+'km'
                 forSitemap = transliterate(forSitemap)
                 forSitemap = forSitemap.replaceAll(" ", "");
 

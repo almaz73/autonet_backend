@@ -13,11 +13,11 @@ export function makeSitemap(links_short_need_frendly) {
         frendlies.push(link.forSitemap)
         urls += `<url>
             <loc>https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&amp;id=${link.id}</loc>
-            <lastmod>${new Date().toISOString()}</lastmod>
+            <lastmod>${new Date().toLocaleDateString('en-CA')}</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.8</priority>
         </url>`
-        newLinks.push(`https://xn--80aej9aped4f.xn--p1ai/cars/car.html?${link.forSitemap}&id=${link.id}`)
+        newLinks.push(`https://xn--80aej9aped4f.xn--p1ai/cars/${link.forSitemap}?id=${link.id}`)
     })
 
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
