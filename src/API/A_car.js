@@ -1,5 +1,12 @@
+import {RussianBrandsLat, RussianBrandsRus} from "../constants.js";
+
 class CityListService {
-    async getFullAutoInfo(guid) {
+    async getAutoByParams(brand, model, linkId) {
+
+        let ssr_brandSearch = brand
+        let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
+        if (placeRusBrand != -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
+
         const db = global.db
         try {
             // Query the a_car table and join with a_section to get the brandId
@@ -27,11 +34,11 @@ class CityListService {
 
                 FROM a_car ac
                          LEFT JOIN a_section sec ON UPPER(ac.prop_brand) = UPPER(sec.brand)
-                WHERE ac.id = ?
-            `, [guid]);
+                WHERE ac.prop_brand = ?
+                  AND ac.prop_guarantee = ?`, [ssr_brandSearch, linkId]);
 
             if (!result) {
-                console.log('No car found with guid:', guid);
+                console.log('No car found with brand, link:', brand, linkId);
                 return null; // Return null if no car is found with the given guid
             }
 
@@ -310,7 +317,7 @@ class CityListService {
 
             results.forEach(row => {
                 if (row.images && typeof row.images === 'string') {
-                     links.push(...row.images.split(/, /));
+                    links.push(...row.images.split(/, /));
                 }
             });
 

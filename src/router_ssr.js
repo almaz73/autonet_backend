@@ -29,13 +29,8 @@ async function carAlone(req, res) {
 
     try {
         console.log('req.params = ', req.params)
-        const carId = req.query.id || req.params.id;
-
-
         const {brand, model, linkId} = req.params;
         if (!linkId) return res.send()
-
-        console.log('? ?? ?? ???????? carId = ', carId)
 
         let manifest = manifest_links['cars/car.html']
 
@@ -58,13 +53,7 @@ async function carAlone(req, res) {
             if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
         }
 
-        let carData = await A_car.getFullAutoInfo(carId)
-        //
-        // console.log(':: carData = ',carData.brand)
-
-        // let carData = await A_car.getFullAutoInfoByLinkId(brand, model, linkId)
-
-        // console.log(':: carData2 = ',carData2.brand)
+        let carData = await A_car.getAutoByParams(brand, model, linkId)
 
         if (!carData) {
             return res.render('404', {confirm: '☹ ВОЗМОЖНО АВТОМОБИЛЬ СНЯТ С ПРОДАЖИ'})

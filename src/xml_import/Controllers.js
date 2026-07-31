@@ -125,12 +125,13 @@ class Controllers {
     }
 
 
-    async getFullAutoInfo(req, res) {
+    async getAutoByParams(req, res) {
         try {
-            const list = await A_car.getFullAutoInfo(req.query.guid)
+            const {brand, model, linkId} = req.query;
+            const list = await A_car.getAutoByParams(brand, model, linkId)
             res.json(list);
         } catch (error) {
-            console.error('Error getFullAutoInfo:', error);
+            console.error('Error getAutoByParams:', error);
             res.status(500).json({error: error.message});
         }
     }

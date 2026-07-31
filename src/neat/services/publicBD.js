@@ -131,7 +131,7 @@ export async function publicBD(db) {
         // Copy data from sections_table to a_section
         await copyTableData(db, 'sections_table', 'a_section');
 
-        makeLinkid(db)
+        // makeLinkid(db) // РЕМЕННО ОТКЛЮЧАЕМ TODO
 
         return '⚡. Публикация'
 

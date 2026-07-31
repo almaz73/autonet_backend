@@ -89,7 +89,7 @@
                 <%= el.items %>
                 <div class='cart' id='galery_${N}'>
                     <div class='cart__slide'><img class='photo' alt='' src="<%- el.images[0] %>"></div>
-                    <a class="big_link" href="../<% if (!brand){ %>cars/<% } %><%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>?id=<%= el.id %>">
+                    <a class="big_link" href="../<% if (!brand){ %>cars/<% } %><%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>">
                         <div class='name'>
                             <%= el.brand %> <%= el.model %> <%= el.yearReleased %>
                         </div>
