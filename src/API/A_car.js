@@ -1,4 +1,6 @@
-import {RussianBrandsLat, RussianBrandsRus} from "../constants.js";
+import {RussianBrandsLat, RussianBrandsRus, FolderLINKS} from "../constants.js";
+import fs from 'fs';
+import path from "path";
 
 class CityListService {
     async getAutoByParams(brand, model, linkId) {
@@ -54,21 +56,18 @@ class CityListService {
     }
 
 
-    async getLatestCarArrivials(page) {
-        console.log('page = ',page)
-        let ids =  [
-            'c708cd05-8106-11f1-816e-00505601020a',
-            '5ba6b3cd-85c1-11f1-816e-00505601020a',
-            '2b324b07-4ed2-11f1-816e-00505601020a',
-            '05c1ecac-81bc-11f1-816e-00505601020a',
-            'f9124e63-7562-11f1-816e-00505601020a',
-            '08136905-7949-11f1-816e-00505601020a',
-            '0e5daebe-5dcc-11f1-816e-00505601020a',
-            '679aa189-7d1b-11f1-816e-00505601020a',
-            '113afcd6-666e-11f1-816e-00505601020a',
-            '2d5af1dc-f6c6-11f0-816d-00505601020a'
-        ]
-        // TODO нужно используя список ids вытащить список автомобилей постарнично
+    /**
+     * Список последних поступлений,
+     */
+    async getLatestCarArrivials(page = 1, pageSize = 5) {
+        // Get list of car IDs from file
+        const ids = await this._getCarIdList();
+
+        if (!ids || ids.length === 0) return console.log('No car IDs found')
+
+        const offset = (page - 1) * pageSize;
+        const pageIds = ids.slice(0, offset + pageSize);
+
         const db = global.db
         try {
             // language=SQLite
@@ -91,25 +90,55 @@ class CityListService {
                        ac.prop_steering_wheel    as wheelType, 
                        ac.images
                 FROM a_car ac
-                WHERE id = ?
-                LIMIT 15
+                WHERE ac.id IN (${pageIds.map(() => '?').join(',')})
             `;
-            // language=SQLite
-            const result = await db.get(query, [...ids]);
+            
+            // Execute query with the page IDs
+            const results = await db.all(query, pageIds);
 
-            if (!result) {
-                console.log('No new car today');
-                return null;
-            }
+            if (!results || results.length === 0) return console.log('No new cars found for this page');
 
-            if (result.images) {
-                result.images = result.images.split(',').map(url => url.trim())
-                result.images = result.images.map(el => '/pub_auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
+            for (const el of results) {
+                const brandKey = `${el.brand}`;
+                try {
+                    if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)
+                    if (el.gearboxType) {
+                        if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
+                        if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
+                        if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
+                        if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
+                    }
+                    el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
+                    el.images.length = 5
+                    el.images = el.images.map(item => '/pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
+                } catch (error) {
+                    console.error('Error parsing images for car ID ' + el.id + ':', error.message);
+                    el.images = [];
+                }
             }
-            return result;
+            return results;
         } catch (error) {
             console.error('Error retrieving car info from a_car table:', error.message);
             throw error;
+        }
+    }
+
+    /**
+     * список новых авто за сегодня
+     */
+    async _getCarIdList() {
+        try {
+            const filePath = path.join(FolderLINKS, 'links_short_need.js');
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            let links_short_need = JSON.parse(fileContent)
+            let ids = []
+            for (let link of links_short_need) {
+                ids.push(link.split('/')[4])
+            }
+            return ids;
+        } catch (e) {
+            console.error('Error _getCarIdList:', e.message);
+            return [];
         }
     }
     async getCarCount() {

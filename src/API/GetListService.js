@@ -157,7 +157,7 @@ class GetListService {
                     }
                     el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
                     el.images.length = 5
-                    el.images = el.images.map(item => '../../pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
+                    el.images = el.images.map(item => '/pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
                 } catch (error) {
                     console.error('Error parsing images for car ID ' + el.id + ':', error.message);
                     el.images = [];
@@ -269,7 +269,7 @@ class GetListService {
                         }
                         el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
                         el.images.length = 5
-                        el.images = el.images.map(item => '../../pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
+                        el.images = el.images.map(item => '/pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
                     }
                 } catch (error) {
                     console.error('Error parsing images for car ID ' + el.id + ':', error.message);
