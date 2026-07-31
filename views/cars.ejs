@@ -119,12 +119,119 @@
 
 <%- include('partials/footer') %>
 
-<script defer src='st/swiper-bundle.min.js'></script>
 <script type="module" crossorigin src="/assets/<%- js3 %>"></script>
 <script type="module" crossorigin src="/assets/<%- js4 %>"></script>
 <script type="module" crossorigin src="/assets/<%- js5 %>"></script>
 <script type="module" crossorigin src="/assets/<%- js6 %>"></script>
 <script type="module" crossorigin src="/assets/<%- js7 %>"></script>
+<script defer src='/st/swiper-bundle.min.js'></script>
+
+
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Каталог автомобилей в наличии",
+        "description": "Список доступных подержанных и новых автомобилей с ценами",
+        "url": "https://xn--80aej9aped4f.xn--p1ai",
+        "numberOfItems": 3,
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "image": "https://xn--80aej9aped4f.xn--p1ai/pub_auto/101-01-07-2026-01-03-03_big.webp",
+                "name": "KIA Ceed 2009",
+                "url": "https://xn--80aej9aped4f.xn--p1ai/cars/KIA/Ceed/2009-Almetevsk-397899-333162km?id=3e523a1b-72f0-11f1-9a7a-00505699f212",
+                "item": {
+                    "@type": "Car",
+                    "name": "KIA Ceed",
+                    "model": "Ceed",
+                    "brand": {
+                        "@type": "Brand",
+                        "name": "KIA"
+                    },
+                    "modelDate": "2009",
+                    "vehicleModelDate": "2009",
+                    "color": "Серый",
+                    "mileageFromOdometer": {
+                        "@type": "QuantitativeValue",
+                        "value": 333162,
+                        "unitCode": "KMT"
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "397899",
+                        "priceCurrency": "RUB",
+                        "availability": "https://schema.org",
+                        "itemCondition": "https://schema.org"
+                    }
+                }
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "image": "https://xn--80aej9aped4f.xn--p1ai/pub_auto/4E8A1647_novii-razmer-14-07-2026-05-17-32_big.webp",
+                "name": "KIA RIO 2011",
+                "url": "https://xn--80aej9aped4f.xn--p1ai/cars/KIA/RIO/2011-Kazan-486110-221625km?id=9a7a5ddc-3733-47d3-93db-f905a45e4736",
+                "item": {
+                    "@type": "Car",
+                    "name": "KIA RIO",
+                    "model": "RIO",
+                    "brand": {
+                        "@type": "Brand",
+                        "name": "KIA"
+                    },
+                    "modelDate": "2011",
+                    "vehicleModelDate": "2011",
+                    "color": "Красный",
+                    "mileageFromOdometer": {
+                        "@type": "QuantitativeValue",
+                        "value": 221625,
+                        "unitCode": "KMT"
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "486110",
+                        "priceCurrency": "RUB",
+                        "availability": "https://schema.org",
+                        "itemCondition": "https://schema.org"
+                    }
+                }
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "image": "https://xn--80aej9aped4f.xn--p1ai/pub_auto/IMG_9377-21-07-2026-03-55-49_big.webp",
+                "name": "KIA Carens 2005",
+                "url": "https://xn--80aej9aped4f.xn--p1ai/cars/KIA/Carens/2005-Samara-340000-176110km?id=e795c06e-81e9-11f1-9a7c-00505699f212",
+                "item": {
+                    "@type": "Car",
+                    "name": "KIA Carens",
+                    "model": "Carens",
+                    "brand": {
+                        "@type": "Brand",
+                        "name": "KIA"
+                    },
+                    "modelDate": "2005",
+                    "vehicleModelDate": "2005",
+                    "color": "Золотой",
+                    "mileageFromOdometer": {
+                        "@type": "QuantitativeValue",
+                        "value": 176110,
+                        "unitCode": "KMT"
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "340000",
+                        "priceCurrency": "RUB",
+                        "availability": "https://schema.org",
+                        "itemCondition": "https://schema.org"
+                    }
+                }
+            }
+        ]
+    }
+</script>
 
 </body>
 </html>
