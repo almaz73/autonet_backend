@@ -60,13 +60,12 @@ class CityListService {
      * Список последних поступлений,
      */
     async getLatestCarArrivials(page = 1, pageSize = 5) {
-        // Get list of car IDs from file
         const ids = await this._getCarIdList();
 
         if (!ids || ids.length === 0) return console.log('No car IDs found')
 
         const offset = (page - 1) * pageSize;
-        const pageIds = ids.slice(0, offset + pageSize);
+        let pageIds = ids.slice(0, offset + pageSize);
 
         const db = global.db
         try {
@@ -87,14 +86,16 @@ class CityListService {
                        ac.prop_address           as fullAddress,
                        ac.prop_color             as color,
                        ac.prop_city              as city,
-                       ac.prop_steering_wheel    as wheelType, 
+                       ac.prop_steering_wheel    as wheelType,
                        ac.images
                 FROM a_car ac
                 WHERE ac.id IN (${pageIds.map(() => '?').join(',')})
+                ORDER BY CASE ac.id ${pageIds.map((_, index) => `WHEN ? THEN ${index}`).join(' ')}
+                END
             `;
-            
+
             // Execute query with the page IDs
-            const results = await db.all(query, pageIds);
+            const results = await db.all(query, [...pageIds, ...pageIds]);
 
             if (!results || results.length === 0) return console.log('No new cars found for this page');
 
