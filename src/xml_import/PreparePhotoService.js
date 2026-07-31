@@ -52,7 +52,7 @@ class PreparePhotoService {
                     imageArray = car.images.split(',').map(url => url.trim());
 
 
-                    if (devMode) imageArray.length = 2
+                    if (devMode) imageArray.length = 5
 
                     let placeInLine = 0
                     for (const url of imageArray) {

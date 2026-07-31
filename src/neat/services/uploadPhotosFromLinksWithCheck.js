@@ -61,7 +61,7 @@ async function getListExistPhoto() { // список фоток в папке с
 
 async function addNonExistentPhoto(links_short_need, links_all) {
     try {
-        if (devMode) links_short_need.length = 2
+        if (devMode) links_short_need.length = 5
         console.time('🐾🐾🐾 Общее время размещения фоток')
         let count = 0
         for (const photo of links_short_need) {

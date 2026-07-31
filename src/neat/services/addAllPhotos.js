@@ -12,7 +12,7 @@ export async function addAllPhotos() {
         const filePath2 = path.join(FolderLINKS, 'links_all.js');
         const links_all = JSON.parse( fs.readFileSync(filePath2, 'utf8'))
 
-        if (devMode) links_short_need.length = 2
+        if (devMode) links_short_need.length = 5
 
 
 

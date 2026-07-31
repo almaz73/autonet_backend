@@ -26,7 +26,7 @@ export async function removeUnNecessary() {
         const fileContent = fs.readFileSync(filePath, 'utf8');
         let links_short_need = JSON.parse(fileContent)
 
-        if (devMode) links_short_need.length = 2
+        if (devMode) links_short_need.length = 5
 
         let count = 0
         for (const photo of links_short_need) {

@@ -180,7 +180,7 @@ async function uploadAllPhotos(db) {
 
                 let placeInLine = 0
 
-                if(devMode) imageArray.length =2
+                if(devMode) imageArray.length =5
 
                 for (const url of imageArray) {
                     count++

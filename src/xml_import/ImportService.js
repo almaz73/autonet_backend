@@ -84,7 +84,7 @@ class importService {
             if (newLinksWithPhoto.length) {
                 console.log('⚡ ::: Забираем к себе Новые фото:')
                 let placeInLine = 0
-                if (devMode) newLinksWithPhoto.length = 2
+                if (devMode) newLinksWithPhoto.length = 5
                 for (const url of newLinksWithPhoto) {
                     placeInLine++
                     // if (placeInLine > 2) break // todo пока по частям добавляем
@@ -109,7 +109,7 @@ class importService {
             console.log('⚡ ::: Фотки на удаление:', staleLinksWithPhoto.length)
             textForReport += '⚡ ::: Фотки на удаление: ' + staleLinksWithPhoto.length + ' ::: ⚡ ' + new Date().toLocaleDateString()
 
-            if (devMode) staleLinksWithPhoto.length = 2
+            if (devMode) staleLinksWithPhoto.length = 5
             if (staleLinksWithPhoto.length) {
                 console.log('⚡ ::: Удаляем фотки')
                 let placeInLine = 0
