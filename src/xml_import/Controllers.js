@@ -124,6 +124,16 @@ class Controllers {
         }
     }
 
+    async getLatestCarArrivials(req, res) {
+        try {
+            const list = await A_car.getLatestCarArrivials(req.query.page)
+            res.json(list);
+        } catch (error) {
+            console.error('Error getLatestCarArrivials:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
 
     async getAutoByParams(req, res) {
         try {

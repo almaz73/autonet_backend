@@ -53,6 +53,65 @@ class CityListService {
         }
     }
 
+
+    async getLatestCarArrivials(page) {
+        console.log('page = ',page)
+        let ids =  [
+            'c708cd05-8106-11f1-816e-00505601020a',
+            '5ba6b3cd-85c1-11f1-816e-00505601020a',
+            '2b324b07-4ed2-11f1-816e-00505601020a',
+            '05c1ecac-81bc-11f1-816e-00505601020a',
+            'f9124e63-7562-11f1-816e-00505601020a',
+            '08136905-7949-11f1-816e-00505601020a',
+            '0e5daebe-5dcc-11f1-816e-00505601020a',
+            '679aa189-7d1b-11f1-816e-00505601020a',
+            '113afcd6-666e-11f1-816e-00505601020a',
+            '2d5af1dc-f6c6-11f0-816d-00505601020a'
+        ]
+        // TODO нужно используя список ids вытащить список автомобилей постарнично
+        const db = global.db
+        try {
+            // language=SQLite
+            let query = `
+                SELECT ac.id,
+                       ac.prop_brand             as brand,
+                       ac.prop_model             as model,
+                       ac.prop_year              as yearReleased,
+                       ac.price,
+                       ac.prop_milleage          as milleage,
+                       ac.prop_power             as enginePower,
+                       ac.prop_engine_capacity   as engineCapacity,
+                       ac.prop_transmission_type as gearboxType,
+                       ac.prop_body_type         as bodyType,
+                       ac.prop_engine_type       as engineType,
+                       ac.prop_drive             as driveType,
+                       ac.prop_address           as fullAddress,
+                       ac.prop_color             as color,
+                       ac.prop_city              as city,
+                       ac.prop_steering_wheel    as wheelType, 
+                       ac.images
+                FROM a_car ac
+                WHERE id = ?
+                LIMIT 15
+            `;
+            // language=SQLite
+            const result = await db.get(query, [...ids]);
+
+            if (!result) {
+                console.log('No new car today');
+                return null;
+            }
+
+            if (result.images) {
+                result.images = result.images.split(',').map(url => url.trim())
+                result.images = result.images.map(el => '/pub_auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
+            }
+            return result;
+        } catch (error) {
+            console.error('Error retrieving car info from a_car table:', error.message);
+            throw error;
+        }
+    }
     async getCarCount() {
         const db = global.db
         try {

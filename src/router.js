@@ -39,6 +39,7 @@ const upload = MulterConfig.getUpload();
 
 router.get('/getList', Controllers.getList)
 router.get('/getSpecials', Controllers.getSpecials) // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
+router.get('/getLatestCarArrivials', Controllers.getLatestCarArrivials) // Последние поступления
 router.get('/getAutoByParams', Controllers.getAutoByParams)
 router.get('/getCarCount', Controllers.getCarCount) // вместо getBrandList можно использовать
 // router.get('/getBrandList', Controllers.getBrandList)
