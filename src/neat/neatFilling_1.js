@@ -6,6 +6,7 @@ import {sendTelegram} from "../telegramReport.js";
 import {clearBadPhotos} from './services/clearBadPhotos.js'
 import {getAllNewCarsWithPhoto} from "./services/getAllNewCarsWithPhoto.js"
 import {saveLinks} from "./services/saveLinks.js"
+import { promisify } from 'util';
 
 
 const db = await open({
@@ -18,12 +19,12 @@ let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 
 let text = ''
 
-for (let i in [1]) {
-    //4 удаление плохих ссылок
-    text = await clearBadPhotos(db)
+try {
+    // 4. удаление плохих ссылок
+    text = await clearBadPhotos(db);
     reportForTelegram += `  ➜  badLinks ⋲ ${text} `
     report += `\n 5. ⚡. Отредактированы ${text} авто, удалены плохие фото-ссылки`
-    if (text == undefined) break
+    if (text == undefined) throw new Error('clearBadPhotos returned undefined')
 
     // 5. получение ссылок для обновления
     let {
@@ -41,21 +42,35 @@ for (let i in [1]) {
 
     report += `\n 6, ⚡. Новые ${links_short_need.length} фото-ссылки подготовлены. В папке ${existPhotoslength} фоток. На удаление  ${links_unnecessary.length}. Создан sitemap2.xml`
     reportForTelegram += `  ➜  newLinks ${links_short_need.length} ➜ inFolder now: ${existPhotoslength} ➜ unnecessary: ${links_unnecessary.length}`
+} catch (error) {
+    report += `\n ❌ Ошибка: ${error.message}`;
+    reportForTelegram += `\n ❌ Ошибка: ${error.message}`;
+    console.error('Error in processing pipeline:', error);
 }
 
 console.log('\n' + report)
 
 try {
-    setTimeout(() => sendEmail(report), 100)
+    // Promisify setTimeout for better async handling
+    const delay = promisify(setTimeout);
+    
+    // Send email with delay
+    await delay(100);
+    await sendEmail(report);
 } catch (e) {
-    console.log('e1 = ', e)
+    console.error('Error sending email:', e);
+    report += `\n ❌ Ошибка при отправке email: ${e.message}`;
 }
 
-
-// try {
-//     setTimeout(() => sendTelegram(reportForTelegram), 2000)
-// } catch (e) {
-//     console.log('e2 = ', e)
-// }
+/*
+try {
+    // Send Telegram message with delay
+    await delay(2000);
+    await sendTelegram(reportForTelegram);
+} catch (e) {
+    console.error('Error sending Telegram message:', e);
+    reportForTelegram += `\n ❌ Ошибка при отправке Telegram: ${e.message}`;
+}
+ */
 
 

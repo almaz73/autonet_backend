@@ -17,6 +17,7 @@ function checkServer() {
 
 function handleFailure(reason) {
     isRecovering = true;
+    console.log('!!!!!!!!!!! САЙТ УПАЛ !!!!!!!!!!!!' + reason)
     sendEmail('!!!!!!!!!!! САЙТ УПАЛ !!!!!!!!!!!!' + reason)
     setTimeout(() => {
         // Тут наверно нужно будет удалить зависший процесс и перезапустить сервер:

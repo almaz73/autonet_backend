@@ -10,27 +10,40 @@ let reportForTelegram = `  ::::::  ${getTime()}  ::::::  `
 
 let text = ''
 
-for (let i in [1]) {
+try {
     // 9 история удаляемых машин
     text = await collectDeletedCars()
     reportForTelegram += '  ➜  public_BD '
     report += `\n 9. ${text}`
-    if (text && text.indexOf('⚡') < 0) break
-
+    if (text && text.indexOf('⚡') < 0) throw new Error('collectDeletedCars returned no changes');
+} catch (error) {
+    report += `\n ❌ Ошибка: ${error.message}`;
+    reportForTelegram += `\n ❌ Ошибка: ${error.message}`;
+    console.error('Error in processing pipeline:', error);
 }
 
 console.log('\n' + report)
 
 try {
-    setTimeout(() => sendEmail(report), 100)
+    // Promisify setTimeout for better async handling
+    const delay = promisify(setTimeout);
+    
+    // Send email with delay
+    await delay(100);
+    await sendEmail(report);
 } catch (e) {
+    console.error('Error sending email:', e);
+    report += `\n ❌ Ошибка при отправке email: ${e.message}`;
 }
 
-
-// try {
-//     setTimeout(() => sendTelegram(reportForTelegram), 2000)
-// } catch (e) {
-//     console.log('e2 = ', e)
-// }
-
+/*
+try {
+    // Send Telegram message with delay
+    await delay(2000);
+    await sendTelegram(reportForTelegram);
+} catch (e) {
+    console.error('Error sending Telegram message:', e);
+    reportForTelegram += `\n ❌ Ошибка при отправке Telegram: ${e.message}`;
+}
+*/
 
