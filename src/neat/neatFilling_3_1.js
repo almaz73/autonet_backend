@@ -2,6 +2,7 @@ import {getTime} from "../constants.js";
 import {sendEmail} from "../post/sendEmail.js"
 
 import {collectDeletedCars} from "./services/historyOfSold.js";
+import {promisify} from "util";
 
 
 

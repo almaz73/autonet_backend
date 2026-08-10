@@ -69,7 +69,15 @@ class PrepareXMLService {
                     });
 
                     // Write the XML content to the file
-                    fs.writeFileSync(filePath, response.data, 'utf8');
+                    await new Promise((resolve, reject) => {
+                        fs.writeFile(filePath, response.data, 'utf8', (err) => {
+                            if (err) {
+                                console.error(`Error writing file ${filePath}:`, err);
+                                reject(err);
+                            }
+                            resolve();
+                        });
+                    });
 
                     savedFiles.push({
                         url: xmlUrl,

@@ -31,7 +31,12 @@ export async function copyXmlToFolder() {
                 });
 
                 // Write the XML content to the file
-                fs.writeFileSync(filePath, response.data, 'utf8');
+                await fs.writeFile(filePath, response.data, 'utf8', (err) => {
+                    if (err) {
+                        console.error(`Error writing file ${filePath}:`, err);
+                        throw err;
+                    }
+                });
 
                 savedFiles.push({
                     url: xmlUrl,

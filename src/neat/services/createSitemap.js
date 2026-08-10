@@ -4,7 +4,7 @@ import {FolderForSitemap} from "../../constants.js";
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
-export function makeSitemap(links_short_need_frendly) {
+export async function makeSitemap(links_short_need_frendly) {
     let urls = ''
     let frendlies = []
     let newLinks = []
@@ -24,10 +24,13 @@ export function makeSitemap(links_short_need_frendly) {
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${urls}</urlset>`
 
     try {
-        saveFileSitemap(sitemap)
-        saveLinksInBD(frendlies)
-        saveNewLinks(newLinks)
+        await Promise.all([
+            saveFileSitemap(sitemap),
+            saveLinksInBD(frendlies),
+            saveNewLinks(newLinks)
+        ]);
     } catch (e) {
+        console.error('Error in makeSitemap:', e);
     }
 }
 
@@ -69,14 +72,42 @@ async function saveLinksInBD(frendlies) {
     }
 }
 
-function saveFileSitemap(xmlContent) {
-    const filePath = path.join(FolderForSitemap, 'sitemap2.xml');
-    fs.mkdirSync(FolderForSitemap, {recursive: true});
-    fs.writeFileSync(filePath, xmlContent);
+async function saveFileSitemap(xmlContent) {
+    return new Promise((resolve, reject) => {
+        const filePath = path.join(FolderForSitemap, 'sitemap2.xml');
+        fs.mkdir(FolderForSitemap, {recursive: true}, (err) => {
+            if (err) {
+                console.error(`Error creating directory ${FolderForSitemap}:`, err);
+                reject(err);
+            }
+            
+            fs.writeFile(filePath, xmlContent, (err) => {
+                if (err) {
+                    console.error(`Error writing sitemap file ${filePath}:`, err);
+                    reject(err);
+                }
+                resolve();
+            });
+        });
+    });
 }
 
-function saveNewLinks(newLinks) {
-    const filePath = path.join(FolderForSitemap, 'newLinks.txt');
-    fs.mkdirSync(FolderForSitemap, {recursive: true});
-    fs.writeFileSync(filePath, newLinks.join('\n'));
+async function saveNewLinks(newLinks) {
+    return new Promise((resolve, reject) => {
+        const filePath = path.join(FolderForSitemap, 'newLinks.txt');
+        fs.mkdir(FolderForSitemap, {recursive: true}, (err) => {
+            if (err) {
+                console.error(`Error creating directory ${FolderForSitemap}:`, err);
+                reject(err);
+            }
+            
+            fs.writeFile(filePath, newLinks.join('\n'), (err) => {
+                if (err) {
+                    console.error(`Error writing newLinks file ${filePath}:`, err);
+                    reject(err);
+                }
+                resolve();
+            });
+        });
+    });
 }

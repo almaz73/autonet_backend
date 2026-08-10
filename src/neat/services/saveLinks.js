@@ -11,7 +11,15 @@ export async function saveLinks(fileName, data) {
         }
 
         const filePath = path.join(FolderLINKS, fileName);
-        fs.writeFileSync(filePath, JSON.stringify(data), 'utf8');
+        await new Promise((resolve, reject) => {
+            fs.writeFile(filePath, JSON.stringify(data), 'utf8', (err) => {
+                if (err) {
+                    console.error(`Error writing file ${filePath}:`, err);
+                    reject(err);
+                }
+                resolve();
+            });
+        });
     } catch (error) {
         console.error('Error in saveXmlFilesToPublic:', error.message);
         throw error;
