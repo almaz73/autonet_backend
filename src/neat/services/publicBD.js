@@ -78,7 +78,7 @@ async function makeLinkid(db) {
 }
 
 export async function publicBD(db) {
-    console.log('⚡ Публикуем обновленную базу ')
+
     try {
         await deleteFromTableIfExists(db, 'a_car');
         await deleteFromTableIfExists(db, 'a_section');
@@ -131,7 +131,7 @@ export async function publicBD(db) {
         // Copy data from sections_table to a_section
         await copyTableData(db, 'sections_table', 'a_section');
 
-        makeLinkid(db) // РЕМЕННО ОТКЛЮЧАЕМ TODO
+        makeLinkid(db)
 
         return '⚡. Публикация'
 

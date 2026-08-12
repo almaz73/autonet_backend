@@ -10,7 +10,11 @@
     <meta property='og:title'
           content='Каталог автомобилей с пробегом (БУ). Купить авто из наличия в автосалонах Казани и всей России - Автосеть.РФ'>
     <meta property='og:image' content='https://xn--80aej9aped4f.xn--p1ai/st/auto.webp'>
-    <link rel="canonical" href="https://автосеть.рф/cars/<%- ssr_page %>/<%- ssr_brandSearch %>" />
+    <% if (ssr_brandSearch){ %>
+        <link rel="canonical" href="https://автосеть.рф/cars/<%- ssr_page %>/<%- ssr_brandSearch %>" />
+    <% } else { %>
+        <link rel="canonical" href="https://автосеть.рф/cars<% if (ssr_page>0){ %>/<%- ssr_page %><%}%>" />
+    <% } %>
     <meta property='og:url' content='https://автосеть.рф/cars/<%- ssr_page %>/<%- ssr_brandSearch %>'>
     <meta property='og:locale' content='ru_RU'>
     <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
@@ -18,7 +22,7 @@
     <meta name='robots' content='index, follow'>
     <meta name='keywords' content='Купить автомобили с пробегом, авто в Казани'>
     <meta name='description'
-          content='Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Екатеринбурге, Уфе, Туле, Самаре и других городах России.
+          content='Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Уфе, Набережных челнах, Нижнекамске, Самаре и других городах России.
           ✅ Купить автомобили с пробегом из каталога - иномарки, Lada в наличии. ☎ Звоните по телефону 8-800-500-11-56.'>
 
     <link rel='stylesheet' href='../src/css/style.css'/>
