@@ -10,15 +10,12 @@
     <meta property='og:title'
           content='Каталог автомобилей с пробегом (БУ). Купить авто из наличия в автосалонах Казани и всей России - Автосеть.РФ'>
     <meta property='og:image' content='https://xn--80aej9aped4f.xn--p1ai/st/auto.webp'>
-    <meta property='og:url' content='https://автосеть.рф/cars'>
+    <link rel="canonical" href="https://автосеть.рф/cars/<%- ssr_page %>/<%- ssr_brandSearch %>" />
+    <meta property='og:url' content='https://автосеть.рф/cars/<%- ssr_page %>/<%- ssr_brandSearch %>'>
     <meta property='og:locale' content='ru_RU'>
     <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
     <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
-    <% if (ssr_page>1){ %>/
-    <meta name='robots' content='noindex'>
-    <% } else { %>
     <meta name='robots' content='index, follow'>
-    <% } %>
     <meta name='keywords' content='Купить автомобили с пробегом, авто в Казани'>
     <meta name='description'
           content='Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Екатеринбурге, Уфе, Туле, Самаре и других городах России.
@@ -83,7 +80,7 @@
     </div>
 
     <div id='car-vitrina' class='container'>
-        <div class="car_vitrina"><h2 id="vitrina_name">Автомобили</h2></div>
+        <div class="car_vitrina"><h1 id="vitrina_name">Автомобили</h1></div>
         <cards class="cards dot8">
             <% carList.items.forEach(function(el) { %>
                 <%= el.items %>

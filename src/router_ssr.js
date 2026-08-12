@@ -136,7 +136,7 @@ async function carsList(req, res) {
     }
 
     let title = 'Авто с пробегом (БУ). Купить авто в автосалонах Казани и всей России - Автосеть.РФ'
-    if (brand) title = `Автомобили ${ssr_brandSearch} . Купить в автосалонах Казани и всей России`
+    if (brand) title = `Автомобили ${ssr_brandSearch} с пробегом.`
 
     res.render('cars', {
         js1, js2, js3, js4, js5, js6, js7,
