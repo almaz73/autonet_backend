@@ -64,8 +64,9 @@
         </div>
     </div>
 
-    <!-- для cars и cars/?brand -->
-    <div id='filter_cars'></div>
+    <div id='filter_cars'>
+        <div class="filter-white" style="min-height: 106px"></div>
+    </div>
 
     <div id='brands_dynamic' class='container main__top--block'>
         <div class='list_brands'>
@@ -73,8 +74,8 @@
                 <% if (el.count) { %>
                     <div>
                         <a href='/cars/0/<%= el.latBrand %>'>
-                            <span class='icon'></span>
-                            <span class='text'><%= el.name %></span>
+                            <span class='icon' style="width: 37px;height: 29px"></span>
+                            <span class='text'><%= el.name.toUpperCase() %></span>
                             <span class='total'><%= el.count %></span>
                         </a>
                     </div>
