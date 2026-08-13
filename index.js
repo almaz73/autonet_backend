@@ -58,11 +58,15 @@ app.use((req, res, next) => {
 
 async function startApp() {
     try {
-        // Open SQLite database
+        // Open SQLite database with WAL mode
         const db = await open({
             filename: DB_PATH,
-            driver: sqlite3.Database
+            driver: sqlite3.Database,
+            mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE | sqlite3.OPEN_URI,
+            uri: true
         });
+        // Enable WAL mode
+        await db.run('PRAGMA journal_mode=WAL');
 
         // Create sections and cars tables if they don't exist
         // language=SQLite
