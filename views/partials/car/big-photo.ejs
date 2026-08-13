@@ -3,7 +3,9 @@
   <section class='swiper mySwiper'>
     <div class='open_all' onclick='toBig("big")'>На весь экран</div>
     <div class='swiper-wrapper' id='auto-swip'>
+      <% if(carData.images && carData.images.length){ %>
       <img src="<%- carData.images[0] %>">
+      <% } %>
     </div>
     <div class='swiper-button-next'></div>
     <div class='swiper-button-prev'></div>
