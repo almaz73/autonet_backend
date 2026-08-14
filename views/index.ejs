@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Автомобили с пробегом (бу) в автосалонах Казани и других городов России - Автосеть.РФ</title>
+    <meta property='og:type' content='website'>
+    <meta property='og:title' content='Автомобили с пробегом (бу) в автосалонах Казани и других городов России'>
+    <meta property='og:image' content='https://xn--80aej9aped4f.xn--p1ai/st/auto.webp'>
+    <meta property='og:url' content='https://автосеть.рф'>
+    <meta property='og:locale' content='ru_RU'>
+    <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='index, follow'>
+    <meta name='keywords' content='Купить автомобили с пробегом, авто в Казани'>
+    <meta name='description' content='Купите автомобили с пробегом в Казани и других городах.
+        🚗 БУ авто в автосалонах Автосеть.рф.
+        Подробная информация по телефону: ☎ 8-800-500-11-56. Звоните!'>
+
+    <link rel='stylesheet' href='../src/css/swiper.css'/>
+    <link rel='stylesheet' href='../src/css/style.css'/>
+    <link rel='stylesheet' href='../src/css/swiper-bundle.min.css'/>
+    <link rel='stylesheet' href='../src/css/index/ourservice.css'/>
+    <link rel='stylesheet' href="../src/css/contacts.css"/>
+    <link rel='stylesheet' href="../src/css/filter-controls.css"/>
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap2.xml">
+
+
+    <link rel="stylesheet" crossorigin href="/assets/<%- css1 %>">
+    <link rel="stylesheet" crossorigin href="/<%- css2 %>">
+    <link rel="stylesheet" crossorigin href="/<%- css3 %>">
+    <link rel="stylesheet" crossorigin href="/<%- css4 %>">
+
+
+</head>
+<body>
+
+<%- include('partials/verbox') %>
+<%- include('partials/ya_metrica') %>
+<%- include('partials/header') %>
+
+<div id="main_swiper">
+    <section class='mainPage swiper mySwiper'></section>
+</div>
+
+<main>
+
+    <section class="container">
+        <div class="filter">
+
+            <div class="date-list" id="list1_1"></div>
+            <div class="date-list" id="list2_2"></div>
+
+            <div class="filter__wrapper filter-fields">
+                <div class="filter__controls">
+                    <button class="filter__controls-button f_auto active">Автомобили</button>
+                </div>
+
+                <div class="filter__controls filter-fields f_auto_buttons">
+                    <div class="frame-filter__item">
+                        <span class='comb' data-placeholder='Марка'/>
+                        <label>Марка</label>
+                    </div>
+                    <div class="frame-filter__item">
+                        <span class='comb' data-placeholder='Модель'/>
+                        <label>Модель</label>
+                    </div>
+
+                    <div class="frame-filter__item">
+                        <span class='comb' data-placeholder='Город'/>
+                    </div>
+
+                    <div style="flex-grow: 1" onmousedown="onCard(this)">
+                        <div class="big-combo control-flex">
+                            <span style="width: 60px">Год от:</span>
+                            <input class="big-comb__input" style="width: 80px"
+                                   oninput="input_on('yearReleasedFrom', this.value)"
+                                   onchange="input_chamged('yearReleasedFrom', this.value)">
+                        </div>
+                    </div>
+
+                    <div style="flex-grow: 1" class="no_advanced">
+                        <div class="big-combo control-flex" onmousedown="onCard(this)">
+                            <span style="width: 60px">Год до:</span>
+                            <input class="big-comb__input" style="width: 80px"
+                                   oninput="input_on('yearReleasedTo', this.value)"
+                                   onchange="input_chamged('yearReleasedTo', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="no_advanced">
+                        <div class="big-combo control-flex">
+                            <span style="width: 100px">Цена от: </span>
+                            <input class="big-comb__input" style="width: 60px"
+                                   oninput="input_on('priceFrom', this.value)"
+                                   onchange="input_chamged('priceFrom', this.value)" onclick="this.select()">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="big-combo control-flex">
+                            <span style="width: 100px">Цена до: </span>
+                            <input class="big-comb__input" style="width: 60px"
+                                   oninput="input_on('priceTo', this.value)"
+                                   onchange="input_chamged('priceTo', this.value)" onclick="this.select()">
+                        </div>
+                    </div>
+
+                    <div class="no_advanced">
+                        <div class="big-combo control-flex">
+                            <span style="width: 100px">Пробег до: </span>
+                            <input class="big-comb__input" style="width: 70px"
+                                   oninput="input_on('milleageFrom', this.value)"
+                                   onchange="input_chamged('milleageFrom', this.value)" onclick="this.select()">
+                        </div>
+                    </div>
+
+                    <div class="no_advanced">
+                        <div class="big-combo control-flex">
+                            <span style="width: 100px">Пробег до: </span>
+                            <input class="big-comb__input" style="width: 70px"
+                                   oninput="input_on('milleageTo', this.value)"
+                                   onchange="input_chamged('milleageTo', this.value)" onclick="this.select()">
+                        </div>
+                    </div>
+
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Цвет'/>
+                    </div>
+
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Тип кузова'/>
+                    </div>
+
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Тип КПП'/>
+                    </div>
+
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Тип двигателя'/>
+                    </div>
+
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Тип привода'/>
+                    </div>
+
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Руль'/>
+                    </div>
+                </div>
+
+                <div class="filter__controls f_tire_buttons" style="display: none">
+                    <div class="frame-filter__item">
+                        <span class='comb' data-placeholder='Производитель'/>
+                    </div>
+                    <div class="frame-filter__item">
+                        <span class='comb' data-placeholder='Ширина профиля'/>
+                    </div>
+                    <div class="frame-filter__item">
+                        <span class='comb' data-placeholder='Высота профиля'/>
+                    </div>
+                    <div class="frame-filter__item">
+                        <span class='comb' data-placeholder='Диаметр'/>
+                    </div>
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Сезон'/>
+                    </div>
+                    &nbsp;
+                    <div class="frame-filter__item no_advanced">
+                        <span class='comb' data-placeholder='Диски'/>
+                    </div>
+                    <div class="no_advanced">
+                        <div class="big-combo control-flex">
+                            <span style="width: 100px">Цена до: </span>
+                            <input class="big-comb__input" style="width: 70px" onclick="this.select()">
+                        </div>
+                    </div>
+                    &nbsp;
+                </div>
+                <div class="frame-filter__controls">
+                    <button class="frame-filter__controls-advanced">
+                        <span class="frame-filter__controls-advanced-icon"></span>
+                        <span class="frame-filter__controls-advanced-text">Расширенный фильтр</span>
+                    </button>
+
+                    <a href="javascript:void(0)" onclick="clearFilter()"
+                       class="frame-filter__controls-reset">Сбросить</a>
+
+                    <button class="frame-filter__submit" id="set_filter" onclick="goToCars()">
+                        Найдено&nbsp;<span class="filter_number"/></span>
+                    </button>
+                </div>
+
+            </div>
+
+
+        </div>
+        <div class="tires_sizes">
+
+            <div class="tires-flex">
+                <div>
+                    <h2>Расшифровка маркировки шин</h2>
+                    <p>Типоразмер указан в маркировке на боковине шины:</p>
+                    <p><span class="red_strong">Ширина профиля шины</span> — первое число в маркировке, например 195/50
+                        R16 - ширина 195 мм. Ширина профиля представляет собой выраженное в миллиметрах расстояние между
+                        наружными сторонами боковин накачанной шины.</p>
+                    <p><span class="red_strong">Высота профиля</span> — второе число в маркировке шин, например 195/50
+                        R16 - высота 50%. Это отношение высоты шины к ширине, выраженное в процентах (%).</p>
+                    <p><span class="red_strong">Диаметр колеса</span> — третье число в маркировке шины, например 195/50
+                        R16 - диаметр обода 16'. Должен совпадать с монтажным диаметром колесного диска. Измеряется в
+                        дюймах.</p>
+                </div>
+                <img class="tyres_img" src="/st/tyres_size.webp" alt="">
+                <div class='x'><img src="/src/images/x.webp" loading='lazy' alt=''></div>
+            </div>
+
+            <span class='dark-fon'/>
+        </div>
+    </section>
+
+
+    <div class='container main__top--block'>
+        <h2>Топ 20 марок по продаже</h2>
+        <div id='brands_dynamic' class='container main__top--block'>
+            <div class='list_brands'>
+                <% carCount.forEach(function(el) { %>
+                    <% if (el.count) { %>
+                        <div>
+                            <a href='/cars/0/<%= el.latBrand %>'>
+                                <span class='icon' style="width: 37px;height: 29px"></span>
+                                <span class='text'><%= el.name.toUpperCase() %></span>
+                                <span class='total'><%= el.count %></span>
+                            </a>
+                        </div>
+                    <% } %>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+
+
+    <div class='container'>
+        <div class="car_vitrina">
+            <h1 id="vitrina_name"></h1>
+
+            <a href="/cars" class="page__link cars_link" style="display: none">
+                <img src="/st/red_arrow.svg" loading='lazy' alt=''>
+                <span>Все предложения</span>
+            </a>
+        </div>
+        <!--        <cards class='cards dot4' data-col='dot4'></cards>-->
+        <cards class="cards dot4" data-col='dot4'>
+            <% carList.forEach(function(el) { %>
+                <%= el.items %>
+                <div class='cart' id='galery_${N}'>
+                    <div class='cart__slide'>
+                        <% if(el.images && el.images.length){ %><img class='photo' alt='' src="<%- el.images[0] %>">
+                    </div>
+                    <% } %>
+                    <a class="big_link" href="../cars/<%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>">
+                        <div class='name'>
+                            <%= el.brand %> <%= el.model %> <%= el.yearReleased %>
+                        </div>
+                        <div class='cart__price'>
+                            <div class='total'><%= el.price %> ₽</div>
+                        </div>
+                        <div class='cart__info'>
+                            <%= el.milleage %>км, <%- el.engineCapacity %> <%- el.gearboxType %> (<%- el.enginePower %>
+                            л.с.)
+                            <%= el.bodyType %> <%= el.driveType %> <%= el.engineType %>
+                        </div>
+                    </a>
+                </div>
+
+            <% }); %>
+        </cards>
+    </div>
+
+    <div class="page__link" style="margin: -73px 0 73px 0; cursor: pointer; text-align: center">
+        <span onclick="getLatestCars()">Показать еще ...</span>
+    </div>
+
+    <div class='container'>
+        <div class='main__provided--top'>
+            <div class='page__flex'>
+                <h2> Наши услуги </h2>
+                <a href='/services/' class='page__link'>
+                    <img src='/st/red_arrow.svg' loading='lazy' alt=''>
+                    <span>Все услуги</span>
+                </a>
+            </div>
+        </div>
+        <div class='main__provided--block'>
+            <div class='item'>
+                <div class='main__provided--item light main__provided--renctable'>
+                    <a href='/services/vykup/'>
+                        <div class='page__flex'>
+                            <div class='block'>
+                                <div class='name'>
+                                    Продать авто
+                                </div>
+                                <div class='info'>
+                                    Быстро выкупим любой авто на выгодных для Вас условиях!
+                                </div>
+                            </div>
+                            <div class='main__provided--link'>
+                                    <span class='icon'>
+
+                                    </span>
+                                <span class='text'>
+                                        Подробнее
+                                    </span>
+                            </div>
+                        </div>
+                        <div class='main__provided--img'>
+                            <img src='/st/car.png' alt='' loading='lazy' width="191px" height="170px"
+                                 class='mw-100 d-block'>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class='item'>
+                <div class='main__provided--item dark main__provided--light'>
+                    <a href='/services/servisnoe-obsluzhivanie/'>
+                        <div class='page__flex'>
+                            <div class='block'>
+                                <div class='name'>
+                                    Сервисный центр
+                                </div>
+                                <div class='info'>
+                                    Ремонт авто любой сложности
+                                </div>
+                            </div>
+                            <div class='main__provided--link'>
+                                    <span class='icon'>
+
+                                    </span>
+                                <span class='text'>
+                                        Подробнее
+                                    </span>
+                            </div>
+                        </div>
+                        <div class='main__provided--img'>
+                            <img src='/st/key.webp' alt='' width="191px" height="170px" loading='lazy'
+                                 class='mw-100 d-block'>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class='item'>
+                <div class='main__provided--item light main__provided--renctable'>
+                    <a href='/services/insurance/'>
+                        <div class='page__flex'>
+                            <div class='block'>
+                                <div class='name'>
+                                    Страхование
+                                </div>
+                                <div class='info'>
+                                    ОСАГО и КАСКО. Без ограничений и очередей!
+                                </div>
+                            </div>
+                            <div class='main__provided--link'>
+                                    <span class='icon'>
+
+                                    </span>
+                                <span class='text'>
+                                        Подробнее
+                                    </span>
+                            </div>
+                        </div>
+                        <div class='main__provided--img'>
+                            <img src='/st/service_insurance.webp' alt='' width="190px" height="170px" loading='lazy'
+                                 class='mw-100 d-block'>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class='item'>
+                <div class='main__provided--item dark main__provided--light'>
+                    <a href='/services/shinnyy-сentr/'>
+                        <div class='page__flex'>
+                            <div class='block'>
+                                <div class='name'>
+                                    Шинный центр
+                                </div>
+                                <div class='info'>
+                                    Самый большой магазин автомобильных шин в Казани для легковых автомобилей
+                                </div>
+                            </div>
+                            <div class='main__provided--link'>
+                                <span class='text'>
+                                        Подробнее
+                                    </span>
+                            </div>
+                        </div>
+                        <div class='main__provided--img'>
+                            <img src='/st/shina.webp' width="190px" height="169px" loading='lazy' alt=''
+                                 class='mw-100 d-block'>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main__provided--top">
+        <div class="page__flex">
+            <h2> Адреса дилерских центров Автосеть.РФ </h2>
+            <a href="/contacts/" class="page__link">
+                <img src="/st/red_arrow.svg" loading='lazy' alt=''>
+                <span>Все адреса</span>
+            </a>
+        </div>
+    </div>
+    <div class="contact_items" id="currentCity"></div>
+    <div class="photo-modal" onclick="openPhoto(false)">
+        <div class="pic"></div>
+    </div>
+    <div class='geography'>
+        <img src='/st/geo_big.webp' id='mainPhoto' class="mainPhoto_big" alt='география присутствия'
+             loading='lazy'>
+        <img src='/st/geo_small.webp' class='mainPhoto_little' alt='география присутствия' loading='lazy'>
+    </div>
+
+    <div class='container'>
+        <h2>Легковые авто с пробегом в автосалонах Автосеть.рф</h2>
+        <p>
+            В Автосеть.рф можно купить автомобиль с пробегом в отличном состоянии. Автоцентры находятся в Казани,
+            Самаре, Екатеринбурге и других городах России. В продаже представлены самые востребованные модели известных
+            брендов: ВАЗ (Lada), Hyundai, Kia, Chevrolet, Skoda, Renault, Volkswagen, Ford, Toyota, Mitsubishi, Chery и
+            других. Каждый авто в каталоге проходит юридическую проверку, комплексную диагностику и предпродажную
+            подготовку. Благодаря хорошему техническому состоянию вы долго сможете пользоваться автомобилем без расходов
+            на ремонт.
+        </p>
+        <h2>Чем удобна покупка б/у автомобиля?</h2>
+        <p>
+            Главное преимущество б/у автомобилей — их цена. Подержанные иномарки становятся дешевле на 10% сразу, как
+            только покидают автосалон. А через год они теряют в цене уже на 20% и становятся более доступными. При этом
+            качество позволяет ездить на них ещё много лет. В последующие годы темп снижения стоимости снижается.
+            Подержанный автомобиль при должном уходе можно продать почти по такой же цене, по какой он был куплен.
+            Назовём ещё несколько причин сделать выбор в пользу недорогого подержанного авто:
+        </p>
+        <ul>
+            <li>
+                <p>
+                    Отсутствие обкатки. Новые автомобили требуют щадящего режима первые 2-3 тысячи км пробега. Сразу
+                    отправляться на таком авто в путешествие рискованно. Подержанные авто уже проверены, с ними таких
+                    проблем нет.
+                </p>
+            </li>
+            <li>
+                <p>
+                    Лучшее сочетание цены и качества. Можно позволить себе более высокую комплектацию, даже если в новом
+                    авто она кажется слишком дорогой. Также не придется устанавливать дополнительное оборудование: его
+                    уже поставил первый владелец.
+                </p>
+            </li>
+            <li>
+                <p>
+                    Большой выбор моделей и комплектаций. Среди подержанных автомобилей можно встретить удачные версии,
+                    которые уже сняты с производства и отсутствуют у автодилеров.
+                </p>
+            </li>
+        </ul>
+        <h2>Где лучше покупать б/у автомобили?</h2>
+        <p>
+            Всех возможных рисков легко избежать, если выбирать авто с пробегом в автосалоне. В Автосеть.рф мы
+            гарантируем безопасность сделки. Оформление документов не занимает много времени — вы можете уехать на
+            выбранном автомобиле уже в день обращения. Вот ещё несколько преимуществ покупки авто в нашем автоцентре:
+        </p>
+        <ul>
+            <li>
+                <p>
+                    Кредиты и рассрочки. Купить подержанный автомобиль в кредит также легко, как и новый. Мы
+                    сотрудничаем с несколькими банками-партнерами поэтому вы можете выбирать самое выгодное предложение
+                    из многих вариантов.
+                </p>
+            </li>
+            <li>
+                <p>
+                    Программа Трейд-Ин. Можно приобрести б/у авто в более высокой комплектации или сменить седан на
+                    кроссовер, не теряя время на продажу старого автомобиля. Мы предлагаем программу обмена с доплатой.
+                </p>
+            </li>
+            <li>
+                <p>
+                    Большой выбор. Многие сотни моделей в разных комплектациях и с разными типами двигателя. Среди них
+                    вы точно есть подходящий вам вариант.
+                </p>
+            </li>
+            <li>
+                <p>
+                    Профессиональные консультации. Если у вас есть вопросы о модели, комплектации или условиях продажи,
+                    менеджер готов ответить на них по телефону или во время вашего визита в автосалон.
+                </p>
+            </li>
+        </ul>
+        <p>
+            Чтобы приобрести подержанную иномарку или отечественный автомобиль, позвоните нам или оставьте заявку на
+            сайте! Мы быстро свяжемся с вами и пригласим в автосалон в удобное время.
+        </p>
+    </div>
+</main>
+
+<%- include('partials/footer') %>
+
+<script type="module" crossorigin src="/assets/<%- js1 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js2 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js3 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js4 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js5 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js6 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js7 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js8 %>"></script>
+<script type="module" crossorigin src="/<%- js9 %>"></script>
+<script defer src='/st/swiper-bundle.min.js'></script>
+</body>
+</html>

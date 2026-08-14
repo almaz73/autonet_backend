@@ -7,7 +7,7 @@ class CityListService {
 
         let ssr_brandSearch = brand
         let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
-        if (placeRusBrand != -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
+        if (placeRusBrand !== -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
 
         const db = global.db
         try {
@@ -72,6 +72,7 @@ class CityListService {
             // language=SQLite
             let query = `
                 SELECT ac.id,
+                       ac.prop_guarantee         as linkId,
                        ac.prop_brand             as brand,
                        ac.prop_model             as model,
                        ac.prop_year              as yearReleased,
@@ -100,7 +101,6 @@ class CityListService {
             if (!results || results.length === 0) return console.log('No new cars found for this page');
 
             for (const el of results) {
-                const brandKey = `${el.brand}`;
                 try {
                     if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)
                     if (el.gearboxType) {

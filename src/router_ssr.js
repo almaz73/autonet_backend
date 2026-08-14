@@ -6,6 +6,8 @@ import GetListService from "./API/GetListService.js";
 
 const router = new Router()
 
+router.get('/', indexPage);                                 // Главная страница
+
 router.get('/cars', carsList);                              // Страница витрины /cars
 router.get('/cars/:number(\\d+)', carsList);                // Страница витрины /cars
 router.get('/cars/:number(\\d+)/:brand(\\D+)', carsList);   // Страница витрины /cars
@@ -13,6 +15,51 @@ router.get('/cars/:number(\\d+)/:brand(\\D+)', carsList);   // Страница 
 router.get('/cars/:brand(\\D+)/:model/:linkId', carAlone);  // Страница автомобиля
 //http://localhost:3000/cars/Chevrolet/Camaro/2021-Tver-3250000-66525km
 
+
+async function indexPage(req, res) {
+    const manifest = manifest_links['index.html']
+
+    if (!manifest) return res.status(404).send('Vite manifest not found');
+
+    const js1 = manifest.imports && manifest.imports[0].slice(1)
+    const js2 = manifest.imports && manifest.imports[1].slice(1)
+    const js3 = manifest.imports && manifest.imports[2].slice(1)
+    const js4 = manifest.imports && manifest.imports[3].slice(1)
+    const js5 = manifest.imports && manifest.imports[4].slice(1)
+    const js6 = manifest.imports && manifest.imports[5].slice(1)
+    const js7 = manifest.imports && manifest.imports[6].slice(1)
+    const js8 = manifest.imports && manifest.imports[7].slice(1)
+    const js9 = manifest.file
+
+    let css1
+    const css2 = manifest.css && manifest.css[0]
+    const css3 = manifest.css && manifest.css[1]
+    const css4 = manifest.css && manifest.css[2]
+    for (const manifestKey in manifest_links) {
+        if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
+    }
+
+    const carCount = await A_car.getCarCount()
+    carCount.length = 20
+    carCount.forEach(el => {
+        if (RussianBrandsRus.includes(el.name)) el.latBrand = transliterate(el.name).replaceAll(" ", "");
+        else el.latBrand = el.name
+    })
+
+    const carList = await A_car.getLatestCarArrivials()
+    carList.forEach(el => {
+        if (RussianBrandsRus.includes(el.brand)) el.latBrand = transliterate(el.brand).replaceAll(" ", "");
+        else el.latBrand = el.brand
+    })
+
+    res.render('index', {
+        js1, js2, js3, js4, js5, js6, js7, js8, js9,
+        css1, css2, css3,css4,
+        carCount,
+        carList
+    })
+    return res
+}
 
 async function carsList(req, res) {
     let {brand, number: ssr_page} = req.params
@@ -43,7 +90,7 @@ async function carsList(req, res) {
 
     let ssr_brandSearch = brand
     let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
-    if (placeRusBrand != -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
+    if (placeRusBrand !== -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
 
     const carList = await GetListService.getList({offset: ssr_page * 20, limit: 20, brand: ssr_brandSearch})
     carCount.forEach(el => {
