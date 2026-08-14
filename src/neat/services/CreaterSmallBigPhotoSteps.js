@@ -21,7 +21,8 @@ class CreaterSmallBigPhoto {
             const baseName = path.parse(originalFilename).name;
             // console.log(' ⚡ добавим фотки для = ', baseName)
 
-            if (placeInLine < 6) await createSmallPhoto(baseName, uploadDir, imageUrl);
+            /// ТУТ СНЯЛ ЗАПРЕТ СОЗДАВАТЬ МНОГО МЕЛКИХ PHOTO if (placeInLine < 6)
+            await createSmallPhoto(baseName, uploadDir, imageUrl);
             await createBigPhoto(baseName, uploadDir, imageUrl)
 
         } catch (error) {

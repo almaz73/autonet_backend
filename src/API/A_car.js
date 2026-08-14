@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from "path";
 
 class CityListService {
-    async getAutoByParams(brand, model, linkId) {
+    async getAutoByParams(brand, model, linkId, isSmallPhoto) {
 
         let ssr_brandSearch = brand
         let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
@@ -46,7 +46,8 @@ class CityListService {
 
             if (result.images) {
                 result.images = result.images.split(',').map(url => url.trim())
-                result.images = result.images.map(el => '/pub_auto/' + el.split('/').pop().split('.')[0] + '_big.webp')
+                let typePhoto = isSmallPhoto === 'true' ? '_small.webp' : '_big.webp'
+                result.images = result.images.map(el => '/pub_auto/' + el.split('/').pop().split('.')[0] + typePhoto)
             }
             return result;
         } catch (error) {

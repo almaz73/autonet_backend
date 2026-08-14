@@ -137,8 +137,8 @@ class Controllers {
 
     async getAutoByParams(req, res) {
         try {
-            const {brand, model, linkId} = req.query;
-            const list = await A_car.getAutoByParams(brand, model, linkId)
+            const {brand, model, linkId, isSmallPhoto} = req.query;
+            const list = await A_car.getAutoByParams(brand, model, linkId, isSmallPhoto)
             res.json(list);
         } catch (error) {
             console.error('Error getAutoByParams:', error);
