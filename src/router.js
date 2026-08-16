@@ -39,7 +39,7 @@ const upload = MulterConfig.getUpload();
 
 router.get('/getList', Controllers.getList)
 router.get('/getSpecials', Controllers.getSpecials) // Специальные предложения, по городу, их 5 последних в диапазоне цен от 400 до 800 тыс. руб. (для главной страницы)
-router.get('/getLatestCarArrivials', Controllers.getLatestCarArrivials) // Последние поступления
+router.get('/getLatestCarArrivials', Controllers.getLatestCarArrivials) // Свежие поступления авто с пробегом
 router.get('/getAutoByParams', Controllers.getAutoByParams)
 router.get('/getCarCount', Controllers.getCarCount) // вместо getBrandList можно использовать
 // router.get('/getBrandList', Controllers.getBrandList)
@@ -68,8 +68,8 @@ router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние ф
 // router.get('/getOldPhotoToDelete', Controllers.getOldPhotoToDelete) // чтобы найти старые фотки
 // router.get('/getListExistPhoto', Controllers.getListExistPhoto) // получить список фоток из папки с файлами
 
-router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке, Обновления БАЗ
-router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
+// router.get('/worker-import-xml', Controllers.workerImportXML) //в неблокирующем отдельном потоке, Обновления БАЗ
+// router.get('/uploadAllPhotos', Controllers.uploadAllPhotos) // Это можно фоново запускать, чтобы все ссылки превратить в оптимизированные фотки.
 
 
 /*
