@@ -175,7 +175,8 @@ async function carAlone(req, res) {
             js1, js2, js3, js4, js5,
             carjs,
             css1, css2, css3,
-            carData
+            carData,
+            brand, model,linkId
         });
     } catch (error) {
         console.error('Error rendering car page:', error);
