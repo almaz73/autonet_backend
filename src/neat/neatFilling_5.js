@@ -1,4 +1,4 @@
-import {getTime} from "../constants.js";
+import {addReport, getTime, reportAboutUpdate} from "../constants.js";
 import {removeUnNecessary} from "./services/removeUnNecessary.js"
 import {sendEmail} from "../post/sendEmail.js"
 import {sendTelegram} from "../telegramReport.js";
@@ -24,13 +24,15 @@ try {
 
 console.log('\n' + report)
 
+addReport(report)
 try {
     // Promisify setTimeout for better async handling
     const delay = promisify(setTimeout);
     
     // Send email with delay
     await delay(100);
-    await sendEmail(report);
+    // await sendEmail(report);
+    await sendEmail(reportAboutUpdate);
 } catch (e) {
     console.error('Error sending email:', e);
     report += `\n ❌ Ошибка при отправке email: ${e.message}`;

@@ -1,4 +1,4 @@
-import {Version, getTime} from "../constants.js";
+import {getTime, addReport} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import {sendEmail} from "../post/sendEmail.js"
@@ -50,17 +50,19 @@ try {
 
 console.log('\n' + report)
 
-try {
-    // Promisify setTimeout for better async handling
-    const delay = promisify(setTimeout);
-    
-    // Send email with delay
-    await delay(100);
-    await sendEmail(report);
-} catch (e) {
-    console.error('Error sending email:', e);
-    report += `\n ❌ Ошибка при отправке email: ${e.message}`;
-}
+addReport(report)
+
+// try {
+//     // Promisify setTimeout for better async handling
+//     const delay = promisify(setTimeout);
+//
+//     // Send email with delay
+//     await delay(100);
+//     await sendEmail(report);
+// } catch (e) {
+//     console.error('Error sending email:', e);
+//     report += `\n ❌ Ошибка при отправке email: ${e.message}`;
+// }
 
 /*
 try {

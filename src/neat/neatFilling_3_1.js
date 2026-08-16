@@ -1,4 +1,4 @@
-import {getTime} from "../constants.js";
+import {getTime, addReport} from "../constants.js";
 import {sendEmail} from "../post/sendEmail.js"
 
 import {collectDeletedCars} from "./services/historyOfSold.js";
@@ -24,18 +24,18 @@ try {
 }
 
 console.log('\n' + report)
-
-try {
-    // Promisify setTimeout for better async handling
-    const delay = promisify(setTimeout);
-    
-    // Send email with delay
-    await delay(100);
-    await sendEmail(report);
-} catch (e) {
-    console.error('Error sending email:', e);
-    report += `\n ❌ Ошибка при отправке email: ${e.message}`;
-}
+addReport(report)
+// try {
+//     // Promisify setTimeout for better async handling
+//     const delay = promisify(setTimeout);
+//
+//     // Send email with delay
+//     await delay(100);
+//     await sendEmail(report);
+// } catch (e) {
+//     console.error('Error sending email:', e);
+//     report += `\n ❌ Ошибка при отправке email: ${e.message}`;
+// }
 
 /*
 try {

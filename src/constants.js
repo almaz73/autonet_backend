@@ -1,4 +1,4 @@
-export const Version = 'ver.3.310'
+export const Version = 'ver.3.312'
 
 export const devMode = false // для тестирования
 
@@ -82,3 +82,8 @@ export function set_manifest(val) {
 
 export const RussianBrandsRus = ['ВАЗ (LADA)', 'ЗАЗ', 'УАЗ', 'ИЖ', 'Богдан', 'ГАЗ', 'Атом', 'Москвич', 'ЛуАЗ', 'ВИС', 'ЗиС']
 export const RussianBrandsLat = ['VAZ(LADA)', 'ZAZ', 'UAZ', 'IZH', 'Bogdan', 'GAZ', 'Atom', 'Moskvich', 'Luaz', 'VIS', 'ZiS']
+export let reportAboutUpdate='' // сюда собрать и отправить отчет одним письмом
+export function addReport(val) {
+    if (!val) reportAboutUpdate = ''
+    reportAboutUpdate += val
+}
