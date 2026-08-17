@@ -1,4 +1,4 @@
-import {getTime, addReport} from "../constants.js";
+import {getTime, addReportAboutUpdate} from "../constants.js";
 import {sendEmail} from "../post/sendEmail.js"
 import {sendTelegram} from "../telegramReport.js";
 import {addFirstPhotos} from "./services/addFirstPhotos.js"
@@ -25,7 +25,7 @@ try {
 }
 
 console.log('\n' + report)
-addReport(report)
+addReportAboutUpdate(report)
 // try {
 //     // Promisify setTimeout for better async handling
 //     const delay = promisify(setTimeout);

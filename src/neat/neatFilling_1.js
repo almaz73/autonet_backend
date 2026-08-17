@@ -1,4 +1,4 @@
-import {getTime, addReport} from "../constants.js";
+import {getTime, addReportAboutUpdate, reportAboutUpdate} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import {sendEmail} from "../post/sendEmail.js"
@@ -48,9 +48,9 @@ try {
     console.error('Error in processing pipeline:', error);
 }
 
-console.log('\n' + report)
+// console.log('\n' + report)
 
-addReport(report)
+addReportAboutUpdate(report)
 
 // try {
 //     // Promisify setTimeout for better async handling

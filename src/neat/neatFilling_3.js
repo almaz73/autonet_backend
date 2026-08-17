@@ -1,4 +1,4 @@
-import {addReport, getTime} from "../constants.js";
+import {addReportAboutUpdate, getTime} from "../constants.js";
 import {sendEmail} from "../post/sendEmail.js"
 import {sendTelegram} from "../telegramReport.js";
 import {addAllPhotos} from "./services/addAllPhotos.js"
@@ -25,7 +25,7 @@ try {
 }
 
 console.log('\n' + report)
-addReport(report)
+addReportAboutUpdate(report)
 // try {
 //     setTimeout(() => sendEmail(report), 100)
 // } catch (e) {

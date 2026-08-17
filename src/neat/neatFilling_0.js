@@ -1,4 +1,4 @@
-import {Version, getTime, addReport} from "../constants.js";
+import {Version, getTime, addReportAboutUpdate} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import {sendEmail} from "../post/sendEmail.js"
@@ -48,8 +48,8 @@ try {
 
 console.log('\n' + report)
 
-addReport('')
-addReport('ОБНОВЛЕНО:\n ' + report)
+addReportAboutUpdate('')
+addReportAboutUpdate('ОБНОВЛЕНО:\n ' + report)
 
 // try {
 //     // Promisify setTimeout for better async handling
