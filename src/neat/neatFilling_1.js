@@ -40,7 +40,7 @@ try {
     await saveLinks('allCarsWitnPhoto.js', allCarsWitnPhoto)
     await saveLinks('links_unnecessary.js', links_unnecessary)
 
-    report += `\n 6, ⚡. Новые ${links_short_need.length} фото-ссылки подготовлены. В папке ${existPhotoslength} фоток. На удаление  ${links_unnecessary.length}. Создан sitemap2.xml`
+    report += `\n 6, ⚡. Новые ${links_short_need.length} фото-ссылки подготовлены. В папке ${existPhotoslength} фоток. На удаление  ${links_unnecessary.length}.`
     reportForTelegram += `  ➜  newLinks ${links_short_need.length} ➜ inFolder now: ${existPhotoslength} ➜ unnecessary: ${links_unnecessary.length}`
 } catch (error) {
     report += `\n ❌ Ошибка: ${error.message}`;
