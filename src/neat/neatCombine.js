@@ -24,6 +24,7 @@ const step = process.argv[2];  // если запускают файл с пар
 startUpdate(+step)
 
 export async function startUpdate(step) {
+    console.log('Идет обновление ...')
     const startTime = performance.now();
 
     if (!step || step === 1) {
@@ -92,7 +93,7 @@ export async function startUpdate(step) {
             let text = await _addAllPhotos(db)
             addReportAboutUpdate(`\n 7.  Добавление остальных фоток: ${text}`); //1
         } catch (e) {
-            addReportAboutUpdate('\n Не получилось добавить первые фотки', e)
+            addReportAboutUpdate('\n Не получилось добавить все остальные фотки', e)
         }
     }
 

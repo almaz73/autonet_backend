@@ -159,12 +159,12 @@ async function processSectionRecursive(sections, db, parentInfo) {
         // Extract id from the section data
         let id = '';
         if (sectionData.$ && sectionData.$.id) {
-            id = extractValue(sectionData.$.id);
+            id = extractValueClean(sectionData.$.id);
         } else if (sectionData.id && typeof sectionData.id === 'object' && sectionData.id._) {
             // Handle case where id is an object with a value
-            id = extractValue(sectionData.id._);
+            id = extractValueClean(sectionData.id._);
         } else if (sectionData.id) {
-            id = extractValue(sectionData.id);
+            id = extractValueClean(sectionData.id);
         }
 
         // Skip if id equals 'ap_probeg'
@@ -208,12 +208,6 @@ async function processSectionRecursive(sections, db, parentInfo) {
             }
         }
     }
-}
-
-function extractValue(value) {
-    if (value && typeof value === 'object' && value._) return value._.toString().trim();
-    if (value && typeof value === 'object') return JSON.stringify(value);
-    return value ? value.toString().trim() : '';
 }
 
 async function insertCars(cars, db) {
@@ -286,7 +280,7 @@ async function findAndProcessCars(data, db, path = '') {
 
 async function insertIntoCarsTable(car, db) {
     // Extract values from the car object, handling nested properties
-    const id = extractValue(car, ['id', 'Id', '_id']) || generateCarId(car);
+    const id = extractValue(car, ['id', 'Id', '_id']);
     const name = extractValue(car, ['Наименование', 'name', 'title', 'model']);
     const section = extractValue(car, ['section', 'section_id']);
     const price = extractNumericValue(car, ['price', 'cost']);
@@ -344,6 +338,24 @@ function extractNumericValue(obj, possibleKeys) {
         if (obj && obj[key] !== undefined && obj[key] !== null) {
             const value = parseFloat(obj[key]);
             return isNaN(value) ? null : value;
+        }
+    }
+    return null;
+}
+
+function extractValueClean(value) {
+    if (value && typeof value === 'object' && value._) return value._.toString().trim();
+    if (value && typeof value === 'object') return JSON.stringify(value);
+    return value ? value.toString().trim() : '';
+}
+function extractValue(obj, possibleKeys) {
+    for (const key of possibleKeys) {
+        if (obj && obj.properties && obj.properties[key] !== undefined && obj.properties[key] !== null) {
+            return String(obj.properties[key])
+        }
+
+        if (obj && obj[key] !== undefined && obj[key] !== null) {
+            return String(obj[key]);
         }
     }
     return null;

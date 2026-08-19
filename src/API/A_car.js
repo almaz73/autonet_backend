@@ -63,7 +63,10 @@ class CityListService {
     async getLatestCarArrivials(page = 1, pageSize = 5) {
         const ids = await this._getCarIdList();
 
-        if (!ids || ids.length === 0) return console.log('No car IDs found')
+        if (!ids || ids.length === 0) {
+            console.log('No car IDs found')
+            return []
+        }
 
         const offset = (page - 1) * pageSize;
         let pageIds = ids.slice(0, offset + pageSize);
@@ -98,9 +101,10 @@ class CityListService {
 
             // Execute query with the page IDs
             const results = await db.all(query, [...pageIds, ...pageIds]);
-
-            if (!results || results.length === 0) return console.log('No new cars found for this page');
-
+            if (!results || results.length === 0) {
+                console.log('No new cars found for this page');
+                return []
+            }
             for (const el of results) {
                 try {
                     if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)

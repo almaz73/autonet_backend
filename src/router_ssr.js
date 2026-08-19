@@ -46,7 +46,7 @@ async function indexPage(req, res) {
         else el.latBrand = el.name
     })
 
-    const carList = await A_car.getLatestCarArrivials()
+    let carList = await A_car.getLatestCarArrivials() || []
     carList.forEach(el => {
         if (RussianBrandsRus.includes(el.brand)) el.latBrand = transliterate(el.brand).replaceAll(" ", "");
         else el.latBrand = el.brand
