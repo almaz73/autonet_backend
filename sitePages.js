@@ -12,6 +12,7 @@ export const pages = [
     'https://xn--80aej9aped4f.xn--p1ai/privacy-policy/agreement',
     'https://xn--80aej9aped4f.xn--p1ai/privacy-policy',
     'https://xn--80aej9aped4f.xn--p1ai/promo',
+    'https://xn--80aej9aped4f.xn--p1ai/promo/660822/',
     'https://xn--80aej9aped4f.xn--p1ai/services',
     'https://xn--80aej9aped4f.xn--p1ai/tyres',
     'https://xn--80aej9aped4f.xn--p1ai/work-in-autosite',
