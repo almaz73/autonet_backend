@@ -13,6 +13,8 @@ import {_getAllNewCarsWithPhoto} from "./services/_getAllNewCarsWithPhoto.js";
 import {_saveLinks} from "./services/_saveLinks.js";
 import {_publicBD} from "./services/_publicBD.js"
 import {_updateSitemap} from "./services/_updateSitemap.js"
+import {_addFirstPhotos} from "./services/_addFirstPhotos.js";
+import {_addAllPhotos} from "./services/_addAllPhotos.js";
 
 const db = await open({
     filename: './database.sqlite',
@@ -30,7 +32,7 @@ export async function startUpdate(step) {
     if (!step || step === 1) {
         try {
             let text = await _copyXml()
-            addReportAboutUpdate(`\n 1. ${text }`); //1
+            addReportAboutUpdate(`\n 1. ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n ошибка копирования XML')
         }
@@ -82,7 +84,7 @@ export async function startUpdate(step) {
     }
     if (!step || step === 6) {
         try {
-            let text = await _addFirstPhotos(db)
+            let text = await _addFirstPhotos()
             addReportAboutUpdate(`\n 6.  Добавление главных фоток: ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n Не получилось добавить первые фотки', e)
@@ -90,17 +92,16 @@ export async function startUpdate(step) {
     }
     if (!step || step === 7) {
         try {
-            let text = await _addAllPhotos(db)
+            let text = await _addAllPhotos()
             addReportAboutUpdate(`\n 7.  Добавление остальных фоток: ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n Не получилось добавить все остальные фотки', e)
         }
     }
-
     if (!step || step === 8) {
         try {
             let text = await _publicBD(db)
-            addReportAboutUpdate(`\n 8.  Публикация новой БД ${text}` );
+            addReportAboutUpdate(`\n 8.  Публикация новой БД ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Не получилось опубликовать', e)
         }
@@ -108,19 +109,18 @@ export async function startUpdate(step) {
     if (!step || step === 9) {
         try {
             let text = await _updateSitemap(db)
-            addReportAboutUpdate(`\n 9.  Обновлен sitemap.xml ${text}` );
+            addReportAboutUpdate(`\n 9.  Обновлен sitemap.xml ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Неудача при обновлении sitemap', e)
         }
     }
 
     const endTime = performance.now();
-    const duration = parseInt((endTime - startTime)/1000);
+    const duration = parseInt((endTime - startTime) / 1000);
     addReportAboutUpdate(`\n::   Общее время обновления сайта ${duration} сек. ::`)
     await db.close();
     prepareEmail()
 }
-
 
 
 function prepareEmail() {

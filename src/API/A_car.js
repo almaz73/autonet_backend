@@ -61,10 +61,19 @@ class CityListService {
      * Список последних поступлений,
      */
     async getLatestCarArrivials(page = 1, pageSize = 5) {
-        const ids = await this._getCarIdList();
+        // const ids = await this._getCarIdList(); // TODO  вариант с отдельными neat
+
+        let ids = []
+        try {
+            const filePath = path.join(FolderLINKS, 'links_todays_cars.js');
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            ids = JSON.parse(fileContent)
+        } catch (e) {
+            console.log('ошибка получения списка сегодняшних авто = ', e)
+        }
 
         if (!ids || ids.length === 0) {
-            console.log('No car IDs found')
+            console.log('Сегодня не добавлен не один автомобиль')
             return []
         }
 

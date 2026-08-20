@@ -8,7 +8,8 @@ import fs from 'fs';
 import {pages} from '../../../sitePages.js'
 import sqlite3 from "sqlite3";
 import {open} from "sqlite";
-import {transliterate} from "../../constants.js";
+import {RussianBrandsLat, RussianBrandsRus, transliterate} from "../../constants.js";
+import {_saveLinks} from "./_saveLinks.js"
 
 // Настройки для парсера и билдера
 const parser = new xml2js.Parser({explicitArray: false});
@@ -41,8 +42,7 @@ export async function _updateSitemap() {
 }
 
 async function searchAndAddNodes() {
-
-    // проходим по страницам сайта и маркируем
+    // проходим по страницам сайта и маркируем, чтобы не удалить потом.
     for (let page of pages) {
         urls.map(el => {
             if (el.loc === page) el.mark = true
@@ -52,16 +52,15 @@ async function searchAndAddNodes() {
 
     // Получаем из базы все автомобили, проходим по всем, если нет добавляем с маркировкой, если находим маркируем
     const db = await open({filename: './database.sqlite', driver: sqlite3.Database});
-
     //  language=SQLite
     const rows = await db.all(`
-        SELECT ac.prop_guarantee as linkId,
+        SELECT ac.id,
+               ac.prop_guarantee as linkId,
                ac.prop_brand     as brand,
                ac.prop_model     as model
         FROM a_car ac
     `);
     await db.close();
-
 
     for (let row of rows) {
         let model = row.model && row.model.replace(' ', '')
@@ -79,6 +78,12 @@ async function searchAndAddNodes() {
                 mark: true
             })
         }
+    }
+
+    try {
+        await findAndSaveTodaysCars(rows)
+    } catch (e) {
+        console.log('Не получилось создать список сегодняшних авто = ', e)
     }
 
     return deleteUnnecessaryNodes()
@@ -107,4 +112,26 @@ function saveSitemap() {
     let report = `, добавлено-${countAdded} удалено-${countDeleted}`
 
     return report
+}
+
+
+// запишем список сегодняшних авто в файл (Это нужно для первой страницы - свежие постуления)
+async function findAndSaveTodaysCars(rows) {
+    let day = new Date().toISOString().split('T')[0]
+    let todaysCars = urls.filter(el => el.lastmod === day)
+    let Ids = []
+    todaysCars = todaysCars.map(el => el.loc.slice(39))
+    todaysCars = todaysCars.map(el => el.split('/'))
+    todaysCars = todaysCars.map(el => {
+        let brand
+        let placeRusBrand = RussianBrandsLat.findIndex(item => item === el[0])
+        if (placeRusBrand !== -1) brand = RussianBrandsRus[placeRusBrand]
+        el = brand + '/' + el[2]
+        return el
+    })
+    rows.forEach(el => {
+        if (todaysCars.includes(`${el.brand}/${el.linkId}`)) Ids.push(el.id)
+    })
+
+    _saveLinks('links_todays_cars.js', Ids)
 }
