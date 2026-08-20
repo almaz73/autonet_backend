@@ -87,8 +87,6 @@ async function searchAndAddNodes() {
 function deleteUnnecessaryNodes() {
     let count = urls.length
     // Очистка удаленных страниц
-    let zzz = urls.filter(item => !item.mark);
-    console.log('zzz = ', zzz)
     urls = urls.filter(item => item.mark);
     countDeleted = count - urls.length
     return saveSitemap()
