@@ -62,17 +62,15 @@ export async function generationPagesForPromo(res, url) {
         let css1, css2, js3
         for (let manifestKey in manifest) {
             if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
-            if (manifestKey.includes('_promo-') && manifestKey.includes('.css')) css2 = manifestKey.slice(1)
+            if (manifestKey.includes('_promo-') && manifestKey.includes('.css')) css2 = 'assets/'+manifestKey.slice(1)
             if (manifestKey.includes('_promo-')) js3 = manifestKey.slice(1)
         }
-
-        // по какой-то причине перестал _promo.css добавляться в манифест
-        if (!css2) css2 = manifest['promo/index.html'].file
 
         const data = {
             js1: manifest['work-in-autosite/index.html'].imports && manifest['work-in-autosite/index.html'].imports[0].slice(1),
             js2: manifest['work-in-autosite/index.html'].imports && manifest['work-in-autosite/index.html'].imports[1].slice(1),
-            js3, css1, css2
+            js3, css1, css2,
+            code: code
         };
 
         if (promoItem) {
