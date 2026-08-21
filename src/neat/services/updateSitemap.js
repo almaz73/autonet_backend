@@ -41,10 +41,12 @@ export async function readXmlToJson() {
 
 async function searchAndAddNodes() {
 
+    console.log('urls = ',urls.length)
+
     // проходим по страницам сайта и маркируем
     for (let page of pages) {
         urls.map(el => {
-            if (el.loc === page) el.mark = true
+            if (el && el.loc === page) el.mark = true
         })
     }
 
@@ -67,7 +69,7 @@ async function searchAndAddNodes() {
         if (!model) continue
         let brand = transliterate(row.brand).replaceAll(" ", "");
         let link = 'https://xn--80aej9aped4f.xn--p1ai/cars/' + brand + '/' + model + '/' + row.linkId
-        if (urls.some(el => el.loc === link)) {  // уже существует, временно маркируем, чтобы не удалять
+        if (urls.some(el => el && el.loc === link)) {  // уже существует, временно маркируем, чтобы не удалять
             let el = urls.find(el => el.loc === link)
             el.mark = true
         } else { // добавляем новый узел
@@ -86,9 +88,9 @@ async function searchAndAddNodes() {
 function deleteUnnecessaryNodes() {
     let count = urls.length
     // Очистка удаленных страниц
-    let zzz = urls.filter(item => !item.mark);
+    let zzz = urls.filter(item => item && !item.mark);
     console.log('zzz = ', zzz)
-    urls = urls.filter(item => item.mark);
+    urls = urls.filter(item => item && item.mark);
     countDeleted = count - urls.length
     return saveSitemap()
 }

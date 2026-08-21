@@ -15,6 +15,7 @@ import {_publicBD} from "./services/_publicBD.js"
 import {_updateSitemap} from "./services/_updateSitemap.js"
 import {_addFirstPhotos} from "./services/_addFirstPhotos.js";
 import {_addAllPhotos} from "./services/_addAllPhotos.js";
+import {_saveHistory} from './services/_saveHistory.js'
 
 const db = await open({
     filename: './database.sqlite',
@@ -28,9 +29,11 @@ startUpdate(+step)
 export async function startUpdate(step) {
     console.log('Идет обновление ...')
     const startTime = performance.now();
+    let rowsGlobal = []
 
     if (!step || step === 1) {
         try {
+            // Копируем XML в свою папку
             let text = await _copyXml()
             addReportAboutUpdate(`\n 1. ${text}`); //1
         } catch (e) {
@@ -39,6 +42,7 @@ export async function startUpdate(step) {
     }
     if (!step || step === 2) {
         try {
+            // Чистим БД перед парсингом
             let text = await _clearTables(db)
             addReportAboutUpdate(`\n 2. ${text}`); //2
         } catch (e) {
@@ -47,14 +51,16 @@ export async function startUpdate(step) {
     }
     if (!step || step === 3) {
         try {
+            // Парсинг XML и БД
             let text = await _parseXMLToBD(db)
             addReportAboutUpdate(`\n 3. ${text}`); //1
         } catch (e) {
-            addReportAboutUpdate('\n ошибка скачивания XML = ', e)
+            addReportAboutUpdate('\n ошибка парсинга XML = ', e)
         }
     }
     if (!step || step === 4) {
         try {
+            // Удаляем плохие ссылки на фото, которые не открываются
             let text = await _clearBadPhotos(db)
             addReportAboutUpdate(`\n 4. ${text}`); //1
         } catch (e) {
@@ -63,6 +69,7 @@ export async function startUpdate(step) {
     }
     if (!step || step === 5) {
         try {
+            // сравнивая БД составляем список добавляемых фото для новых авто и удаляемых фото удаленных авто
             let {
                 links_short_need,
                 links_all,
@@ -84,6 +91,7 @@ export async function startUpdate(step) {
     }
     if (!step || step === 6) {
         try {
+            // добавление главных фото (отдельно, чтобы оптимизипровать - возможно не надо делить todo)
             let text = await _addFirstPhotos()
             addReportAboutUpdate(`\n 6.  Добавление главных фоток: ${text}`); //1
         } catch (e) {
@@ -92,6 +100,7 @@ export async function startUpdate(step) {
     }
     if (!step || step === 7) {
         try {
+            // добавление остальных фото
             let text = await _addAllPhotos()
             addReportAboutUpdate(`\n 7.  Добавление остальных фоток: ${text}`); //1
         } catch (e) {
@@ -100,6 +109,7 @@ export async function startUpdate(step) {
     }
     if (!step || step === 8) {
         try {
+            // публикация фото
             let text = await _publicBD(db)
             addReportAboutUpdate(`\n 8.  Публикация новой БД ${text}`);
         } catch (e) {
@@ -108,10 +118,22 @@ export async function startUpdate(step) {
     }
     if (!step || step === 9) {
         try {
-            let text = await _updateSitemap(db)
+            // обновление sitemap
+            let {text, rows} = await _updateSitemap()
+            rowsGlobal = rows
             addReportAboutUpdate(`\n 9.  Обновлен sitemap.xml ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Неудача при обновлении sitemap', e)
+        }
+    }
+    if (!step || step === 10) {
+        try {
+            // запись истории удаленных, добавленных, список
+            if (!rowsGlobal.length)  rowsGlobal = await _updateSitemap('onlyRows')
+            let text = await _saveHistory(db, rowsGlobal)
+            addReportAboutUpdate(`\n 10.  Сохранили историю добавленных/удаленных`);
+        } catch (e) {
+            addReportAboutUpdate('\n Неудача сохранении истории', e)
         }
     }
 

@@ -18,12 +18,13 @@ const builder = new xml2js.Builder({
 });
 
 const SITEMAP_PATH = '../front/sitemap.xml';
-let urls = []
+let urls = [] // все ссылки собираемые для sitemap
+let rows = [] // все поля bd
 let result = {}
 let countAdded = 0
 let countDeleted = 0
 
-export async function _updateSitemap() {
+export async function _updateSitemap(onlyRows) {
     //readXmlToJson
     try {
         // 1. Чтение исходного XML-файла
@@ -35,13 +36,13 @@ export async function _updateSitemap() {
         // Приводим к массиву для безопасности:
         urls = Array.isArray(result.urlset.url) ? result.urlset.url : [result.urlset.url];
         // console.log(`Исходное количество страниц: ${urls.length}`);
-        return searchAndAddNodes()
+        return searchAndAddNodes(onlyRows)
     } catch (e) {
         console.log('Не получилось прочитать sitemap.xml ', e)
     }
 }
 
-async function searchAndAddNodes() {
+async function searchAndAddNodes(onlyRows) {
     // проходим по страницам сайта и маркируем, чтобы не удалить потом.
     for (let page of pages) {
         urls.map(el => {
@@ -53,7 +54,7 @@ async function searchAndAddNodes() {
     // Получаем из базы все автомобили, проходим по всем, если нет добавляем с маркировкой, если находим маркируем
     const db = await open({filename: './database.sqlite', driver: sqlite3.Database});
     //  language=SQLite
-    const rows = await db.all(`
+    rows = await db.all(`
         SELECT ac.id,
                ac.prop_guarantee as linkId,
                ac.prop_brand     as brand,
@@ -61,6 +62,10 @@ async function searchAndAddNodes() {
         FROM a_car ac
     `);
     await db.close();
+    
+
+
+    if(onlyRows) return rows
 
     for (let row of rows) {
         let model = row.model && row.model.replace(' ', '')
@@ -90,30 +95,17 @@ async function searchAndAddNodes() {
 }
 
 function deleteUnnecessaryNodes() {
+
+    saveDeletedCars()
+
+
+
     let count = urls.length
     // Очистка удаленных страниц
     urls = urls.filter(item => item.mark);
     countDeleted = count - urls.length
     return saveSitemap()
 }
-
-function saveSitemap() {
-
-    // Обновляем массив в структуре JSON
-    urls.map(el => delete el.mark)
-    result.urlset.url = urls;
-    // Конвертация измененного JSON обратно в XML
-    const updatedXml = builder.buildObject(result);
-    // Запись обновленного XML обратно в файл
-    fs.writeFileSync(SITEMAP_PATH, updatedXml, 'utf-8');
-    console.log('Файл sitemap.xml успешно перезаписан!');
-
-
-    let report = `, добавлено-${countAdded} удалено-${countDeleted}`
-
-    return report
-}
-
 
 // запишем список сегодняшних авто в файл (Это нужно для первой страницы - свежие постуления)
 async function findAndSaveTodaysCars(rows) {
@@ -135,3 +127,33 @@ async function findAndSaveTodaysCars(rows) {
 
     _saveLinks('links_todays_cars.js', Ids)
 }
+
+async function saveDeletedCars() {
+    let deletedToday_cars = []
+    urls.map(el => {
+        if (!el.mark) deletedToday_cars.push(el)
+        delete el.mark
+    })
+    console.log('deletedToday_cars = ',deletedToday_cars)
+
+   // _saveLinks('links_deletedToday_cars.js', Ids)
+}
+
+function saveSitemap() {
+
+    // Обновляем массив в структуре JSON
+    urls.map(el => delete el.mark)
+    result.urlset.url = urls;
+    // Конвертация измененного JSON обратно в XML
+    const updatedXml = builder.buildObject(result);
+    // Запись обновленного XML обратно в файл
+    fs.writeFileSync(SITEMAP_PATH, updatedXml, 'utf-8');
+    console.log('Файл sitemap.xml успешно перезаписан!');
+
+
+    let report = {text: `, добавлено-${countAdded} удалено-${countDeleted}`, rows}
+
+    return report
+}
+
+
