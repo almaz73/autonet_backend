@@ -62,13 +62,12 @@ async function searchAndAddNodes(onlyRows) {
         FROM a_car ac
     `);
     await db.close();
-    
 
 
-    if(onlyRows) return rows
+    if (onlyRows) return rows
 
     for (let row of rows) {
-        let model = row.model && row.model.replace(' ', '')
+        let model = row.model && transliterate(row.model).replace(' ', '')
         if (!model) continue
         let brand = transliterate(row.brand).replaceAll(" ", "");
         let link = 'https://xn--80aej9aped4f.xn--p1ai/cars/' + brand + '/' + model + '/' + row.linkId
@@ -87,6 +86,7 @@ async function searchAndAddNodes(onlyRows) {
 
     try {
         await findAndSaveTodaysCars(rows)
+        await saveFileAboutDeletedCars()
     } catch (e) {
         console.log('Не получилось создать список сегодняшних авто = ', e)
     }
@@ -95,10 +95,6 @@ async function searchAndAddNodes(onlyRows) {
 }
 
 function deleteUnnecessaryNodes() {
-
-    saveDeletedCars()
-
-
 
     let count = urls.length
     // Очистка удаленных страниц
@@ -128,19 +124,13 @@ async function findAndSaveTodaysCars(rows) {
     _saveLinks('links_todays_cars.js', Ids)
 }
 
-async function saveDeletedCars() {
-    let deletedToday_cars = []
-    urls.map(el => {
-        if (!el.mark) deletedToday_cars.push(el)
-        delete el.mark
-    })
-    console.log('deletedToday_cars = ',deletedToday_cars)
-
-   // _saveLinks('links_deletedToday_cars.js', Ids)
+async function saveFileAboutDeletedCars() {
+    let deletedToday_cars = urls.filter(item => !item.mark);
+    _saveLinks('links_deletedToday_cars.js', deletedToday_cars)
 }
 
 function saveSitemap() {
-
+    if (urls.length < 70) return console.log('sitemap сильно обрезан. Не получилось обновить')
     // Обновляем массив в структуре JSON
     urls.map(el => delete el.mark)
     result.urlset.url = urls;

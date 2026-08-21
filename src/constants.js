@@ -87,3 +87,8 @@ export function addReportAboutUpdate(val) {
     if (!val) reportAboutUpdate = ''
     reportAboutUpdate += val
 }
+
+export const isToday = (date) => { // для определения даты изменения файла
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+};

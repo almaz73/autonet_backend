@@ -65,7 +65,7 @@ async function searchAndAddNodes() {
 
 
     for (let row of rows) {
-        let model = row.model && row.model.replace(' ', '')
+        let model = row.model && transliterate(row.model).replace(' ', '')
         if (!model) continue
         let brand = transliterate(row.brand).replaceAll(" ", "");
         let link = 'https://xn--80aej9aped4f.xn--p1ai/cars/' + brand + '/' + model + '/' + row.linkId

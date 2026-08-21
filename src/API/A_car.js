@@ -1,4 +1,4 @@
-import {RussianBrandsLat, RussianBrandsRus, FolderLINKS} from "../constants.js";
+import {RussianBrandsLat, RussianBrandsRus, FolderLINKS, isToday} from "../constants.js";
 import fs from 'fs';
 import path from "path";
 
@@ -61,13 +61,13 @@ class CityListService {
      * Список последних поступлений,
      */
     async getLatestCarArrivials(page = 1, pageSize = 5) {
-        // const ids = await this._getCarIdList(); // TODO  вариант с отдельными neat
+        let ids = await this._getCarIdList(); // старая версия сегодняшних, может быть пустой
 
-        let ids = []
         try {
-            const filePath = path.join(FolderLINKS, 'links_todays_cars.js');
+            const filePath = path.join(FolderLINKS, 'links_todays_cars.js'); // вытаскивание по дате
             const fileContent = fs.readFileSync(filePath, 'utf8');
-            ids = JSON.parse(fileContent)
+            const timeUpdateFile = fs.statSync(filePath);
+            if(isToday(new Date(timeUpdateFile.mtime))) ids = JSON.parse(fileContent) // Если файл сегодняшний, берем его данные
         } catch (e) {
             console.log('ошибка получения списка сегодняшних авто = ', e)
         }
