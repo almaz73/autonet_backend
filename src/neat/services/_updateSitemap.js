@@ -108,6 +108,7 @@ async function findAndSaveTodaysCars(rows) {
     let day = new Date().toISOString().split('T')[0]
     let todaysCars = urls.filter(el => el.lastmod === day)
     let Ids = []
+    let links = []
     todaysCars = todaysCars.map(el => el.loc.slice(39))
     todaysCars = todaysCars.map(el => el.split('/'))
     todaysCars = todaysCars.map(el => {
@@ -118,10 +119,14 @@ async function findAndSaveTodaysCars(rows) {
         return el
     })
     rows.forEach(el => {
-        if (todaysCars.includes(`${el.brand}/${el.linkId}`)) Ids.push(el.id)
+        if (todaysCars.includes(`${el.brand}/${el.linkId}`)) {
+            Ids.push(el.id)
+            links.push( transliterate(el.brand).replaceAll(" ", "")+'/'+ transliterate(el.model).replaceAll(" ", "")+'/'+transliterate(el.linkId).replaceAll(" ", ""))
+        }
     })
-
-    _saveLinks('links_todays_cars.js', Ids)
+    
+    _saveLinks('ids_todays_cars.js', Ids)
+    _saveLinks('links_todays_cars.js', links)
 }
 
 async function saveFileAboutDeletedCars() {

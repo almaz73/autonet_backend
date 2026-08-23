@@ -130,8 +130,8 @@ export async function startUpdate(step) {
         try {
             // запись истории удаленных, добавленных, список
             if (!rowsGlobal.length)  rowsGlobal = await _updateSitemap('onlyRows')
-            let text = await _saveHistory(db, rowsGlobal)
-            addReportAboutUpdate(`\n 10.  Сохранили историю добавленных/удаленных`);
+            let text = await _saveHistory(rowsGlobal)
+            addReportAboutUpdate(`\n 10.  ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Неудача сохранении истории', e)
         }

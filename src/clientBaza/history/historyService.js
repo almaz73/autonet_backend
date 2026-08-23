@@ -38,11 +38,7 @@ function get_history_period(page = 1, pageSize = 10) {
 
 function get_history_period_days(page = 1, pageSize = 10) {
     return new Promise((resolve, reject) => {
-        
-        console.log('pageSize = ',pageSize)
-        
         getHistoryPeriodDays((err, data) => {
-            console.log('data total = ',data.total)
             if (err) {
                 console.error('Error getting article items', err);
                 return reject(err);

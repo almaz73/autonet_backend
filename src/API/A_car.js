@@ -64,7 +64,7 @@ class CityListService {
         let ids = await this._getCarIdList(); // старая версия сегодняшних, может быть пустой
 
         try {
-            const filePath = path.join(FolderLINKS, 'links_todays_cars.js'); // вытаскивание по дате
+            const filePath = path.join(FolderLINKS, 'ids_todays_cars.js'); // вытаскивание по дате
             const fileContent = fs.readFileSync(filePath, 'utf8');
             const timeUpdateFile = fs.statSync(filePath);
             if(isToday(new Date(timeUpdateFile.mtime))) ids = JSON.parse(fileContent) // Если файл сегодняшний, берем его данные
