@@ -35,7 +35,7 @@ export async function startUpdate(step) {
         try {
             // Копируем XML в свою папку
             let text = await _copyXml()
-            addReportAboutUpdate(`\n 1. ${text}`); //1
+            addReportAboutUpdate(`\n     1. ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n ошибка копирования XML')
         }
@@ -44,7 +44,7 @@ export async function startUpdate(step) {
         try {
             // Чистим БД перед парсингом
             let text = await _clearTables(db)
-            addReportAboutUpdate(`\n 2. ${text}`); //2
+            addReportAboutUpdate(`\n     2. ${text}`); //2
         } catch (e) {
             addReportAboutUpdate('\n ошибка очистки баз ', e)
         }
@@ -53,7 +53,7 @@ export async function startUpdate(step) {
         try {
             // Парсинг XML и БД
             let text = await _parseXMLToBD(db)
-            addReportAboutUpdate(`\n 3. ${text}`); //1
+            addReportAboutUpdate(`\n     3. ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n ошибка парсинга XML = ', e)
         }
@@ -62,7 +62,7 @@ export async function startUpdate(step) {
         try {
             // Удаляем плохие ссылки на фото, которые не открываются
             let text = await _clearBadPhotos(db)
-            addReportAboutUpdate(`\n 4. ${text}`); //1
+            addReportAboutUpdate(`\n     4. ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n ошибка удаления плохих ссылок на фото, авто без фоток =', e)
         }
@@ -84,7 +84,7 @@ export async function startUpdate(step) {
             await _saveLinks('links_unnecessary.js', links_unnecessary)
 
             let text = ` Новые ${links_short_need.length} фото-ссылки подготовлены. В папке ${existPhotoslength} фоток. На удаление  ${links_unnecessary.length}.`
-            addReportAboutUpdate(`\n 5. ${text}`);
+            addReportAboutUpdate(`\n     5. ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Создаем список вновьдобавленных и удаленных =', e)
         }
@@ -93,7 +93,7 @@ export async function startUpdate(step) {
         try {
             // добавление главных фото (отдельно, чтобы оптимизипровать - возможно не надо делить todo)
             let text = await _addFirstPhotos()
-            addReportAboutUpdate(`\n 6.  Добавление главных фоток: ${text}`); //1
+            addReportAboutUpdate(`\n     6.  Добавление главных фоток: ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n Не получилось добавить первые фотки', e)
         }
@@ -102,7 +102,7 @@ export async function startUpdate(step) {
         try {
             // добавление остальных фото
             let text = await _addAllPhotos()
-            addReportAboutUpdate(`\n 7.  Добавление остальных фоток: ${text}`); //1
+            addReportAboutUpdate(`\n     7.  Добавление остальных фоток: ${text}`); //1
         } catch (e) {
             addReportAboutUpdate('\n Не получилось добавить все остальные фотки', e)
         }
@@ -111,7 +111,7 @@ export async function startUpdate(step) {
         try {
             // публикация фото
             let text = await _publicBD(db)
-            addReportAboutUpdate(`\n 8.  Публикация новой БД ${text}`);
+            addReportAboutUpdate(`\n     8.  Публикация новой БД ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Не получилось опубликовать', e)
         }
@@ -121,7 +121,7 @@ export async function startUpdate(step) {
             // обновление sitemap
             let {text, rows} = await _updateSitemap()
             rowsGlobal = rows
-            addReportAboutUpdate(`\n 9.  Обновлен sitemap.xml ${text}`);
+            addReportAboutUpdate(`\n     9.  Обновлен sitemap.xml ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Неудача при обновлении sitemap', e)
         }
@@ -131,7 +131,7 @@ export async function startUpdate(step) {
             // запись истории удаленных, добавленных, список
             if (!rowsGlobal.length)  rowsGlobal = await _updateSitemap('onlyRows')
             let text = await _saveHistory(rowsGlobal)
-            addReportAboutUpdate(`\n 10.  ${text}`);
+            addReportAboutUpdate(`\n     10.  ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Неудача сохранении истории', e)
         }
@@ -141,10 +141,8 @@ export async function startUpdate(step) {
     const duration = parseInt((endTime - startTime) / 1000);
     addReportAboutUpdate(`\n::   Общее время обновления сайта ${duration} сек. ::`)
     await db.close();
-    prepareEmail()
-}
-
-
-function prepareEmail() {
-    console.log(reportAboutUpdate)
+    
+    console.log('reportAboutUpdate = ',reportAboutUpdate)
+    
+    // await sendEmail(reportAboutUpdate);
 }

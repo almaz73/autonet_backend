@@ -10,9 +10,9 @@ export async function _addAllPhotos() {
     const filePath2 = path.join(FolderLINKS, 'links_all.js');
     const links_all = JSON.parse(fs.readFileSync(filePath2, 'utf8'))
 
-    if (!links_short_need.length || !links_all.length) return 0
+    // if (!links_short_need.length) return 0
 
-    if (devMode) links_short_need.length = 5
+    if (devMode && links_short_need.length > 5) links_short_need.length = 5
 
 
     console.time('🐾🐾🐾 Общее время размещения остальных фоток')
@@ -29,5 +29,6 @@ export async function _addAllPhotos() {
         }
     }
     console.timeEnd('🐾🐾🐾 Общее время размещения остальных фоток')
+    console.log('🐾🐾🐾  = ',count)
     return count
 }

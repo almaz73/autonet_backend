@@ -8,7 +8,8 @@ import fs from 'fs';
 import {pages} from '../../../sitePages.js'
 import sqlite3 from "sqlite3";
 import {open} from "sqlite";
-import {RussianBrandsLat, RussianBrandsRus, transliterate} from "../../constants.js";
+import path from "path";
+import {FolderForSitemap, RussianBrandsLat, RussianBrandsRus, transliterate} from "../../constants.js";
 import {_saveLinks} from "./_saveLinks.js"
 
 // Настройки для парсера и билдера
@@ -17,7 +18,7 @@ const builder = new xml2js.Builder({
     xmldec: {version: '1.0', encoding: 'UTF-8'}
 });
 
-const SITEMAP_PATH = '../front/sitemap.xml';
+const SITEMAP_PATH = FolderForSitemap + '/sitemap.xml';
 let urls = [] // все ссылки собираемые для sitemap
 let rows = [] // все поля bd
 let result = {}
@@ -121,12 +122,35 @@ async function findAndSaveTodaysCars(rows) {
     rows.forEach(el => {
         if (todaysCars.includes(`${el.brand}/${el.linkId}`)) {
             Ids.push(el.id)
-            links.push( transliterate(el.brand).replaceAll(" ", "")+'/'+ transliterate(el.model).replaceAll(" ", "")+'/'+transliterate(el.linkId).replaceAll(" ", ""))
+            links.push(transliterate(el.brand).replaceAll(" ", "") + '/' + transliterate(el.model).replaceAll(" ", "") + '/' + transliterate(el.linkId).replaceAll(" ", ""))
         }
     })
-    
+
     _saveLinks('ids_todays_cars.js', Ids)
     _saveLinks('links_todays_cars.js', links)
+    saveNewLinks(links)
+}
+
+async function saveNewLinks(links) {
+    let newLinks = links.map(el => 'https://xn--80aej9aped4f.xn--p1ai/cars/' + el)
+
+    return new Promise((resolve, reject) => {
+        const filePath = path.join(FolderForSitemap, 'newLinks.txt');
+        fs.mkdir(FolderForSitemap, {recursive: true}, (err) => {
+            if (err) {
+                console.error(`Error creating directory ${FolderForSitemap}:`, err);
+                reject(err);
+            }
+
+            fs.writeFile(filePath, newLinks.join('\n'), (err) => {
+                if (err) {
+                    console.error(`Error writing newLinks file ${filePath}:`, err);
+                    reject(err);
+                }
+                resolve();
+            });
+        });
+    });
 }
 
 async function saveFileAboutDeletedCars() {

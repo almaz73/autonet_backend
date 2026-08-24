@@ -62,7 +62,7 @@ class CityListService {
      */
     async getLatestCarArrivials(page = 1, pageSize = 5) {
         let ids = await this._getCarIdList(); // старая версия сегодняшних, может быть пустой
-
+console.log('ids = ',ids)
         try {
             const filePath = path.join(FolderLINKS, 'ids_todays_cars.js'); // вытаскивание по дате
             const fileContent = fs.readFileSync(filePath, 'utf8');
@@ -71,7 +71,7 @@ class CityListService {
         } catch (e) {
             console.log('ошибка получения списка сегодняшних авто = ', e)
         }
-
+        console.log('222 ids = ',ids)
         if (!ids || ids.length === 0) {
             console.log('Сегодня не добавлен не один автомобиль')
             return []
@@ -103,13 +103,16 @@ class CityListService {
                        ac.prop_steering_wheel    as wheelType,
                        ac.images
                 FROM a_car ac
-                WHERE ac.id IN (${pageIds.map(() => '?').join(',')})
+                WHERE ac.id IN (${pageIds.map(() => '?').join(',')}) AND ac.images IS NOT NULL AND ac.images != ''
                 ORDER BY CASE ac.id ${pageIds.map((_, index) => `WHEN ? THEN ${index}`).join(' ')}
                 END
             `;
 
             // Execute query with the page IDs
             const results = await db.all(query, [...pageIds, ...pageIds]);
+            
+            console.log('results = ',results)
+            
             if (!results || results.length === 0) {
                 console.log('No new cars found for this page');
                 return []

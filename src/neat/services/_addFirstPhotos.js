@@ -16,6 +16,7 @@ export async function _addFirstPhotos() {
             await PhotoSaver.savePhotoToServer(photo, 1, FolderPhoto);
         }
         console.timeEnd('🐾🐾🐾 Общее время размещения первых фоток')
+        console.log('🐾  = ',links_short_need.length)
         return links_short_need.length
     } catch (e) {
 
