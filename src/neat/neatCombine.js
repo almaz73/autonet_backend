@@ -9,13 +9,19 @@ import {_copyXml} from "./services/_copyXml.js"
 import {_clearTables} from "./services/_clearTables.js";
 import {_parseXMLToBD} from "./services/_parseXMLToBD.js"
 import {_clearBadPhotos} from "./services/_clearBadPhotos.js";
+
+import {_createHelpFiles} from "./services/_createHelpFiles.js"
+import {_addNewPhotos} from './services/_addNewPhotos.js'
+import {_publicBD} from "./services/_publicBD.js"
+import {_updHistory} from "./services/_updHistory.js";
+
 import {_getAllNewCarsWithPhoto} from "./services/_getAllNewCarsWithPhoto.js";
 import {_saveLinks} from "./services/_saveLinks.js";
-import {_publicBD} from "./services/_publicBD.js"
 import {_updateSitemap} from "./services/_updateSitemap.js"
 import {_addFirstPhotos} from "./services/_addFirstPhotos.js";
 import {_addAllPhotos} from "./services/_addAllPhotos.js";
 import {_saveHistory} from './services/_saveHistory.js'
+
 
 const db = await open({
     filename: './database.sqlite',
@@ -27,7 +33,15 @@ const step = process.argv[2];  // если запускают файл с пар
 startUpdate(+step)
 
 export async function startUpdate(step) {
-    console.log('Идет обновление ...')
+    console.log(`   Идет обновление ...
+    1. Загрузка XML
+    2. Очистка таблиц
+    3. Парсинг в БД
+    4. Очистка плохих ссылок на фото
+    5. Вспомогательные файлы
+    6. Загрузка фоток
+    7. Публикация БД
+    8. Сохранение истории`)
     const startTime = performance.now();
     let rowsGlobal = []
 
@@ -69,80 +83,48 @@ export async function startUpdate(step) {
     }
     if (!step || step === 5) {
         try {
-            // сравнивая БД составляем список добавляемых фото для новых авто и удаляемых фото удаленных авто
-            let {
-                links_short_need,
-                links_all,
-                allCarsWitnPhoto,
-                existPhotoslength,
-                links_unnecessary
-            } = await _getAllNewCarsWithPhoto(db)
-
-            await _saveLinks('links_short_need.js', links_short_need)
-            await _saveLinks('links_all.js', links_all)
-            await _saveLinks('allCarsWitnPhoto.js', allCarsWitnPhoto)
-            await _saveLinks('links_unnecessary.js', links_unnecessary)
-
-            let text = ` Новые ${links_short_need.length} фото-ссылки подготовлены. В папке ${existPhotoslength} фоток. На удаление  ${links_unnecessary.length}.`
-            addReportAboutUpdate(`\n     5. ${text}`);
+            //Используя предыдущий список sitemap и новый список бд создаем вспомогательные файлы
+            let text = await _createHelpFiles(db)
+            addReportAboutUpdate(`\n     5.  ${text}`)
         } catch (e) {
-            addReportAboutUpdate('\n Создаем список вновьдобавленных и удаленных =', e)
+            addReportAboutUpdate('\n Не получилось создать вспомогательные файлы', e)
         }
     }
     if (!step || step === 6) {
         try {
-            // добавление главных фото (отдельно, чтобы оптимизипровать - возможно не надо делить todo)
-            let text = await _addFirstPhotos()
-            addReportAboutUpdate(`\n     6.  Добавление главных фоток: ${text}`); //1
+            // добавление новых фото
+            let text = await _addNewPhotos()
+            addReportAboutUpdate(`\n     6.  Добавление новых фоток: ${text}`); //1
         } catch (e) {
-            addReportAboutUpdate('\n Не получилось добавить первые фотки', e)
+            addReportAboutUpdate('\n Не получилось фотки', e)
         }
     }
     if (!step || step === 7) {
         try {
-            // добавление остальных фото
-            let text = await _addAllPhotos()
-            addReportAboutUpdate(`\n     7.  Добавление остальных фоток: ${text}`); //1
-        } catch (e) {
-            addReportAboutUpdate('\n Не получилось добавить все остальные фотки', e)
-        }
-    }
-    if (!step || step === 8) {
-        try {
-            // публикация фото
+            // публикация
             let text = await _publicBD(db)
-            addReportAboutUpdate(`\n     8.  Публикация новой БД ${text}`);
+            addReportAboutUpdate(`\n     7.  Публикация новой БД ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Не получилось опубликовать', e)
         }
     }
-    if (!step || step === 9) {
+    if (!step || step === 8) {
         try {
-            // обновление sitemap
-            let {text, rows} = await _updateSitemap()
-            rowsGlobal = rows
-            addReportAboutUpdate(`\n     9.  Обновлен sitemap.xml ${text}`);
-        } catch (e) {
-            addReportAboutUpdate('\n Неудача при обновлении sitemap', e)
-        }
-    }
-    if (!step || step === 10) {
-        try {
-            // запись истории удаленных, добавленных, список
-            if (!rowsGlobal.length)  rowsGlobal = await _updateSitemap('onlyRows')
-            let text = await _saveHistory(rowsGlobal)
-            addReportAboutUpdate(`\n     10.  ${text}`);
+            // запись истории удаленных, добавленных
+            let text = await _updHistory(rowsGlobal)
+            addReportAboutUpdate(`\n     8.  ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Неудача сохранении истории', e)
         }
     }
 
+
     const endTime = performance.now();
     const duration = parseInt((endTime - startTime) / 1000);
     addReportAboutUpdate(`\n::   Общее время обновления сайта ${duration} сек. ::`)
     await db.close();
-    
-    console.log('reportAboutUpdate = ',reportAboutUpdate)
-    
+
+    if (!step) console.log('reportAboutUpdate = ', reportAboutUpdate)
+
     // await sendEmail(reportAboutUpdate);
 }

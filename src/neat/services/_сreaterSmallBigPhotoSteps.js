@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 class CreaterSmallBigPhoto {
 
-    async savePhotoToServer(imageUrl, placeInLine, directory) {
+    async savePhotoToServer(imageUrl, directory) {
         try {
             if (!imageUrl) return {error: 'Image URL is required'};
 
@@ -21,7 +21,6 @@ class CreaterSmallBigPhoto {
             const baseName = path.parse(originalFilename).name;
             // console.log(' ⚡ добавим фотки для = ', baseName)
 
-            /// ТУТ СНЯЛ ЗАПРЕТ СОЗДАВАТЬ МНОГО МЕЛКИХ PHOTO if (placeInLine < 6)
             await createSmallPhoto(baseName, uploadDir, imageUrl);
             await createBigPhoto(baseName, uploadDir, imageUrl)
 
