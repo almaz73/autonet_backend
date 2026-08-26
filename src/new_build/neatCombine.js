@@ -4,16 +4,16 @@
 
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
-import {getTime, Version, reportAboutUpdate, addReportAboutUpdate, devMode} from "../constants.js";
-import {_copyXml} from "./services/_copyXml.js"
-import {_clearTables} from "./services/_clearTables.js";
-import {_parseXMLToBD} from "./services/_parseXMLToBD.js"
-import {_clearBadPhotos} from "./services/_clearBadPhotos.js";
+import {getTime, Version, reportAboutUpdate, addReportAboutUpdate, isLocal} from "../constants.js";
+import {_copyXml} from "../new_build/services/_copyXml.js"
+import {_clearTables} from "../new_build/services/_clearTables.js";
+import {_parseXMLToBD} from "../new_build/services/_parseXMLToBD.js"
+import {_clearBadPhotos} from "../new_build/services/_clearBadPhotos.js";
 
-import {_createHelpFiles} from "./services/_createHelpFiles.js"
-import {_addNewPhotos} from './services/_addNewPhotos.js'
-import {_publicBD} from "./services/_publicBD.js"
-import {_updHistory} from "./services/_updHistory.js";
+import {_createHelpFiles} from "../new_build/services/_createHelpFiles.js"
+import {_addNewPhotos} from '../new_build/services/_addNewPhotos.js'
+import {_publicBD} from "../new_build/services/_publicBD.js"
+import {_updHistory} from "../new_build/services/_updHistory.js";
 import {sendEmail} from "../post/sendEmail.js";
 
 
@@ -21,22 +21,21 @@ const db = await open({
     filename: './database.sqlite',
     driver: sqlite3.Database
 });
-addReportAboutUpdate(`:: ${getTime()} :: Отчет ${Version} ::`)
+addReportAboutUpdate(`\n\n:: ${getTime()} :: Отчет ${Version} ::`)
 
 const step = process.argv[2];  // если запускают файл с параметром step (только один узел) // для отладки
 await startUpdate(+step)
-await db.close();
 
 export async function startUpdate(step) {
-    console.log(`   Идет обновление ...
-    1. Загрузка XML
-    2. Очистка таблиц
-    3. Парсинг в БД
-    4. Очистка плохих ссылок на фото
-    5. Вспомогательные файлы
-    6. Загрузка фоток
-    7. Публикация БД
-    8. Сохранение истории`)
+    // console.log(`   Идет обновление ...
+    // 1. Загрузка XML
+    // 2. Очистка таблиц
+    // 3. Парсинг в БД
+    // 4. Очистка плохих ссылок на фото
+    // 5. Вспомогательные файлы
+    // 6. Загрузка фоток
+    // 7. Публикация БД
+    // 8. Сохранение истории`)
     const startTime = performance.now();
     let rowsGlobal = []
 
@@ -119,6 +118,6 @@ export async function startUpdate(step) {
     addReportAboutUpdate(`\n::   Общее время обновления сайта ${duration} сек. ::`)
     await db.close();
 
-    if (!step || devMode) console.log('reportAboutUpdate = ', reportAboutUpdate)
+    if (isLocal) console.log('reportAboutUpdate = ', reportAboutUpdate)
     else await sendEmail(reportAboutUpdate);
 }

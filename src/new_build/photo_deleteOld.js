@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from "url";
-import {devMode, FolderPhoto} from "../constants.js";
+import {devMode, FolderPhoto, isLocal} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import {sendEmail} from "../post/sendEmail.js";
@@ -21,6 +21,8 @@ const pubAutoPath = path.join(__dirname, '../..', FolderPhoto);
 
 // нужно вытащить ссылки на все файлы из папки ../front/pub_auto
 let linksFolder = getLinksFromFolder()
+
+console.log('linksFolder = ',linksFolder)
 // фотки из БД
 let linksFromBD = await getLinksFromBD()
 
@@ -28,13 +30,13 @@ let linksFromBD = await getLinksFromBD()
 const difference = [...new Set(linksFolder).difference(new Set(linksFromBD))];
 
 // удаляем старые фотки
-let text =  await removeOldPhotos(difference)
+let text = await removeOldPhotos(difference)
 
 let result = `Удаление не используемых Фоток. В папке было ${linksFolder.length} фоток, в БД ссылки есть на ${linksFromBD.length}. Удалены ${text}`
 
+console.log('старт УДАЛЯТОРА')
 
-
-if (devMode) console.log('result = ', result)
+if (isLocal) console.log('result = ', result)
 else await sendEmail(result);
 
 function getLinksFromFolder() {
@@ -71,13 +73,16 @@ async function getLinksFromBD() {
     `);
     await db.close();
 
-    allAutoDB = allAutoDB.map(el => el.images.split(','))
+
+    allAutoDB = allAutoDB.map(el => el.images && el.images.split(','))
 
     let allAuto = []
     for (let auto of allAutoDB) {
-        for (let link of auto[0].split(',')) {
-            let ind = link.lastIndexOf('/')
-            allAuto.push(link.slice(ind + 1).split('.')[0])
+        if (auto && auto.length) {
+            for (let link of auto) {
+                let ind = link.lastIndexOf('/')
+                allAuto.push(link.slice(ind + 1).split('.')[0])
+            }
         }
     }
 
@@ -85,21 +90,24 @@ async function getLinksFromBD() {
 }
 
 export async function removeOldPhotos(difference) {
-    try {        
-        if (devMode) difference.length = 5
+    console.log('difference = ',difference)
+    if(difference.length<5) return ' 0 '
+    try {
+        // if (isLocal)
+            difference.length = 5 // todo Пока тестируем. Удаялем по 5
 
         let count = 0
         for (const photo of difference) {
-            let bigPhoto = photo+'_big.webp'
-            let smallPhoto = photo+'_small.webp'
-            
+            let bigPhoto = photo + '_big.webp'
+            let smallPhoto = photo + '_small.webp'
+
             await deleteFileByName(bigPhoto);
             await deleteFileByName(smallPhoto);
             count++
         }
         return count
     } catch (e) {
-        console.log('removeOldPhotos e = ',e)
+        console.log('removeOldPhotos e = ', e)
     }
 }
 
