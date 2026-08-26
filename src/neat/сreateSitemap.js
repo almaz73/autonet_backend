@@ -100,6 +100,7 @@ async function addAllAuto() {
         FROM a_car ac
                  LEFT JOIN a_section ast ON ac.section = ast.id
     `);
+    await db.close();
     let site = 'https://xn--80aej9aped4f.xn--p1ai/cars/'
 
     // получаем старые записи sitemap

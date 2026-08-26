@@ -4,7 +4,7 @@
 
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
-import {getTime, Version, reportAboutUpdate, addReportAboutUpdate} from "../constants.js";
+import {getTime, Version, reportAboutUpdate, addReportAboutUpdate, devMode} from "../constants.js";
 import {_copyXml} from "./services/_copyXml.js"
 import {_clearTables} from "./services/_clearTables.js";
 import {_parseXMLToBD} from "./services/_parseXMLToBD.js"
@@ -14,13 +14,7 @@ import {_createHelpFiles} from "./services/_createHelpFiles.js"
 import {_addNewPhotos} from './services/_addNewPhotos.js'
 import {_publicBD} from "./services/_publicBD.js"
 import {_updHistory} from "./services/_updHistory.js";
-
-import {_getAllNewCarsWithPhoto} from "./services/_getAllNewCarsWithPhoto.js";
-import {_saveLinks} from "./services/_saveLinks.js";
-import {_updateSitemap} from "./services/_updateSitemap.js"
-import {_addFirstPhotos} from "./services/_addFirstPhotos.js";
-import {_addAllPhotos} from "./services/_addAllPhotos.js";
-import {_saveHistory} from './services/_saveHistory.js'
+import {sendEmail} from "../post/sendEmail.js";
 
 
 const db = await open({
@@ -30,7 +24,8 @@ const db = await open({
 addReportAboutUpdate(`:: ${getTime()} :: Отчет ${Version} ::`)
 
 const step = process.argv[2];  // если запускают файл с параметром step (только один узел) // для отладки
-startUpdate(+step)
+await startUpdate(+step)
+await db.close();
 
 export async function startUpdate(step) {
     console.log(`   Идет обновление ...
@@ -124,7 +119,6 @@ export async function startUpdate(step) {
     addReportAboutUpdate(`\n::   Общее время обновления сайта ${duration} сек. ::`)
     await db.close();
 
-    if (!step) console.log('reportAboutUpdate = ', reportAboutUpdate)
-
-    // await sendEmail(reportAboutUpdate);
+    if (!step || devMode) console.log('reportAboutUpdate = ', reportAboutUpdate)
+    else await sendEmail(reportAboutUpdate);
 }

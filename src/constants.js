@@ -1,6 +1,6 @@
-export const Version = 'ver.3.419'
+export const Version = 'ver.3.420'
 
-export const devMode = true // для тестирования
+export const devMode = false // для тестирования
 
 export const FolderPhoto = '../front/pub_auto'
 export const FolderXML = '../front/XML'
