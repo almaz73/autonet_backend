@@ -1,5 +1,5 @@
 import path from "path";
-import {devMode, FolderLINKS, FolderPhoto} from "../../constants.js";
+import {FolderLINKS, FolderPhoto, isLocal} from "../../constants.js";
 import fs from "fs";
 import PhotoSaver from "./_сreaterSmallBigPhotoSteps.js";
 
@@ -9,7 +9,7 @@ export async function _addNewPhotos() {
         const fileContent = fs.readFileSync(filePath, 'utf8');
         let newPhotos = JSON.parse(fileContent)
 
-        if (devMode && newPhotos.length > 5) newPhotos.length = 5
+        if (isLocal && newPhotos.length > 5) newPhotos.length = 5
 
         // console.time('🐾 Общее время размещения фоток')
         for (const photo of newPhotos) {

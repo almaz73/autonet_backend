@@ -46,6 +46,11 @@ export let xmlNames = [
     'alfa-trade.xml'
 ];
 
+export let xmlUrls_forDev = [
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
+];
+export let xmlNames_forDev = xmlUrls_forDev.map(el => el.slice(52))
+
 export function getTime() {
     return new Date().toLocaleDateString('ru') + ' ' + new Date().toLocaleTimeString([], {
         hour: "2-digit",

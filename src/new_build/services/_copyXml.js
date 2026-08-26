@@ -1,5 +1,5 @@
 import fs from "fs";
-import {devMode, FolderXML, xmlUrls} from "../../constants.js";
+import {FolderXML, isLocal, xmlUrls, xmlUrls_forDev} from "../../constants.js";
 import path from "path";
 import axios from "axios";
 
@@ -13,7 +13,7 @@ export async function _copyXml() {
 
         let URLS = xmlUrls
 
-        if (devMode) URLS = ['https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml', 'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml']
+        if (isLocal) URLS = xmlUrls_forDev
         for (const xmlUrl of URLS) {
             try {
                 const urlParts = xmlUrl.split('/');

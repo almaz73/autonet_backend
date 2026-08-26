@@ -1,4 +1,4 @@
-import {devMode, FolderXML, xmlNames} from "../../constants.js";
+import {FolderXML, isLocal, xmlNames, xmlNames_forDev} from "../../constants.js";
 import path from "path";
 import fs from "fs";
 import {parseString} from "xml2js";
@@ -6,7 +6,8 @@ import {parseString} from "xml2js";
 export async function _parseXMLToBD(db) {
     let countCars = 0
     let ARR = xmlNames
-    if (devMode) ARR = ['AlfaAvto5_Tver.xml','alfa-trade.xml']
+    if (isLocal) ARR = xmlNames_forDev
+    if (isLocal) console.log('!!!! xmlNames_forDev = ',xmlNames_forDev)
 
     for (const xmlName of ARR) {
         let xmlData = '';

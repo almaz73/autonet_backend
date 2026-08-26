@@ -88,7 +88,7 @@ export async function startUpdate(step) {
         try {
             // добавление новых фото
             let text = await _addNewPhotos()
-            addReportAboutUpdate(`\n     6.  Добавление новых фоток: ${text}`); //1
+            addReportAboutUpdate(`\n     6.  Добавление новых фоток: ${text} ${isLocal?"(не более 5 из-за режима dev)":""}`); //1
         } catch (e) {
             addReportAboutUpdate('\n Не получилось фотки', e)
         }

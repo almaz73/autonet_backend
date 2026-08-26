@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from "url";
-import {devMode, FolderPhoto, isLocal} from "../constants.js";
+import {FolderPhoto, isLocal} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import {sendEmail} from "../post/sendEmail.js";

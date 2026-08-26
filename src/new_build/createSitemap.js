@@ -1,7 +1,7 @@
 import fs from 'fs';
 import * as fs_promises from 'node:fs/promises'
 import path from 'path';
-import {FolderForSitemap, transliterate} from "../constants.js";
+import {FolderForSitemap, isLocal, transliterate} from "../constants.js";
 import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import {pages} from '../../sitePages.js'
@@ -35,13 +35,11 @@ await addPromoPages()
 // получаю список всех авто и добавляю, дату обновления беру со старого sitemap
 await addAllAuto()
 
-
 await saveFileSitemap(links)
 await saveNewLinks(newLinks)
 
 
-let text = `Файл sitemap.xml успешно перезаписан!\n Ссылок ${links.length}, добавлено новых: ${newLinks.length}`
-sendEmail(text)
+
 
 async function makeDoubleOldSitemap() {
     try {
@@ -134,11 +132,7 @@ async function addAllAuto() {
     }
 }
 
-
 async function saveFileSitemap(links) {
-    console.log('links.length = ', links.length)
-
-
     if (links.length < 70) return console.log('sitemap сильно обрезан. Не получилось обновить')
     // Обновляем массив в структуре JSON
     links.map(el => delete el.mark)
@@ -168,3 +162,8 @@ async function saveNewLinks(newLinks) {
         });
     });
 }
+
+let text = `Файл sitemap.xml успешно перезаписан! Всего страниц ${links.length}, сейчас добавлено: ${newLinks.length}`
+
+if (isLocal) console.log('text = ', text)
+else await sendEmail(text);
