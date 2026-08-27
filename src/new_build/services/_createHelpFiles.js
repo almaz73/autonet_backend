@@ -4,7 +4,7 @@ import xml2js from "xml2js";
 import path from "path";
 import {fileURLToPath} from 'url';
 import {access} from 'fs/promises';
-import {_saveLinks} from "./_saveLinks.js"
+import {_saveLinks, _saveNewLinks} from "./_saveLinks.js"
 
 // Настройки для парсера и билдера
 const parser = new xml2js.Parser({explicitArray: false});
@@ -17,8 +17,9 @@ let newPhotos = []
 let newAuto = []
 let oldAuto = []
 let newAutoIDS = [] // Этот список нужен будет для A_car.getLatestCarArrivials()
-// newAutoIDS // нельзя перезаписать, Если файл сегодняшний, нужно добавить
-getNewAutoIdsFromFile() // поэтому загружаем и используем если сегодняшний
+getNewAutoIdsFromFile() // используем прежние данные если сегодняшний
+let newLinks = [] // Этот список нужен будет для A_car.getLatestCarArrivials()
+getNewLinks() // используем прежние данные если сегодняшний
 
 export async function _createHelpFiles(db) {
     let newDbRows = await getAllNewCarsWithPhoto(db)
@@ -29,7 +30,8 @@ export async function _createHelpFiles(db) {
     await _saveLinks('_newPhotos.js', newPhotos)
     await _saveLinks('_oldAuto.js', oldAuto)
     await _saveLinks('_newAuto.js', newAuto)
-    await _saveLinks('_newAutoIDS.js', newAutoIDS) 
+    await _saveLinks('_newAutoIDS.js', newAutoIDS)
+    await _saveNewLinks(newLinks)
 
     return `Новых авто: ${newAuto.length}, Удаляемых авто:${oldAuto.length}, Новых фото: ${newPhotos.length}`
 }
@@ -41,6 +43,18 @@ function getNewAutoIdsFromFile() {
         const timeUpdateFile = fs.statSync(filePath);
         // Если файл сегодняшний, забираем
         if (fileContent && isToday(new Date(timeUpdateFile.mtime))) newAutoIDS = JSON.parse(fileContent)
+    } catch (e) {
+        return []
+    }
+}
+
+function getNewLinks() {
+    try {
+        const filePath = path.join(FolderForSitemap, 'newLinks.txt');
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        const timeUpdateFile = fs.statSync(filePath);
+        // Если файл сегодняшний, забираем
+        if (fileContent && isToday(new Date(timeUpdateFile.mtime))) newLinks = fileContent.split('\n')
     } catch (e) {
         return []
     }
@@ -88,6 +102,7 @@ async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
                 found.mark = true
             } else {
                 newAuto.push(dbLink)
+                if (!newLinks.includes(dbLink)) newLinks.push(dbLink)
                 if (!newAutoIDS.includes(car.id)) newAutoIDS.push(car.id)
                 await addNewPhotosWithCheck(car.images)
             }

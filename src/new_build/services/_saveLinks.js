@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {FolderLINKS} from "../../constants.js";
+import {FolderForSitemap, FolderLINKS} from "../../constants.js";
 
 
 export async function _saveLinks(fileName, data) {
@@ -24,4 +24,24 @@ export async function _saveLinks(fileName, data) {
         console.error('Error in saveXmlFilesToPublic:', error.message);
         throw error;
     }
+}
+
+export async function _saveNewLinks(newLinks) {
+    return new Promise((resolve, reject) => {
+        const filePath = path.join(FolderForSitemap, 'newLinks.txt');
+        fs.mkdir(FolderForSitemap, {recursive: true}, (err) => {
+            if (err) {
+                console.error(`Error creating directory ${FolderForSitemap}:`, err);
+                reject(err);
+            }
+
+            fs.writeFile(filePath, newLinks.join('\n'), (err) => {
+                if (err) {
+                    console.error(`Error writing newLinks file ${filePath}:`, err);
+                    reject(err);
+                }
+                resolve();
+            });
+        });
+    });
 }
