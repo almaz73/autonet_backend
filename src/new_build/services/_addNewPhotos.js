@@ -11,11 +11,11 @@ export async function _addNewPhotos() {
 
         if (isLocal && newPhotos.length > 5) newPhotos.length = 5
 
-        // console.time('🐾 Общее время размещения фоток')
+        console.time('🐾 Общее время размещения фоток')
         for (const photo of newPhotos) {
             await PhotoSaver.savePhotoToServer(photo, FolderPhoto);
         }
-        // console.timeEnd('🐾 Общее время размещения фоток')
+        console.timeEnd('🐾 Общее время размещения фоток')
         console.log('🐾  загружено новых фоток: ',newPhotos.length)
         return newPhotos.length
     } catch (e) {

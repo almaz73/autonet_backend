@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 class CreaterSmallBigPhoto {
 
     async savePhotoToServer(imageUrl, directory) {
+        // imageUrl - Это прежняя ссылка из XML
         try {
             if (!imageUrl) return {error: 'Image URL is required'};
 
@@ -19,7 +20,7 @@ class CreaterSmallBigPhoto {
             const urlObj = new URL(imageUrl);
             let originalFilename = path.basename(urlObj.pathname);
             const baseName = path.parse(originalFilename).name;
-            // console.log(' ⚡ добавим фотки для = ', baseName)
+            console.log(' ⚡ добавим фотки для = ', baseName)
 
             await createSmallPhoto(baseName, uploadDir, imageUrl);
             await createBigPhoto(baseName, uploadDir, imageUrl)

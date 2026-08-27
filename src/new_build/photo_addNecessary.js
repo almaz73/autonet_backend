@@ -5,6 +5,8 @@ import {FolderPhoto, isLocal} from "../constants.js";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import {sendEmail} from "../post/sendEmail.js";
+import {_saveLinks} from "./services/_saveLinks.js";
+import PhotoSaver from "./services/_сreaterSmallBigPhotoSteps.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,20 +24,22 @@ console.log('старт ДОБАВЛЯТОРА фоток')
 // нужно вытащить ссылки на все файлы из папки ../front/pub_auto
 let linksFolder = getLinksFromFolder()
 // фотки из БД
-let linksFromBD = await getLinksFromBD()
+let {allBasedNamesBD, allLinksFromXMLBD} = await getLinksFromBD()
 
 // Вычитаем одно из другого, Нативное вычитание множеств
-const difference = [...new Set(linksFromBD).difference(new Set(linksFolder))];
+const difference = [...new Set(allBasedNamesBD).difference(new Set(linksFolder))];
+let newPhotosFromAdder = []
 
-console.log('Недостающих difference.length = ',difference.length)
+console.log('Недостающих : ', difference.length)
 
 // добавляем недостающие фотки
-let text = await removeOldPhotos(difference)
+let text = await collectPhotoBasedNames(difference)
 
-let result = `Добавление недостающих фоток. В папке было ${linksFolder.length} фоток, в БД есть ссылки на ${linksFromBD.length}. Добавлены ${text}`
+let result = `Добавление недостающих фоток. В папке было ${linksFolder.length} фоток, в БД есть ссылки на ${allBasedNamesBD.length}. Добавлены ${text}`
 
-if (isLocal) console.log('result = ', result)
-else await sendEmail(result);
+await _saveLinks('_newPhotosFromAdder.js', newPhotosFromAdder)
+console.log('ОТЧЕТ: ', result)
+if (!isLocal) await sendEmail(result);
 
 function getLinksFromFolder() {
     try {
@@ -46,7 +50,7 @@ function getLinksFromFolder() {
             //     // photoName: file.name,
             //     // createDate: fs.statSync(path.join(pubAutoPath, file.name)).birthtime
             // }));
-            .map(el => el.name.split('_')[0])
+            .map(el => el.name.slice(0, -5).replace('_small', '').replace('_big', ''))
 
         result = [...new Set(result)]
 
@@ -73,33 +77,36 @@ async function getLinksFromBD() {
 
     allAutoDB = allAutoDB.map(el => el.images && el.images.split(','))
 
-    let allAuto = []
+    let allBasedNamesBD = []
+    let allLinksFromXMLBD = []
+
     for (let auto of allAutoDB) {
         if (auto && auto.length) {
             for (let link of auto) {
                 let ind = link.lastIndexOf('/')
-                allAuto.push(link.slice(ind + 1).split('.')[0])
+                allBasedNamesBD.push(link.slice(ind + 1).split('.')[0])
+                allLinksFromXMLBD.push(link)
             }
         }
     }
 
-    return allAuto
+    return {allBasedNamesBD, allLinksFromXMLBD}
 }
 
-export async function removeOldPhotos(difference) {
+export async function collectPhotoBasedNames(difference) {
     try {
-        // if (isLocal)
-            difference.length = 5; // пока тестируем, добавляем по пять
-
         let count = 0
+        console.time('🐾 Общее время размещения фоток')
         for (const photo of difference) {
-            console.log('todo  Добавление будет тут = ', photo)
-            //await PhotoSaver.savePhotoToServer(photo, FolderPhoto);
+            let linkXML = allLinksFromXMLBD.find(el=>el.includes(photo))
+            await PhotoSaver.savePhotoToServer(linkXML, FolderPhoto);
+            newPhotosFromAdder.push(photo)
             count++
         }
+        console.timeEnd('🐾 Общее время размещения фоток')
         return count
     } catch (e) {
-        console.log('removeOldPhotos e = ', e)
+        console.log('collectPhotoBasedNames e = ', e)
     }
 }
 

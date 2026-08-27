@@ -35,11 +35,15 @@ export async function _createHelpFiles(db) {
 }
 
 function getNewAutoIdsFromFile() {
-    const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    const timeUpdateFile = fs.statSync(filePath);
-    // Если файл сегодняшний, забираем
-    if (fileContent && isToday(new Date(timeUpdateFile.mtime))) newAutoIDS = JSON.parse(fileContent)
+    try {
+        const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        const timeUpdateFile = fs.statSync(filePath);
+        // Если файл сегодняшний, забираем
+        if (fileContent && isToday(new Date(timeUpdateFile.mtime))) newAutoIDS = JSON.parse(fileContent)
+    } catch (e) {
+        return []
+    }
 }
 
 async function getAllNewCarsWithPhoto(db) {
