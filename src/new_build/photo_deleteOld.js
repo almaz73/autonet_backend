@@ -18,26 +18,23 @@ const pubAutoPath = path.join(__dirname, '../..', FolderPhoto);
 // - получаю разницу
 // - удаляю
 
-
+console.log('старт УДАЛЯТОРА')
 // нужно вытащить ссылки на все файлы из папки ../front/pub_auto
 let linksFolder = getLinksFromFolder()
 
-console.log('linksFolder = ',linksFolder)
 // фотки из БД
-let linksFromBD = await getLinksFromBD()
+let {allBasedNamesBD, allLinksFromXMLBD} = await getLinksFromBD()
 
 // Вычитаем одно из другого, Нативное вычитание множеств
-const difference = [...new Set(linksFolder).difference(new Set(linksFromBD))];
+const difference = [...new Set(linksFolder).difference(new Set(allBasedNamesBD))];
 
 // удаляем старые фотки
 let text = await removeOldPhotos(difference)
 
-let result = `Удаление не используемых Фоток. В папке было ${linksFolder.length} фоток, в БД ссылки есть на ${linksFromBD.length}. Удалены ${text}`
+let result = `Удаление неиспользуемых фоток. В папке было ${linksFolder.length} фоток, в БД ссылки есть на ${allBasedNamesBD.length}. Удалены неиспользуемые ${text}`
 
-console.log('старт УДАЛЯТОРА')
-
-if (isLocal) console.log('result = ', result)
-else await sendEmail(result);
+console.log('result = ', result)
+if (!isLocal) await sendEmail(result);
 
 function getLinksFromFolder() {
     try {
@@ -48,7 +45,7 @@ function getLinksFromFolder() {
             //     // photoName: file.name,
             //     // createDate: fs.statSync(path.join(pubAutoPath, file.name)).birthtime
             // }));
-            .map(el => el.name.split('_')[0])
+            .map(el => el.name.slice(0, -5).replace('_small', '').replace('_big', ''))
 
         result = [...new Set(result)]
 
@@ -73,36 +70,35 @@ async function getLinksFromBD() {
     `);
     await db.close();
 
-
     allAutoDB = allAutoDB.map(el => el.images && el.images.split(','))
 
-    let allAuto = []
+    let allBasedNamesBD = []
+    let allLinksFromXMLBD = []
+
     for (let auto of allAutoDB) {
         if (auto && auto.length) {
             for (let link of auto) {
                 let ind = link.lastIndexOf('/')
-                allAuto.push(link.slice(ind + 1).split('.')[0])
+                allBasedNamesBD.push(link.slice(ind + 1).split('.')[0])
+                allLinksFromXMLBD.push(link)
             }
         }
     }
 
-    return allAuto
+    return {allBasedNamesBD, allLinksFromXMLBD}
 }
 
 export async function removeOldPhotos(difference) {
-    console.log('difference = ',difference)
-    if(difference.length<5) return ' 0 '
+    if (difference.length < 5) return ' 0 '
     try {
-        // if (isLocal)
-            difference.length = 5 // todo Пока тестируем. Удаялем по 5
+        if (isLocal) difference.length = 5
 
         let count = 0
-        for (const photo of difference) {
-            let bigPhoto = photo + '_big.webp'
-            let smallPhoto = photo + '_small.webp'
-
-            await deleteFileByName(bigPhoto);
-            await deleteFileByName(smallPhoto);
+        for (const basesName of difference) {
+            let linkXML = allLinksFromXMLBD.find(el => el.includes(basesName))
+            if (!linkXML && basesName.includes(' — копия')) await deleteFileByName(basesName.replace(' — копия', '_small — копия') + '.webp');
+            if (!linkXML && basesName.includes(' — копия')) await deleteFileByName(basesName.replace(' — копия', '_big — копия') + '.webp');
+            await deleteFileByName(linkXML);
             count++
         }
         return count
@@ -118,6 +114,7 @@ async function deleteFileByName(filename) {
         await fs.promises.unlink(filePath);
         console.log(`       👻  ${filename} - удален`)
     } catch (error) {
+        console.log('not deleted ::::filename = ',filename)
         console.log('Error deleting file:', error.message)
         return {error: error.message};
     }
