@@ -1,5 +1,5 @@
 import path from "path";
-import {FolderLINKS, isToday, transliterate} from "../../constants.js";
+import {FolderLINKS, isToday} from "../../constants.js";
 import fs from "fs";
 
 import {open} from "sqlite";

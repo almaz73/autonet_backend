@@ -60,10 +60,10 @@ class CityListService {
     /**
      * Список последних поступлений,
      */
-    async getLatestCarArrivials(page = 1, pageSize = 5) {
+    async getLatestCarArrivials(page = 1, pageSize = 7) {
         let ids = await this._getCarIdList(); // старая версия сегодняшних, может быть пустой
         try {
-            const filePath = path.join(FolderLINKS, 'ids_todays_cars.js'); // вытаскивание по дате
+            const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
             const fileContent = fs.readFileSync(filePath, 'utf8');
             const timeUpdateFile = fs.statSync(filePath);
             if(isToday(new Date(timeUpdateFile.mtime))) ids = JSON.parse(fileContent) // Если файл сегодняшний, берем его данные

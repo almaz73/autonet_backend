@@ -1,8 +1,8 @@
 import * as os from "node:os";
-export const Version = 'ver.3.421'
+export const Version = 'ver.3.422'
 
 export const isLocal = os.platform() === 'win32'
-export const devMode = true // для тестирования
+export const devMode = false // для тестирования
 
 export const FolderPhoto = '../front/pub_auto'
 export const FolderXML = '../front/XML'
@@ -47,7 +47,7 @@ export let xmlNames = [
 ];
 
 export let xmlUrls_forDev = [
-    'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
 ];
 export let xmlNames_forDev = xmlUrls_forDev.map(el => el.slice(52))
 

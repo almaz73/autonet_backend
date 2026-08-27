@@ -1,4 +1,4 @@
-import {FolderForSitemap, FolderPhoto, transliterate} from "../../constants.js";
+import {FolderForSitemap, FolderLINKS, FolderPhoto, isToday, transliterate} from "../../constants.js";
 import fs from "fs";
 import xml2js from "xml2js";
 import path from "path";
@@ -16,6 +16,9 @@ const SITEMAP_PATH = FolderForSitemap + '/sitemap.xml';
 let newPhotos = []
 let newAuto = []
 let oldAuto = []
+let newAutoIDS = [] // Этот список нужен будет для A_car.getLatestCarArrivials()
+// newAutoIDS // нельзя перезаписать, Если файл сегодняшний, нужно добавить
+getNewAutoIdsFromFile() // поэтому загружаем и используем если сегодняшний
 
 export async function _createHelpFiles(db) {
     let newDbRows = await getAllNewCarsWithPhoto(db)
@@ -26,8 +29,17 @@ export async function _createHelpFiles(db) {
     await _saveLinks('_newPhotos.js', newPhotos)
     await _saveLinks('_oldAuto.js', oldAuto)
     await _saveLinks('_newAuto.js', newAuto)
+    await _saveLinks('_newAutoIDS.js', newAutoIDS) 
 
     return `Новых авто: ${newAuto.length}, Удаляемых авто:${oldAuto.length}, Новых фото: ${newPhotos.length}`
+}
+
+function getNewAutoIdsFromFile() {
+    const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const timeUpdateFile = fs.statSync(filePath);
+    // Если файл сегодняшний, забираем
+    if (fileContent && isToday(new Date(timeUpdateFile.mtime))) newAutoIDS = JSON.parse(fileContent)
 }
 
 async function getAllNewCarsWithPhoto(db) {
@@ -72,6 +84,7 @@ async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
                 found.mark = true
             } else {
                 newAuto.push(dbLink)
+                if (!newAutoIDS.includes(car.id)) newAutoIDS.push(car.id)
                 await addNewPhotosWithCheck(car.images)
             }
         }
