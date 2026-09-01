@@ -1,6 +1,8 @@
-export const Version = 'ver.3.419'
+import * as os from "node:os";
+export const Version = 'ver.3.426'
 
-export const devMode = true // для тестирования
+export const isLocal = os.platform() === 'win32'
+export const devMode = false // для тестирования
 
 export const FolderPhoto = '../front/pub_auto'
 export const FolderXML = '../front/XML'
@@ -43,6 +45,11 @@ export let xmlNames = [
     'alfa5_gktm.xml',
     'alfa-trade.xml'
 ];
+
+export let xmlUrls_forDev = [
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
+];
+export let xmlNames_forDev = xmlUrls_forDev.map(el => el.slice(52))
 
 export function getTime() {
     return new Date().toLocaleDateString('ru') + ' ' + new Date().toLocaleTimeString([], {
@@ -88,7 +95,11 @@ export function addReportAboutUpdate(val) {
     reportAboutUpdate += val
 }
 
-export const isToday = (date) => { // для определения даты изменения файла
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+export const isToday = (date) => { // для определения даты изменения файла, забираем до 6:45 следующего дня
+    const target = new Date();
+    // 1. Сдвигаем дату на +1 день вперед
+    target.setDate(target.getDate() + 1);
+    // 2. Устанавливаем ровно 06:00:00.000
+    target.setHours(6, 45, 0, 0);
+    return date.toDateString() === target.toDateString();
 };
