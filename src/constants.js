@@ -1,5 +1,5 @@
 import * as os from "node:os";
-export const Version = 'ver.3.426'
+export const Version = 'ver.3.427'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования
@@ -101,5 +101,6 @@ export const isToday = (date) => { // для определения даты и�
     target.setDate(target.getDate() + 1);
     // 2. Устанавливаем ровно 06:00:00.000
     target.setHours(6, 45, 0, 0);
-    return date.toDateString() === target.toDateString();
+
+    return date.toDateString() < target.toDateString();
 };

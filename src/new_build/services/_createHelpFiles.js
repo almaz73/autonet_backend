@@ -83,12 +83,16 @@ async function getAllNewCarsWithPhoto(db) {
 }
 
 async function getAutoLinksFromSitemap() {
-    const xmlData = fs.readFileSync(SITEMAP_PATH, 'utf-8');
-    let result = await parser.parseStringPromise(xmlData);
-    let urls = Array.isArray(result.urlset.url) ? result.urlset.url : [result.urlset.url]; // Приводим к массиву для безопасности
-    // выбираем только то что относится к авто
-    urls = urls.filter(el => el.loc.includes('/cars/'))
-    return urls
+    try {
+        const xmlData = fs.readFileSync(SITEMAP_PATH, 'utf-8');
+        let result = await parser.parseStringPromise(xmlData);
+        let urls = Array.isArray(result.urlset.url) ? result.urlset.url : [result.urlset.url]; // Приводим к массиву для безопасности
+        // выбираем только то что относится к авто
+        urls = urls.filter(el => el.loc.includes('/cars/'))
+        return urls
+    } catch (e) {
+        return []
+    }
 }
 
 async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
