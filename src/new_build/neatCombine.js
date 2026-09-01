@@ -4,44 +4,38 @@
 
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
-import {getTime, Version, reportAboutUpdate, addReportAboutUpdate} from "../constants.js";
-import {_copyXml} from "./services/_copyXml.js"
-import {_clearTables} from "./services/_clearTables.js";
-import {_parseXMLToBD} from "./services/_parseXMLToBD.js"
-import {_clearBadPhotos} from "./services/_clearBadPhotos.js";
+import {getTime, Version, reportAboutUpdate, addReportAboutUpdate, isLocal} from "../constants.js";
+import {_copyXml} from "../new_build/services/_copyXml.js"
+import {_clearTables} from "../new_build/services/_clearTables.js";
+import {_parseXMLToBD} from "../new_build/services/_parseXMLToBD.js"
+import {_clearBadPhotos} from "../new_build/services/_clearBadPhotos.js";
 
-import {_createHelpFiles} from "./services/_createHelpFiles.js"
-import {_addNewPhotos} from './services/_addNewPhotos.js'
-import {_publicBD} from "./services/_publicBD.js"
-import {_updHistory} from "./services/_updHistory.js";
-
-import {_getAllNewCarsWithPhoto} from "./services/_getAllNewCarsWithPhoto.js";
-import {_saveLinks} from "./services/_saveLinks.js";
-import {_updateSitemap} from "./services/_updateSitemap.js"
-import {_addFirstPhotos} from "./services/_addFirstPhotos.js";
-import {_addAllPhotos} from "./services/_addAllPhotos.js";
-import {_saveHistory} from './services/_saveHistory.js'
+import {_createHelpFiles} from "../new_build/services/_createHelpFiles.js"
+import {_addNewPhotos} from '../new_build/services/_addNewPhotos.js'
+import {_publicBD} from "../new_build/services/_publicBD.js"
+import {_updHistory} from "../new_build/services/_updHistory.js";
+import {sendEmail} from "../post/sendEmail.js";
 
 
 const db = await open({
     filename: './database.sqlite',
     driver: sqlite3.Database
 });
-addReportAboutUpdate(`:: ${getTime()} :: Отчет ${Version} ::`)
+addReportAboutUpdate(`\n\n:: ${getTime()} :: Отчет ${Version} ::`)
 
 const step = process.argv[2];  // если запускают файл с параметром step (только один узел) // для отладки
-startUpdate(+step)
+await startUpdate(+step)
 
 export async function startUpdate(step) {
-    console.log(`   Идет обновление ...
-    1. Загрузка XML
-    2. Очистка таблиц
-    3. Парсинг в БД
-    4. Очистка плохих ссылок на фото
-    5. Вспомогательные файлы
-    6. Загрузка фоток
-    7. Публикация БД
-    8. Сохранение истории`)
+    // console.log(`   Идет обновление ...
+    // 1. Загрузка XML
+    // 2. Очистка таблиц
+    // 3. Парсинг в БД
+    // 4. Очистка плохих ссылок на фото
+    // 5. Вспомогательные файлы
+    // 6. Загрузка фоток
+    // 7. Публикация БД
+    // 8. Сохранение истории`)
     const startTime = performance.now();
     let rowsGlobal = []
 
@@ -94,7 +88,7 @@ export async function startUpdate(step) {
         try {
             // добавление новых фото
             let text = await _addNewPhotos()
-            addReportAboutUpdate(`\n     6.  Добавление новых фоток: ${text}`); //1
+            addReportAboutUpdate(`\n     6.  Добавление новых фоток: ${text} ${isLocal?"(не более 5 из-за режима dev)":""}`); //1
         } catch (e) {
             addReportAboutUpdate('\n Не получилось фотки', e)
         }
@@ -124,7 +118,6 @@ export async function startUpdate(step) {
     addReportAboutUpdate(`\n::   Общее время обновления сайта ${duration} сек. ::`)
     await db.close();
 
-    if (!step) console.log('reportAboutUpdate = ', reportAboutUpdate)
-
-    // await sendEmail(reportAboutUpdate);
+    if (isLocal) console.log('reportAboutUpdate = ', reportAboutUpdate)
+    else await sendEmail(reportAboutUpdate);
 }

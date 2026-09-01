@@ -17,7 +17,7 @@ export function getDB() {
             console.error('Error opening database', err.message);
             return;
         }
-        console.log(`Connected to database at ${DB_FILE}`);
+        // console.log(`Connected to database at ${DB_FILE}`);
     });
     createTables(db);
     if (!dbExists) createTables(db);
