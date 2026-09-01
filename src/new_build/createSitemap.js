@@ -119,12 +119,10 @@ async function addAllAuto() {
             links.push({
                 loc: site + link,
                 lastmod: sitemapNode.lastmod, // Формат YYYY-MM-DD
-                id:car.id
             })
         } else {
             links.push({
                 loc: site + link,
-                id:car.id,
                 lastmod: new Date().toISOString().split('T')[0],
             })
             newLinks.push(site + link)
@@ -165,5 +163,5 @@ async function saveNewLinks(newLinks) {
 
 let text = `Файл sitemap.xml успешно перезаписан! Всего страниц ${links.length}, сейчас добавлено: ${newLinks.length}`
 
-if (isLocal) console.log('text = ', text)
-else await sendEmail(text);
+console.log('text = ', text)
+if (!isLocal) await sendEmail(text);

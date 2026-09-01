@@ -118,6 +118,6 @@ export async function startUpdate(step) {
     addReportAboutUpdate(`\n::   Общее время обновления сайта ${duration} сек. ::`)
     await db.close();
 
-    if (isLocal) console.log('reportAboutUpdate = ', reportAboutUpdate)
-    else await sendEmail(reportAboutUpdate);
+    console.log('reportAboutUpdate = ', reportAboutUpdate)
+    if (!isLocal) await sendEmail(reportAboutUpdate);
 }
