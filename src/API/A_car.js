@@ -1,4 +1,4 @@
-import {RussianBrandsLat, RussianBrandsRus, FolderLINKS, isToday} from "../constants.js";
+import {RussianBrandsLat, RussianBrandsRus, FolderLINKS, isLastUpdate} from "../constants.js";
 import fs from 'fs';
 import path from "path";
 
@@ -61,12 +61,12 @@ class CityListService {
      * Список последних поступлений,
      */
     async getLatestCarArrivials(page = 1, pageSize = 7) {
-        let ids = await this._getCarIdList(); // старая версия сегодняшних, может быть пустой
+        let ids = []
         try {
             const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
             const fileContent = fs.readFileSync(filePath, 'utf8');
             const timeUpdateFile = fs.statSync(filePath);
-            if(isToday(new Date(timeUpdateFile.mtime))) ids = JSON.parse(fileContent) // Если файл сегодняшний, берем его данные
+            if (isLastUpdate(new Date(timeUpdateFile.mtime))) ids = JSON.parse(fileContent) // Если файл сегодняшний, берем его данные
         } catch (e) {
             console.log('ошибка получения списка сегодняшних авто = ', e)
         }
@@ -137,24 +137,6 @@ class CityListService {
         }
     }
 
-    /**
-     * список новых авто за сегодня
-     */
-    async _getCarIdList() {
-        try {
-            const filePath = path.join(FolderLINKS, 'links_short_need.js');
-            const fileContent = fs.readFileSync(filePath, 'utf8');
-            let links_short_need = JSON.parse(fileContent)
-            let ids = []
-            for (let link of links_short_need) {
-                ids.push(link.split('/')[4])
-            }
-            return ids;
-        } catch (e) {
-            console.error('Error _getCarIdList:', e.message);
-            return [];
-        }
-    }
     async getCarCount() {
         const db = global.db
         try {

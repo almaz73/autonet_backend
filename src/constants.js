@@ -95,12 +95,16 @@ export function addReportAboutUpdate(val) {
     reportAboutUpdate += val
 }
 
-export const isToday = (date) => { // для определения даты изменения файла, забираем до 6:45 следующего дня
-    const target = new Date();
+export const isLastUpdate = (date) => { // для определения даты изменения файла, забираем до 6:45 следующего дня
+    const now = new Date();
+    const endDate = new Date();
     // 1. Сдвигаем дату на +1 день вперед
-    target.setDate(target.getDate() + 1);
-    // 2. Устанавливаем ровно 06:00:00.000
-    target.setHours(6, 45, 0, 0);
-
-    return date.toDateString() < target.toDateString();
+    endDate.setDate(endDate.getDate() + 1);
+    // 2. Устанавливаем ровно 06:45
+    endDate.setHours(6, 45, 0, 0);
+    return date.toDateString() === now.toDateString() || (date >= now && date < endDate);
+};
+export const isToday = (date) => { // для определения даты изменения файла, забираем до 6:45 следующего дня
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
 };
