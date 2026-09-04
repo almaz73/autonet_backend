@@ -4,7 +4,7 @@ import path from 'path';
 import {FolderForSitemap, isLocal, transliterate} from "../constants.js";
 import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
-import {pages} from '../../sitePages.js'
+import {sitePages} from '../../sitePages.js'
 import * as promoService from "../clientBaza/promo/promoService.js";
 import xml2js from "xml2js";
 import {sendEmail} from "../post/sendEmail.js"
@@ -51,7 +51,7 @@ async function makeDoubleOldSitemap() {
 }
 
 async function addRootPages() {
-    for (let page of pages) {
+    for (let page of sitePages) {
         page = page.split(' 👉 ')
 
         links.push({
