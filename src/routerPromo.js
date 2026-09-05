@@ -78,7 +78,9 @@ router.put('/promo/:id', async (req, res) => {
             code,
             photo278,
             photo585,
-            photo1200
+            photo1200,
+            description,
+            styles
         };
 
         const changes = await promoService.updatePromo(req.params.id, promo);

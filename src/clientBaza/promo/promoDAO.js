@@ -214,7 +214,7 @@ async function getMainPromoBanners() {
     try {
         const db = getDB();
         // language=SQLite
-        const sql = `SELECT name, photo278, photo585, photo1200, description, code
+        const sql = `SELECT name, photo278, photo585, photo1200, description, code, description, styles
                      FROM promo
                      WHERE active = 1
                        AND onMain = 1

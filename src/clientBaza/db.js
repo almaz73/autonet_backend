@@ -40,9 +40,20 @@ function createTables(db) {
             code        TEXT,
             photo278    TEXT,
             photo585    TEXT,
-            photo1200   TEXT
+            photo1200   TEXT,
+            styles      TEXT
         )
     `;
+
+    // Добавляем колонку 'age' с типом INTEGER, которая по умолчанию будет равна 0
+    const sql = `ALTER TABLE promo ADD COLUMN styles INTEGER DEFAULT ""`;
+    db.run(sql, (err) => {
+        if (err) {
+            console.error('Ошибка при добавлении колонки:', err.message);
+        } else {
+            console.log('Новая колонка успешно добавлена!');
+        }
+    });
 
     db.run(createPromoTable, (err) => {
         if (err) console.error('Error creating promo table', err.message);
