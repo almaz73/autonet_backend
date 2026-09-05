@@ -70,7 +70,8 @@ export async function generationPagesForPromo(res, url) {
             js1: manifest['work-in-autosite/index.html'].imports && manifest['work-in-autosite/index.html'].imports[0].slice(1),
             js2: manifest['work-in-autosite/index.html'].imports && manifest['work-in-autosite/index.html'].imports[1].slice(1),
             js3, css1, css2,
-            code: code
+            code: code,
+            description: promoItem.description, styles: promoItem.styles
         };
 
         if (promoItem) {
