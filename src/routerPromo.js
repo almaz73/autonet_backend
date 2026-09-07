@@ -68,7 +68,7 @@ router.post('/promo', async (req, res) => {
 // Update promo item
 router.put('/promo/:id', async (req, res) => {
     try {
-        const { name, onMain, priority, active, code, photo278, photo585, photo1200} = req.body;
+        const { name, onMain, priority, active, code, photo278, photo585, photo1200, description, styles} = req.body;
 
         const promo = {
             name,

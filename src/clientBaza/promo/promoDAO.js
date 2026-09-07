@@ -87,7 +87,9 @@ function updatePromo(id, promo, callback) {
             code = ?,
             photo278    = ?,
             photo585    = ?,
-            photo1200   = ?
+            photo1200   = ?,
+            description   = ?,
+            styles   = ?
         WHERE id = ?
     `;
 
@@ -100,6 +102,8 @@ function updatePromo(id, promo, callback) {
         promo.photo278 || null,
         promo.photo585 || null,
         promo.photo1200 || null,
+        promo.description || null,
+        promo.styles || null,
         id
     ];
 
