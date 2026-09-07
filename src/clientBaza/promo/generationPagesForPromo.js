@@ -55,8 +55,9 @@ export function clearPromoCache() {
 
 export async function generationPagesForPromo(res, url) {
     let code = url.split('/')[2]
+    let isEditor = url.split('/')[3]
 
-    promoDAO.getPromoByCode(code, (err, promoItem) => {
+    promoDAO.getPromoByCode(code, isEditor, (err, promoItem) => {
         if (err) console.error('Error getting promo item by ID', err);
 
         let css1, css2, js3
@@ -70,14 +71,15 @@ export async function generationPagesForPromo(res, url) {
             js1: manifest['work-in-autosite/index.html'].imports && manifest['work-in-autosite/index.html'].imports[0].slice(1),
             js2: manifest['work-in-autosite/index.html'].imports && manifest['work-in-autosite/index.html'].imports[1].slice(1),
             js3, css1, css2,
-            code: code,
-            description: promoItem.description, styles: promoItem.styles
+            code: code
         };
 
         if (promoItem) {
             data.title = promoItem.name
             data.photo278 = promoItem.photo278
             data.photo1200 = promoItem.photo1200
+            data.description =  promoItem.description && promoItem.description.split('\n').map(word => `<div>${word}</div>`).join('')
+            data.styles = promoItem.styles
             res.render('promo', data);  // шаблон из бакендной папки VIEWS
         } else {
             data.title = 'Данная акция неактивна'

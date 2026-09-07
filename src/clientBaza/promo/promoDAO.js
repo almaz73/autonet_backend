@@ -22,13 +22,13 @@ function getAllPromo(callback) {
     });
 }
 
-function getPromoByCode(id, callback) {
+function getPromoByCode(id, isEditor, callback) {
     const db = getDB();
     // language=SQLite
     const sql = `SELECT *
                  FROM promo
                  WHERE code = ?
-                   AND active = 1`;
+                   AND active = 1 ${isEditor?"OR active = 0":""}`;
 
     db.get(sql, [id], (err, row) => {
         if (err) {
@@ -240,13 +240,13 @@ async function getMainPromoBanners() {
     }
 }
 
-async function getActivePromoBanners() {
+async function getActivePromoBanners(isEditor) {
     try {
         const db = getDB();
         // language=SQLite
         const sql = `SELECT *
                      FROM promo
-                     WHERE active = 1
+                     WHERE active = 1 ${isEditor?"OR active = 0":""}
                      ORDER BY priority ASC`;
 
         return new Promise((resolve, reject) => {
