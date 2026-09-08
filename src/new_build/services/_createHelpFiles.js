@@ -106,14 +106,17 @@ async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
             if (found) {
                 found.mark = true
             } else {
-                newAuto.push(dbLink)
-                if (!newLinks.includes(dbLink)) newLinks.push(dbLink)
-                if (!newAutoIDS.includes(car.id)) newAutoIDS.push(car.id)
+                if (!newLinks.includes(dbLink)) {
+                    if (!newAuto.includes('/null')) {
+                        newLinks.push(dbLink)
+                        newAutoIDS.push(car.id)
+                    }
+                }
                 await addNewPhotosWithCheck(car.images)
             }
         }
     } catch (e) {
-        console.log('getNewCarLinks_NewBD_Sitemap e = ', e)
+        return 'getNewCarLinks_NewBD_Sitemap e = ' + e
     }
 
 }

@@ -19,6 +19,6 @@ export async function _addNewPhotos() {
         console.log('🐾  загружено новых фоток: ',newPhotos.length)
         return newPhotos.length
     } catch (e) {
-
+        return ' ошибка _addNewPhotos, е' + e
     }
 }
