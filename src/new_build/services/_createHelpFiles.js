@@ -88,7 +88,8 @@ async function getAutoLinksFromSitemap() {
         let result = await parser.parseStringPromise(xmlData);
         let urls = Array.isArray(result.urlset.url) ? result.urlset.url : [result.urlset.url]; // Приводим к массиву для безопасности
         // выбираем только то что относится к авто
-        urls = urls.filter(el => el.loc.includes('/cars/'))
+        urls = urls.filter(el => el.loc.includes('/cars/')) // оставляем только страницы авто
+        urls = urls.filter(el =>el && !el.loc.split('/')[4]) // удаляем страницы типа https://xn--80aej9aped4f.xn--p1ai/cars/0/VAZ(LADA)
         return urls
     } catch (e) {
         return []
@@ -97,7 +98,7 @@ async function getAutoLinksFromSitemap() {
 
 async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
     try {
-        if (!newDbRows) return console.log('новая база пустая = ')
+        if (!newDbRows) return console.log('новая база пустая')
 
         for (let car of newDbRows) {
             let dbLink = 'https://xn--80aej9aped4f.xn--p1ai/cars/' + transliterate(car.brand + '/' + car.model + '/' + car.year + '-' + car.sity + '-' + car.price + '-' + car.milleage + 'km').replaceAll(' ', '')
