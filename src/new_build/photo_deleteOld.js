@@ -98,7 +98,10 @@ export async function removeOldPhotos(difference) {
             let linkXML = allLinksFromXMLBD.find(el => el.includes(basesName))
             if (!linkXML && basesName.includes(' — копия')) await deleteFileByName(basesName.replace(' — копия', '_small — копия') + '.webp');
             if (!linkXML && basesName.includes(' — копия')) await deleteFileByName(basesName.replace(' — копия', '_big — копия') + '.webp');
-            await deleteFileByName(linkXML);
+            if (!linkXML) {
+                await deleteFileByName(basesName + '_small.webp');
+                await deleteFileByName(basesName + '_big.webp');
+            }
             count++
         }
         return count
