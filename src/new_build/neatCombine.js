@@ -68,7 +68,7 @@ export async function startUpdate(step) {
     }
     if (!step || step === 4) {
         try {
-            // Удаляем плохие ссылки на фото, которые не открываются
+            // Удаляем плохие ссылки на фото из обновленного БД, которые не открываются
             let text = await _clearBadPhotos(db)
             addReportAboutUpdate(`\n     4. ${text}`); //1
         } catch (e) {
@@ -77,7 +77,12 @@ export async function startUpdate(step) {
     }
     if (!step || step === 5) {
         try {
-            //Используя предыдущий список sitemap и новый список бд создаем вспомогательные файлы
+            //Используя предыдущий список sitemap и новый список бд создаем вспомогательные файлы:
+            //_newPhotos.js'
+            //_oldAuto.js'
+            //_newAuto.js'
+            //_newAutoIDS.js'
+
             let text = await _createHelpFiles(db)
             addReportAboutUpdate(`\n     5.  ${text}`)
         } catch (e) {
@@ -87,6 +92,7 @@ export async function startUpdate(step) {
     if (!step || step === 6) {
         try {
             // добавление новых фото
+            // читает _newPhotos.js и забрасывает в папку фотки
             let text = await _addNewPhotos()
             addReportAboutUpdate(`\n     6.  Добавление новых фоток: ${text} ${isLocal?"(не более 5 из-за режима dev)":""}`); //1
         } catch (e) {
