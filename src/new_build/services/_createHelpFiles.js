@@ -18,7 +18,7 @@ let newAuto = []
 let oldAuto = []
 let newAutoIDS = [] // Этот список нужен будет для A_car.getLatestCarArrivials()
 getNewAutoIdsFromFile() // используем прежние данные если сегодняшний
-let newLinks = [] // Этот список нужен будет для A_car.getLatestCarArrivials()
+let newLinks = []
 getNewLinks() // используем прежние данные если сегодняшний
 
 export async function _createHelpFiles(db) {
@@ -61,6 +61,7 @@ function getNewLinks() {
 }
 
 async function getAllNewCarsWithPhoto(db) {
+    // получаем список всех авто с фотками из БД
     try {
         // language=SQLite
         const allCarsWitnPhoto = await db.all(`
@@ -83,13 +84,14 @@ async function getAllNewCarsWithPhoto(db) {
 }
 
 async function getAutoLinksFromSitemap() {
+    // получает список существующих в сайтемап ссылок на авто
     try {
         const xmlData = fs.readFileSync(SITEMAP_PATH, 'utf-8');
         let result = await parser.parseStringPromise(xmlData);
         let urls = Array.isArray(result.urlset.url) ? result.urlset.url : [result.urlset.url]; // Приводим к массиву для безопасности
         // выбираем только то что относится к авто
         urls = urls.filter(el => el.loc.includes('/cars/')) // оставляем только страницы авто
-        urls = urls.filter(el =>el && !el.loc.split('/')[4]) // удаляем страницы типа https://xn--80aej9aped4f.xn--p1ai/cars/0/VAZ(LADA)
+        urls = urls.filter(el =>el && !el.loc.split('/')[4]) // удаляем страницы пагинации типа https://xn--80aej9aped4f.xn--p1ai/cars/0/VAZ(LADA)
         return urls
     } catch (e) {
         return []
@@ -108,6 +110,7 @@ async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
             } else {
                 if (!newLinks.includes(dbLink)) {
                     if (!newAuto.includes('/null')) {
+                        // ???? newAuto.push(dbLink)
                         newLinks.push(dbLink)
                         newAutoIDS.push(car.id)
                     }
