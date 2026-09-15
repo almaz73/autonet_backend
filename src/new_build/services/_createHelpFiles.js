@@ -109,11 +109,11 @@ async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
                 found.mark = true
             } else {
                 if (!newLinks.includes(dbLink)) {
-                    if (!newAuto.includes('/null')) {
-                        // ???? newAuto.push(dbLink)
-                        newLinks.push(dbLink)
-                        newAutoIDS.push(car.id)
-                    }
+                    newAuto.push(dbLink)
+                    newLinks.push(dbLink)
+                }
+                if (!newAutoIDS.includes(car.id)) {
+                    newAutoIDS.push(car.id)
                 }
                 await addNewPhotosWithCheck(car.images)
             }

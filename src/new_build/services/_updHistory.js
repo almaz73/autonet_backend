@@ -75,7 +75,7 @@ async function saveNewCarsForThisDay() {
 
         await stmt.run(count, carsPerDay);
     }
-    return `В историю БД добавлено: ${result.length - arrFromBD.length}. Всего новых за сегодня: ${count}. `
+    return `В историю БД добавлено автомобилей: ${result.length - arrFromBD.length}. Всего новых за сегодня: ${count}. `
 
 
 }
