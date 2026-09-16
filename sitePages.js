@@ -133,7 +133,7 @@ export const sitePages = [
     'https://xn--80aej9aped4f.xn--p1ai/promo/660823/ 👉 2026-09-16',
     'https://xn--80aej9aped4f.xn--p1ai/promo/660822/ 👉 2026-09-16',
     'https://xn--80aej9aped4f.xn--p1ai/promo/660829/ 👉 2026-09-16',
-    'https://xn--80aej9aped4f.xn--p1ai/promo/660830/ 👉 2026-09-16',
+    'https://xn--80aej9aped4f.xn--p1ai/promo/660830/ 👉 2026-09-17',
     'https://xn--80aej9aped4f.xn--p1ai/promo/660827/ 👉 2026-09-16',
     'https://xn--80aej9aped4f.xn--p1ai/promo/660826/ 👉 2026-09-16',
     'https://xn--80aej9aped4f.xn--p1ai/promo/660819/ 👉 2026-09-16',
