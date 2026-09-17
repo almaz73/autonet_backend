@@ -67,10 +67,12 @@ async function addPromoPages() {
         let promos = promoItems.map(el => 'https://xn--80aej9aped4f.xn--p1ai/promo/' + el.code + '/')
 
         for (let page of promos) {
-            links.push({
-                loc: page,
-                lastmod: new Date().toISOString().split('T')[0], // Формат YYYY-MM-DD
-            })
+            let date = new Date().toISOString().split('T')[0] // Формат YYYY-MM-DD
+            let exist = sitePages.find(el => page.split('/')[4])
+
+            if (exist) date = exist.split(' 👉 ')[1]
+
+            links.push({loc: page, lastmod: date})
         }
     } catch (error) {
         console.error('Error getting promo items:', error);
