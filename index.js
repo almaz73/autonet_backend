@@ -9,6 +9,7 @@ import routerPromo from "./src/routers/routerPromo.js";
 import routerArticles from "./src/routers/routerArticles.js";
 import router_bd from "./src/routers/router_bd.js";
 import router_ssr from "./src/routers/router_ssr.js";
+import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
@@ -32,6 +33,7 @@ app.use(express.urlencoded({extended: true}));
 
 app.use('/api/auth', routerAuth)
 app.use('/api', router)
+app.use('/api', router_buyout); // интеграция с внутренним сайтом
 app.use('/api', routerPromo)
 app.use('/api', routerArticles)
 app.use('/api', router_bd)
