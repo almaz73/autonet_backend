@@ -17,6 +17,8 @@ router.get('/cars/:number(\\d+)/:brand(\\D+)', carsList);   // Страница 
 router.get('/cars/:brand(\\D+)/:model/:linkId', carAlone);  // Страница автомобиля
 //http://localhost:3000/cars/Chevrolet/Camaro/2021-Tver-3250000-66525km
 
+router.get('/buyout', buyoutPage);
+
 
 async function indexPage(req, res) {
     const manifest = manifest_links['index.html']
@@ -188,6 +190,34 @@ async function carAlone(req, res) {
     }
     return res
 
+}
+
+async function buyoutPage(req, res) {
+    const manifest = manifest_links['index.html']
+
+    if (!manifest) return res.status(404).send('Vite manifest not found');
+
+    const js1 = manifest.imports && manifest.imports[0].slice(1)
+    const js2 = manifest.imports && manifest.imports[1].slice(1)
+
+    let css1
+    for (const manifestKey in manifest_links) {
+        if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
+    }
+
+    // Выполняем GET-запрос //  лучше полагаться к стороннему сервису
+    const targetUrl = 'https://live.autonet.pro/api/auto/getBrands'; // Адрес стороннего сервера
+    const response = await fetch(targetUrl);
+    if (!response.ok) throw new Error(`22===22 Ошибка сервера: ${response.status}`);
+    const data = await response.json(); // Парсим JSON из ответа
+    console.log('22==22 data = ', data)
+
+
+    res.render('buyout', {
+        js1, js2,
+        css1,
+    })
+    return res
 }
 
 
