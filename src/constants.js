@@ -1,5 +1,5 @@
 import * as os from "node:os";
-export const Version = 'ver.3.500'
+export const Version = 'ver.3.502'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования

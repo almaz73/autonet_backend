@@ -109,14 +109,13 @@ export async function startUpdate(step) {
         }
     }
     if (!step || step === 8) {
-        /*try {
+        try {
             // запись истории удаленных, добавленных
             let text = await _updHistory(rowsGlobal)
             addReportAboutUpdate(`\n     8.  ${text}`);
         } catch (e) {
             addReportAboutUpdate('\n Неудача сохранении истории', e)
         }
-        */
     }
 
 

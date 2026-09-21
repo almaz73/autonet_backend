@@ -24,6 +24,9 @@ getNewLinks() // используем прежние данные если се�
 export async function _createHelpFiles(db) {
     let newDbRows = await getAllNewCarsWithPhoto(db)
     let autoLinksFromSitemap = await getAutoLinksFromSitemap()
+    
+    console.log(',,, autoLinksFromSitemap.length = ',autoLinksFromSitemap.length)
+    
     await getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap)
     await getOldAuto(autoLinksFromSitemap)
 
@@ -89,9 +92,10 @@ async function getAutoLinksFromSitemap() {
         const xmlData = fs.readFileSync(SITEMAP_PATH, 'utf-8');
         let result = await parser.parseStringPromise(xmlData);
         let urls = Array.isArray(result.urlset.url) ? result.urlset.url : [result.urlset.url]; // Приводим к массиву для безопасности
-        // выбираем только то что относится к авто
-        urls = urls.filter(el => el.loc.includes('/cars/')) // оставляем только страницы авто
-        urls = urls.filter(el =>el && !el.loc.split('/')[4]) // удаляем страницы пагинации типа https://xn--80aej9aped4f.xn--p1ai/cars/0/VAZ(LADA)
+
+        // оставляем только страницы авто, без   страницы пагинации типа https://xn--80aej9aped4f.xn--p1ai/cars/0/VAZ(LADA)
+        urls = urls.filter(el => el.loc.includes('/cars/') && isNaN(el.loc.split('/')[4]))
+
         return urls
     } catch (e) {
         return []
