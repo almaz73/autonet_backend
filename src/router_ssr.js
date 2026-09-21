@@ -206,11 +206,11 @@ async function buyoutPage(req, res) {
     }
 
     // Выполняем GET-запрос //  лучше полагаться к стороннему сервису
-    const targetUrl = 'https://live.autonet.pro/api/auto/getBrands'; // Адрес стороннего сервера
-    const response = await fetch(targetUrl);
-    if (!response.ok) throw new Error(`22===22 Ошибка сервера: ${response.status}`);
-    const data = await response.json(); // Парсим JSON из ответа
-    console.log('22==22 data = ', data)
+    // const targetUrl = 'https://live.autonet.pro/api/auto/getBrands'; // Адрес стороннего сервера
+    // const response = await fetch(targetUrl);
+    // if (!response.ok) throw new Error(`22===22 Ошибка сервера: ${response.status}`);
+    // const data = await response.json(); // Парсим JSON из ответа
+    // console.log('22==22 data = ', data)
 
 
     res.render('buyout', {
