@@ -1,5 +1,5 @@
-import {transporter} from "../nodemailer.js";
-import {transporterYandex} from "../nodemailerYandex.js";
+import {transporter} from "./nodemailer.js";
+import {transporterYandex} from "./nodemailerYandex.js";
 import {receivedDataTypes} from "../constants.js";
 import {addEmailToDatabase} from "../clientBaza/listEmailsFromForms/listClientEmails.js"
 

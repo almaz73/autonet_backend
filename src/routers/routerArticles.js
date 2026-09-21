@@ -1,11 +1,11 @@
 import Router  from 'express'
-import * as articleService from './clientBaza/article/articleService.js';
+import * as articleService from '../clientBaza/article/articleService.js';
 
 // Article routes
 const router = new Router()
 
 // Import auth middleware from authController
-import { authMiddleware } from './authController.js';
+import { authMiddleware } from '../authController.js';
 
 // Import multer for handling multipart/form-data
 import multer from 'multer';

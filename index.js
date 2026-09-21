@@ -1,15 +1,15 @@
 import express from 'express'
 import sqlite3 from 'sqlite3';
 import {open} from 'sqlite';
-import router from "./src/router.js"; // Updated path to reflect router.js being inside src
+import router from "./src/routers/router.js"; // Updated path to reflect router.js being inside src
 import {fileURLToPath} from 'url';
 import path from "path";
-import routerAuth from "./src/routerAuth.js";
-import routerPromo from "./src/routerPromo.js";
-import routerArticles from "./src/routerArticles.js";
-import router_bd from "./src/router_bd.js";
-import router_ssr from "./src/router_ssr.js";
-import router_history from "./src/router_history.js";
+import routerAuth from "./src/routers/routerAuth.js";
+import routerPromo from "./src/routers/routerPromo.js";
+import routerArticles from "./src/routers/routerArticles.js";
+import router_bd from "./src/routers/router_bd.js";
+import router_ssr from "./src/routers/router_ssr.js";
+import router_history from "./src/routers/router_history.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
 

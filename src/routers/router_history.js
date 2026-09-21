@@ -1,11 +1,11 @@
 import Router from 'express'
-import * as historyService from './clientBaza/history/historyService.js';
+import * as historyService from '../clientBaza/history/historyService.js';
 
 // history routes
 const router = new Router()
 
 // Import auth middleware from authController
-import {authMiddleware} from './authController.js';
+import {authMiddleware} from '../authController.js';
 
 // Apply auth middleware to all history routes
 router.use(authMiddleware);

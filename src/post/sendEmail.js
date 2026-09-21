@@ -1,5 +1,5 @@
-import {transporterYandex} from "../nodemailerYandex.js";
-import {transporter} from "../nodemailer.js";
+import {transporterYandex} from "./nodemailerYandex.js";
+import {transporter} from "./nodemailer.js";
 
 export async function sendEmail(text) {
     await transporterYandex.sendMail({

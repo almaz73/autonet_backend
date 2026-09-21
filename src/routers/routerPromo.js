@@ -1,11 +1,11 @@
 import Router  from 'express'
-import * as promoService from './clientBaza/promo/promoService.js';
+import * as promoService from '../clientBaza/promo/promoService.js';
 
 // Promo routes
 const router = new Router()
 
 // Import auth middleware from authController
-import { authMiddleware } from './authController.js';
+import { authMiddleware } from '../authController.js';
 
 // Import multer for handling multipart/form-data
 import multer from 'multer';

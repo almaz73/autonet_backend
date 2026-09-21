@@ -1,6 +1,6 @@
 // routerAuth.js
 import Router from 'express';
-import { login, authMiddleware } from './authController.js';
+import { login, authMiddleware } from '../authController.js';
 
 // Create auth router
 const router = new Router();

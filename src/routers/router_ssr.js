@@ -1,7 +1,7 @@
 import Router from 'express'
-import A_car from "./API/A_car.js";
-import {manifest_links, transliterate, RussianBrandsRus, RussianBrandsLat} from './constants.js';
-import GetListService from "./API/GetListService.js";
+import A_car from "../API/A_car.js";
+import {manifest_links, transliterate, RussianBrandsRus, RussianBrandsLat} from '../constants.js';
+import GetListService from "../API/GetListService.js";
 // import {seoRedirects} from "./htaccess_middleware.js"
 
 const router = new Router()

@@ -1,8 +1,8 @@
 import Router from 'express'
-import Controllers from "./xml_import/Controllers.js";
-import Post from './post/Post.js'
+import Controllers from "../xml_import/Controllers.js";
+import Post from '../post/Post.js'
 import multer from "multer";
-import {getActiveBanners, getMainBanners} from './clientBaza/promo/generationPagesForPromo.js'
+import {getActiveBanners, getMainBanners} from '../clientBaza/promo/generationPagesForPromo.js'
 
 const router = new Router()
 

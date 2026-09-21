@@ -1,11 +1,11 @@
 import Router from 'express'
-import * as bdService from './clientBaza/listEmailsFromForms/bdService.js';
+import * as bdService from '../clientBaza/listEmailsFromForms/bdService.js';
 
 // bd routes
 const router = new Router()
 
 // Import auth middleware from authController
-import {authMiddleware} from './authController.js';
+import {authMiddleware} from '../authController.js';
 
 // Apply auth middleware to all bd routes
 router.use(authMiddleware);
