@@ -66,9 +66,15 @@
                             <input name="name"  required  placeholder="Ваше имя *">
                         </div>
                     </div>
-                    <div class="form__modal--group">
-                        <div class="form__group">
-                            <input name="year" placeholder="Год выпуска">
+                    <div class='form__modal--group'>
+                        <div class='form__group'>
+                            <input name='phone' required placeholder='Ваш телефон *' oninput='formattingPhone(this)'>
+                        </div>
+                    </div>
+                    <div class='form__modal--group'>
+                        <div class='form__group'>
+                            <input name='email' type='email' placeholder='E-mail'
+                                   onchange='emailValidate(this.value)'>
                         </div>
                     </div>
 
@@ -84,6 +90,13 @@
                         <input type="checkbox" id="dd1d">
                         <label for="dd1d"> Нажав кнопку «Отправить заявку» я даю согласие на обработку
                             персональных <a href="/privacy-policy/" target="_blank">данных</a>
+                        </label>
+                    </div>
+
+                    <div class="modal__personal">
+                        <input type="checkbox" id="d2d1d" name="agree">
+                        <label for="d2d1d" style="cursor: pointer">
+                            Согласие на рекламную <a href="/privacy-policy/agreement.html" target="_blank">коммуникацию</a>
                         </label>
                     </div>
                 </div>
