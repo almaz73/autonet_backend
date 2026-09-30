@@ -108,15 +108,15 @@ export async function startUpdate(step) {
             addReportAboutUpdate('\n Не получилось опубликовать', e)
         }
     }
-    if (!step || step === 8) {
-        try {
-            // запись истории удаленных, добавленных
-            let text = await _updHistory(rowsGlobal)
-            addReportAboutUpdate(`\n     8.  ${text}`);
-        } catch (e) {
-            addReportAboutUpdate('\n Неудача сохранении истории', e)
-        }
-    }
+    // if (!step || step === 8) {
+    //     try {
+    //         // запись истории удаленных, добавленных
+    //         let text = await _updHistory(rowsGlobal)
+    //         addReportAboutUpdate(`\n     8.  ${text}`);
+    //     } catch (e) {
+    //         addReportAboutUpdate('\n Неудача сохранении истории', e)
+    //     }
+    // }
 
 
     const endTime = performance.now();
