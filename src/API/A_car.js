@@ -60,7 +60,8 @@ class CityListService {
     /**
      * Список последних поступлений,
      */
-    async getLatestCarArrivials(page = 1, pageSize = 7) {
+    async getLatestCarArrivials(startPage, isNotInFiniteScroll) {
+        let pageSize = 10
         let ids = []
         try {
             const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
@@ -72,11 +73,19 @@ class CityListService {
         }
         if (!ids || ids.length === 0) {
             console.log('Сегодня не добавлен не один автомобиль')
-            return []
+            return null
         }
 
-        const offset = (page - 1) * pageSize;
-        let pageIds = ids.slice(0, offset + pageSize);
+        if (!startPage || !isNaN(startPage)) startPage = 1
+        const offset = (startPage - 1) * pageSize;
+        let pageIds = ids.slice(0, offset + pageSize); // список для бесконечных лент
+        let totalPages = Math.ceil(ids.length / pageSize) // общее количество новых
+
+        if (!startPage) startPage = 1
+        if (isNotInFiniteScroll) {// список для краулеров
+            if ((startPage - 1) * pageSize > ids.length) return null
+            else pageIds = ids.slice((startPage - 1) * pageSize, startPage * pageSize);
+        }
 
         const db = global.db
         try {
@@ -130,7 +139,7 @@ class CityListService {
                     el.images = [];
                 }
             }
-            return results;
+            return {items: results,totalPages} ;
         } catch (error) {
             console.error('Error retrieving car info from a_car table:', error.message);
             throw error;

@@ -243,10 +243,17 @@
 
     <div class='container'>
         <div class="car_vitrina">
-            <h1 id="vitrina_name">Специальные предложения по цене</h1>
-<!--            <h1 id="vitrina_name">Свежие поступления авто с пробегом</h1>-->
+            <!-- <h1 id="vitrina_name">Специальные предложения по цене</h1>-->
+            <h1 id="vitrina_name">Свежие поступления авто с пробегом</h1>
 
-            <a href="/cars" class="page__link cars_link" style="display: none">
+            <span id="vitrina_name_choose" style="display: none">
+                 <a href="/" class="page__link cars_link" >
+                <img src="/st/red_arrow.svg" loading='lazy' alt=''>
+                <span>Новые поступления авто</span>
+            </a>
+            </span>
+
+            <a href="/cars" class="page__link cars_link" >
                 <img src="/st/red_arrow.svg" loading='lazy' alt=''>
                 <span>Все предложения</span>
             </a>
@@ -276,6 +283,13 @@
 
             <% }); %>
         </cards>
+
+        <div class="pager">Страницы:
+            <span id="pager">
+                <%- page  %>
+            </span>
+        </div>
+        <br><br>
     </div>
 
 <!--    <div class="page__link" style="margin: -73px 0 73px 0; cursor: pointer; text-align: center">-->

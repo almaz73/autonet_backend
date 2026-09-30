@@ -50,19 +50,38 @@ async function indexPage(req, res) {
         else el.latBrand = el.name
     })
 
-    // let carList = await A_car.getLatestCarArrivials() || []
-    let carList = await GetListService.getSpecials() || []
+    let page = ''
+    const fullUrl = new URL(req.url, `http://${req.headers.host}`);
+    let numberPage = parseInt(fullUrl.search.split('=')[1])
+    let startPage = null
 
-    carList.forEach(el => {
-        if (RussianBrandsRus.includes(el.brand)) el.latBrand = transliterate(el.brand).replaceAll(" ", "");
-        else el.latBrand = el.brand
-    })
+    if (!isNaN(numberPage) && numberPage > 0) startPage = numberPage
+
+    let {items: carList, totalPages} = await A_car.getLatestCarArrivials(startPage, 'isNotInFiniteScroll') || [] // на главной список новых авто для краулеров
+    // let carList = await GetListService.getSpecials() || []
+    if (!carList) carList = []
+
+
+    if (totalPages) {
+        for (let i = 1; i <= totalPages; i++) {
+            if(i===1) page += `<a href="/">${i}</a><span> | </span>`;
+            else page += `<a href="/?new=${i}">${i}</a><span> | </span>`;
+        }
+    }
+
+    if (carList) {
+        carList.forEach(el => {
+            if (RussianBrandsRus.includes(el.brand)) el.latBrand = transliterate(el.brand).replaceAll(" ", "");
+            else el.latBrand = el.brand
+        })
+    }
 
     res.render('index', {
         js1, js2, js3, js4, js5, js6, js7, js8, js9,
-        css1, css2, css3,css4,
+        css1, css2, css3, css4,
         carCount,
-        carList
+        carList,
+        page
     })
     return res
 }
@@ -112,7 +131,7 @@ async function carsList(req, res) {
 
     let page = ''
     let ssr_page_total = Math.ceil(carList.totalCount / 20)
-    if(carList.items.length) {
+    if (carList.items.length) {
         for (let i = 1; i <= ssr_page_total; i++) {
             page += `<a href="/cars/${i - 1}${brand ? '/' + brand : ''}">${i}</a><span> | </span>`;
         }
@@ -182,7 +201,7 @@ async function carAlone(req, res) {
             carjs,
             css1, css2, css3,
             carData,
-            brand, model,linkId
+            brand, model, linkId
         });
     } catch (error) {
         console.error('Error rendering car page:', error);
