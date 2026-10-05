@@ -60,8 +60,8 @@ class CityListService {
     /**
      * Список последних поступлений,
      */
-    async getLatestCarArrivials(startPage, isNotInFiniteScroll) {
-        let pageSize = 10
+    async getLatestCarArrivials(startPage) {
+        let pageSize = 5
         let ids = []
         try {
             const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
@@ -77,15 +77,13 @@ class CityListService {
         }
 
         if (!startPage || !isNaN(startPage)) startPage = 1
-        const offset = (startPage - 1) * pageSize;
-        let pageIds = ids.slice(0, offset + pageSize); // список для бесконечных лент
+
+        let pageIds = []
         let totalPages = Math.ceil(ids.length / pageSize) // общее количество новых
 
-        if (!startPage) startPage = 1
-        if (isNotInFiniteScroll) {// список для краулеров
-            if ((startPage - 1) * pageSize > ids.length) return null
-            else pageIds = ids.slice((startPage - 1) * pageSize, startPage * pageSize);
-        }
+        // список для краулеров
+        if ((startPage - 1) * pageSize > ids.length) return null
+        else pageIds = ids.slice((startPage - 1) * pageSize, startPage * pageSize);
 
         const db = global.db
         try {

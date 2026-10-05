@@ -3,21 +3,22 @@ import Router from 'express'
 const router = new Router()
 
 // const link = 'https://live.autonet.pro/api/'
-const link = 'http://r1.dev.autonet.pro//api/'
+const link = 'http://r1.dev.autonet.pro/api/'
 
 
 router.post('/Appeals/PostExternalAppeal', async (req, res) => {
+    console.log('22222 req.body= ',req.body)
     try {
-        const targetUrl =link + `Appeals/PostExternalAppeal`; // Адрес стороннего сервера
-        const response = await fetch(targetUrl,{
+        const targetUrl = link + `Appeals/PostExternalAppeal`; // Адрес стороннего сервера
+        const response = await fetch(targetUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json;charset=utf-8'
             },
-            body: req.body
+            body: JSON.stringify(req.body)
         });
 
-        console.log('response = ',response)
+        console.log('!!!! response = ',response)
 
         const data = await response.json(); // Парсим JSON из ответа
         res.json(data);

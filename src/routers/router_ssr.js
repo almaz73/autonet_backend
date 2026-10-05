@@ -57,7 +57,7 @@ async function indexPage(req, res) {
 
     if (!isNaN(numberPage) && numberPage > 0) startPage = numberPage
 
-    let {items: carList, totalPages} = await A_car.getLatestCarArrivials(startPage, 'isNotInFiniteScroll') || [] // на главной список новых авто для краулеров
+    let {items: carList, totalPages} = await A_car.getLatestCarArrivials(startPage) || [] // на главной список новых авто для краулеров
     // let carList = await GetListService.getSpecials() || []
     if (!carList) carList = []
 
