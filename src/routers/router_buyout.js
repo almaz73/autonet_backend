@@ -7,7 +7,6 @@ const link = 'http://r1.dev.autonet.pro/api/'
 
 
 router.post('/Appeals/PostExternalAppeal', async (req, res) => {
-    console.log('22222 req.body= ',req.body)
     try {
         const targetUrl = link + `Appeals/PostExternalAppeal`; // Адрес стороннего сервера
         const response = await fetch(targetUrl, {
@@ -18,10 +17,7 @@ router.post('/Appeals/PostExternalAppeal', async (req, res) => {
             body: JSON.stringify(req.body)
         });
 
-        console.log('!!!! response = ',response)
-
-        const data = await response.json(); // Парсим JSON из ответа
-        res.json(data);
+        res.json(response.ok);
     } catch (e) {
         console.error('error auto/PostExternalAppeal= ', e)
     }

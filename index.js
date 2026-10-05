@@ -26,10 +26,10 @@ const frontendPath = path.join(__dirname, '..', 'front');
 
 
 app.set('view engine', 'ejs');// Установка EJS как движка шаблонов
-app.use(express.json())
+app.use(express.json({ limit: '30mb' }))
 app.use('/', router_ssr)
 app.use(express.static(frontendPath)); // 2. Раздаем статику
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({limit: '30mb',extended: true}));
 
 app.use('/api/auth', routerAuth)
 app.use('/api', router)
