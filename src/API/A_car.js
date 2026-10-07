@@ -76,7 +76,7 @@ class CityListService {
             return null
         }
 
-        if (!startPage || !isNaN(startPage)) startPage = 1
+        if (!startPage || isNaN(startPage) || startPage == 0) startPage = 1
 
         let pageIds = []
         let totalPages = Math.ceil(ids.length / pageSize) // общее количество новых
