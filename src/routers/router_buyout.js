@@ -23,6 +23,17 @@ router.post('/Appeals/PostExternalAppeal', async (req, res) => {
     }
 })
 
+router.get('/auto/getCities', async (req, res) => {
+    try {
+        const targetUrl = link + 'location/GetCitiesForLive'; // Адрес стороннего сервера
+        const response = await fetch(targetUrl);
+        const data = await response.json(); // Парсим JSON из ответа
+        res.json(data);
+    } catch (e) {
+        console.error('error auto/getBrands= ', e)
+    }
+})
+
 
 router.get('/auto/getBrands', async (req, res) => {
     try {
