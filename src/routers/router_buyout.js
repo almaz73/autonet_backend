@@ -2,8 +2,8 @@ import Router from 'express'
 
 const router = new Router()
 
-// const link = 'https://live.autonet.pro/api/'
-const link = 'http://r1.dev.autonet.pro/api/'
+const link = 'https://live.autonet.pro/api/'
+// const link = 'http://r1.dev.autonet.pro/api/'
 
 
 router.post('/Appeals/PostExternalAppeal', async (req, res) => {
