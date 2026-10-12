@@ -13,10 +13,11 @@ import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
+import {routerAdminJs,adminJs} from './in_admin.options.js'
 
 const app = express()
+app.use(adminJs.options.rootPath, routerAdminJs); //Подключение админки
 
-// const HOST = '127.0.0.1'; // Привязка
 const PORT = 3000;
 const DB_PATH = './database.sqlite'; // Local SQLite file
 
@@ -33,7 +34,7 @@ app.use(express.urlencoded({limit: '30mb',extended: true}));
 
 app.use('/api/auth', routerAuth)
 app.use('/api', router)
-app.use('/api', router_buyout); // интеграция с внутренним сайтом
+app.use('/api', router_buyout); // интеграция с внутренним сайтом/ отправка на оценку
 app.use('/api', routerPromo)
 app.use('/api', routerArticles)
 app.use('/api', router_bd)
