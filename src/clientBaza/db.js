@@ -25,9 +25,16 @@ try {
 
 
 // Define User model if not already defined
-const User = sequelize.define('User', {
-    name: { type: DataTypes.STRING, allowNull: false },
-    email: { type: DataTypes.STRING, allowNull: false },
+const Admins = sequelize.define('Admins', {
+    name: {type: DataTypes.STRING, required: true, unique: true},
+    email: {type: DataTypes.STRING, required: true, unique: true},
+    password: {type: DataTypes.STRING, required: true},
+    role: {
+        type: String,
+        enum: ['superadmin', 'manager', 'moderator'],
+        default: 'manager',
+        required: true
+    }
 }, {
     timestamps: false
 });
@@ -63,6 +70,21 @@ try {
     await sequelize.sync(); // This will create tables if they don't exist
 } catch (error) {
     console.error('Error creating tables:', error);
+}
+
+// Дефолтный суперадмин при первом запуске (если таблица Admins пуста)
+try {
+    if (await Admins.count() === 0) {
+        await Admins.create({
+            name: 'Superadmin',
+            email: 'admin@autonet.ru',
+            password: 'Autonet_2026_this_parole_will_be_never_used',
+            role: 'superadmin',
+        });
+        console.log('Создан администратор по умолчанию: admin@autonet.ru / Autonet_2026');
+    }
+} catch (error) {
+    console.error('Error creating default admin:', error);
 }
 
 // Create database connection
@@ -140,4 +162,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, User, history_period, clientEmails };
+export { sequelize, Admins, history_period, clientEmails };

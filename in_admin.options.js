@@ -1,7 +1,17 @@
 import {AdminJS} from 'adminjs'
 import AdminJSExpress from '@adminjs/express'
 import {Database, Resource} from '@adminjs/sequelize'
-import {sequelize, User, history_period, clientEmails} from './src/clientBaza/db.js'
+import {sequelize, Admins, history_period, clientEmails} from './src/clientBaza/db.js'
+
+
+
+
+// Проверка: имеет ли текущий админ роль суперпользователя
+const isSuperAdmin = ({ currentAdmin }) => {
+    return currentAdmin && currentAdmin.role === 'superadmin';
+};
+
+console.log('isSuperAdmin = ',isSuperAdmin)
 
 AdminJS.registerAdapter({Database, Resource})
 
@@ -9,7 +19,7 @@ export const adminJs = new AdminJS({
     databases: [sequelize],
     resources: [
         {
-            resource: User,
+            resource: Admins,
             options: {
                 // navigation: {name: 'Пользователи', icon: 'User'},
                 navigation: null,
@@ -71,7 +81,7 @@ export const adminJs = new AdminJS({
                     pages: 'Страницы',
                     selectedRecords: 'Выбрано ({{count}})',
                     // Перевод названий ваших таблиц/моделей
-                    Users: 'Пользователи',
+                    Admins: 'Администраторы',
                     clientEmails: 'Соглашения',
                     history_period: 'Время продаж',
                 },
@@ -98,4 +108,21 @@ export const adminJs = new AdminJS({
 
 adminJs.watch()
 
-export const routerAdminJs = AdminJSExpress.buildRouter(adminJs); // Создание роутера для Express
+// Проверка логина и пароля при входе в /administrator
+const authenticate = async (email, password) => {
+    const admin = await Admins.findOne({where: {email}});
+    if (admin && admin.password === password) {
+        return admin; // запись попадёт в currentAdmin внутри админки
+    }
+    return null;
+};
+
+export const routerAdminJs = AdminJSExpress.buildAuthenticatedRouter(adminJs, {
+    authenticate,
+    cookieName: 'adminjs',
+    cookiePassword: 'Adm1nJs_autonet_s3ssion_2026', // секрет для подписи сессии
+    maxRetries: 5, // не более 5 попыток входа подряд с одного IP
+}, null, {
+    resave: false,
+    saveUninitialized: true,
+}); // Создание роутера для Express с авторизацией по паролю
