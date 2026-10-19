@@ -8,7 +8,7 @@ import {sequelize, Admins, history_period, clientEmails} from './src/clientBaza/
 
 // Проверка: имеет ли текущий админ роль суперпользователя
 const isSuperAdmin = ({ currentAdmin }) => {
-    return currentAdmin && currentAdmin.role === 'superadmin';
+    return currentAdmin?.role?.toLowerCase() === 'superadmin';
 };
 
 console.log('isSuperAdmin = ',isSuperAdmin)
@@ -23,6 +23,12 @@ export const adminJs = new AdminJS({
             options: {
                 // navigation: {name: 'Пользователи', icon: 'User'},
                 navigation: null,
+                actions: {
+                    new: {
+                        // Кнопка "Создать" и вызов new доступны только суперадмину
+                        isAccessible: isSuperAdmin,
+                    },
+                },
             },
         },
         {
