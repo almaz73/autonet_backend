@@ -1,7 +1,7 @@
 import {AdminJS} from 'adminjs'
 import AdminJSExpress from '@adminjs/express'
 import {Database, Resource} from '@adminjs/sequelize'
-import {sequelize, Admins, history_period, clientEmails} from './src/clientBaza/db.js'
+import {sequelize, Admins, history_period, clientEmails, promo} from './src/clientBaza/db.js'
 
 
 
@@ -50,6 +50,18 @@ export const adminJs = new AdminJS({
                 listProperties: ['startDate', 'endDate', 'car', 'days'],
                 navigation: null,
             },
+        },
+        {
+            resource: promo,
+            options: {
+                tableName: 'promo',
+                listProperties: ['name', 'onMain', 'active', 'priority'],
+                navigation: null,
+                sort: {
+                    sortBy: 'id',
+                    direction: 'desc',
+                },
+            },
         }],
     rootPath: '/administrator',
     loginPath: '/administrator/login',
@@ -83,13 +95,13 @@ export const adminJs = new AdminJS({
                 },
                 labels: {
                     loginWelcome: 'Добро пожаловать в панель управления',
-                    NAVIGATION: 'Навигация',
                     pages: 'Страницы',
                     selectedRecords: 'Выбрано ({{count}})',
                     // Перевод названий ваших таблиц/моделей
                     Admins: 'Администраторы',
                     clientEmails: 'Соглашения',
                     history_period: 'Время продаж',
+                    promo: 'Акции',
                 },
                 messages: {
                     successfullyCreated: 'Запись успешно создана.',
@@ -101,6 +113,11 @@ export const adminJs = new AdminJS({
                 },
                 properties: {
                     // Глобальный перевод названий полей, если они совпадают в разных моделях
+                    // navigation: 'Навигация',
+                    onMain: 'На главной',
+                    active: 'Активный',
+                    name: 'Название',
+                    priority: 'Порядок',
                     id: 'ID',
                     createdAt: 'Дата создания',
                     updatedAt: 'Дата обновления',

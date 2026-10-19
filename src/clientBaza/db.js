@@ -53,6 +53,23 @@ const clientEmails = sequelize.define('clientEmails', {
     timestamps: false
 });
 
+const promo = sequelize.define('promo', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    name: { type: DataTypes.TEXT, allowNull: false },
+    onMain: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    priority: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    description: { type: DataTypes.TEXT },
+    code: { type: DataTypes.TEXT },
+    photo278: { type: DataTypes.TEXT },
+    photo585: { type: DataTypes.TEXT },
+    photo1200: { type: DataTypes.TEXT },
+    styles: { type: DataTypes.TEXT },
+}, {
+    tableName: 'promo',
+    timestamps: false,
+});
+
 // Define User model if not already defined
 const history_period = sequelize.define('Сколько дней висело', {
     startedDate: { type: DataTypes.TEXT, allowNull: false },
@@ -162,4 +179,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, Admins, history_period, clientEmails };
+export { sequelize, Admins, history_period, clientEmails, promo };
