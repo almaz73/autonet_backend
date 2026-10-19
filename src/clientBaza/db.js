@@ -31,7 +31,7 @@ const Admins = sequelize.define('Admins', {
     password: {type: DataTypes.STRING, required: true},
     role: {
         type: String,
-        enum: ['superadmin', 'manager', 'moderator'],
+        enum: ['superadmin', 'manager', 'moderator', 'promo_manager'],
         default: 'manager',
         required: true
     }

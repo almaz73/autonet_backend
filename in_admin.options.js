@@ -11,6 +11,15 @@ const isSuperAdmin = ({ currentAdmin }) => {
     return currentAdmin?.role?.toLowerCase() === 'superadmin';
 };
 
+// Промо-менеджеру разрешён только раздел «Акции»
+const isPromoManager = ({ currentAdmin }) => {
+    return currentAdmin?.role?.toLowerCase() === 'promo_manager';
+};
+
+const hideForPromoManager = {
+    isAccessible: (context) => !isPromoManager(context),
+};
+
 console.log('isSuperAdmin = ',isSuperAdmin)
 
 AdminJS.registerAdapter({Database, Resource})
@@ -26,8 +35,13 @@ export const adminJs = new AdminJS({
                 actions: {
                     new: {
                         // Кнопка "Создать" и вызов new доступны только суперадмину
-                        isAccessible: isSuperAdmin,
+                        isAccessible: (context) => isSuperAdmin(context) && !isPromoManager(context),
                     },
+                    list: hideForPromoManager,
+                    show: hideForPromoManager,
+                    edit: hideForPromoManager,
+                    delete: hideForPromoManager,
+                    bulkDelete: hideForPromoManager,
                 },
             },
         },
@@ -37,6 +51,14 @@ export const adminJs = new AdminJS({
                 tableName: 'clientEmails',
                 listProperties: ['fio', 'address', 'link', 'city', 'type_form', 'credit', 'created_at'],
                 navigation: null,
+                actions: {
+                    list: hideForPromoManager,
+                    show: hideForPromoManager,
+                    new: hideForPromoManager,
+                    edit: hideForPromoManager,
+                    delete: hideForPromoManager,
+                    bulkDelete: hideForPromoManager,
+                },
                 sort: {
                     sortBy: 'id',      // Поле для сортировки (можно заменить на 'createdAt' или 'startedDate')
                     direction: 'desc', // 'desc' — по убыванию (последние будут наверху), 'asc' — по возрастанию [1]
@@ -49,6 +71,14 @@ export const adminJs = new AdminJS({
                 tableName: 'history_period',
                 listProperties: ['startDate', 'endDate', 'car', 'days'],
                 navigation: null,
+                actions: {
+                    list: hideForPromoManager,
+                    show: hideForPromoManager,
+                    new: hideForPromoManager,
+                    edit: hideForPromoManager,
+                    delete: hideForPromoManager,
+                    bulkDelete: hideForPromoManager,
+                },
             },
         },
         {
