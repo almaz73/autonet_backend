@@ -1,7 +1,17 @@
-import {AdminJS} from 'adminjs'
+import {AdminJS, ComponentLoader} from 'adminjs'
 import AdminJSExpress from '@adminjs/express'
 import {Database, Resource} from '@adminjs/sequelize'
-import {sequelize, Admins, history_period, clientEmails, promo} from './src/clientBaza/db.js'
+import path from 'path'
+import {fileURLToPath} from 'url'
+import {sequelize, Admins, history_period, clientEmails, promo} from '../clientBaza/db.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const componentLoader = new ComponentLoader()
+const Components = {
+    // абсолютный путь: относительный ломается в ESM на Windows
+    PromoPhoto: componentLoader.add('PromoPhoto', path.join(__dirname, 'promo-photo.jsx')),
+}
 
 
 
@@ -25,6 +35,7 @@ console.log('isSuperAdmin = ',isSuperAdmin)
 AdminJS.registerAdapter({Database, Resource})
 
 export const adminJs = new AdminJS({
+    componentLoader,
     databases: [sequelize],
     resources: [
         {
@@ -85,11 +96,16 @@ export const adminJs = new AdminJS({
             resource: promo,
             options: {
                 tableName: 'promo',
-                listProperties: ['name', 'onMain', 'active', 'priority'],
+                listProperties: ['name', 'photo278', 'onMain', 'active', 'priority'],
                 navigation: null,
                 sort: {
                     sortBy: 'id',
                     direction: 'desc',
+                },
+                properties: {
+                    photo278: {
+                        components: {list: Components.PromoPhoto},
+                    },
                 },
             },
         }],
@@ -147,6 +163,7 @@ export const adminJs = new AdminJS({
                     onMain: 'На главной',
                     active: 'Активный',
                     name: 'Название',
+                    photo278: 'Фото',
                     priority: 'Порядок',
                     id: 'ID',
                     createdAt: 'Дата создания',

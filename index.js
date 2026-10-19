@@ -13,7 +13,7 @@ import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
-import {routerAdminJs,adminJs} from './in_admin.options.js'
+import {routerAdminJs,adminJs} from './src/admin/in_admin.options.js'
 
 const app = express()
 app.use(adminJs.options.rootPath, routerAdminJs); //Подключение админки
