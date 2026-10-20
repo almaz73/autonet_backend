@@ -15,6 +15,7 @@ const Components = {
     PromoEdit: componentLoader.add('PromoEdit', path.join(__dirname, 'promo-edit.jsx')),
     ClientLink: componentLoader.add('ClientLink', path.join(__dirname, 'client-link.jsx')),
     ClientAddress: componentLoader.add('ClientAddress', path.join(__dirname, 'client-address.jsx')),
+    PromoBool: componentLoader.add('PromoBool', path.join(__dirname, 'promo-bool.jsx')),
 }
 
 
@@ -157,6 +158,12 @@ export const adminJs = new AdminJS({
                     },
                     code: {
                         components: {list: Components.PromoLink},
+                    },
+                    onMain: {
+                        components: {list: Components.PromoBool},
+                    },
+                    active: {
+                        components: {list: Components.PromoBool},
                     },
                     description: {
                         type: 'textarea',
