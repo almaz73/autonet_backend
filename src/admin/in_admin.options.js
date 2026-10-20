@@ -12,6 +12,7 @@ const Components = {
     // абсолютный путь: относительный ломается в ESM на Windows
     PromoPhoto: componentLoader.add('PromoPhoto', path.join(__dirname, 'promo-photo.jsx')),
     PromoLink: componentLoader.add('PromoLink', path.join(__dirname, 'promo-link.jsx')),
+    PromoEdit: componentLoader.add('PromoEdit', path.join(__dirname, 'promo-edit.jsx')),
 }
 
 
@@ -112,6 +113,9 @@ export const adminJs = new AdminJS({
                             return request
                         },
                     },
+                    edit: {
+                        component: Components.PromoEdit,
+                    },
                 },
                 properties: {
                     photo278: {
@@ -119,6 +123,12 @@ export const adminJs = new AdminJS({
                     },
                     code: {
                         components: {list: Components.PromoLink},
+                    },
+                    description: {
+                        type: 'textarea',
+                    },
+                    styles: {
+                        type: 'textarea',
                     },
                 },
             },
@@ -175,6 +185,11 @@ export const adminJs = new AdminJS({
                     promo: {
                         properties: {
                             code: 'Ссылка',
+                            description: 'Описание',
+                            styles: 'Стили',
+                            photo278: 'Фото 278px',
+                            photo585: 'Фото 585px',
+                            photo1200: 'Фото 1200px',
                         },
                     },
                 },

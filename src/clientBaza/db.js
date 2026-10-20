@@ -16,12 +16,9 @@ const sequelize = new Sequelize({
 });
 
 // Test the connection
-try {
-    await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
-} catch (error) {
-    console.error('Unable to connect to the database:', error);
-}
+sequelize.authenticate()
+    .then(() => console.log('Database connection has been established successfully.'))
+    .catch((error) => console.error('Unable to connect to the database:', error));
 
 
 // Define User model if not already defined
@@ -82,27 +79,21 @@ const history_period = sequelize.define('Сколько дней висело', 
     timestamps: false,
 });
 
-// Create tables
-try {
-    await sequelize.sync(); // This will create tables if they don't exist
-} catch (error) {
-    console.error('Error creating tables:', error);
-}
-
-// Дефолтный суперадмин при первом запуске (если таблица Admins пуста)
-try {
-    if (await Admins.count() === 0) {
-        await Admins.create({
-            name: 'Superadmin',
-            email: 'admin@autonet.ru',
-            password: 'Autonet_2026_this_parole_will_be_never_used',
-            role: 'superadmin',
-        });
-        console.log('Создан администратор по умолчанию: admin@autonet.ru / Autonet_2026');
-    }
-} catch (error) {
-    console.error('Error creating default admin:', error);
-}
+// Passenger загружает ESM через require(), поэтому top-level await здесь нельзя
+sequelize.sync() // This will create tables if they don't exist
+    .then(async () => {
+        // Дефолтный суперадмин при первом запуске (если таблица Admins пуста)
+        if (await Admins.count() === 0) {
+            await Admins.create({
+                name: 'Superadmin',
+                email: 'admin@autonet.ru',
+                password: 'Autonet_2026_this_parole_will_be_never_used',
+                role: 'superadmin',
+            });
+            console.log('Создан администратор по умолчанию: admin@autonet.ru / Autonet_2026');
+        }
+    })
+    .catch((error) => console.error('Error creating tables or default admin:', error));
 
 // Create database connection
 export function getDB() {

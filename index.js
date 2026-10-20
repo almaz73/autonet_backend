@@ -18,7 +18,7 @@ import {routerAdminJs,adminJs} from './src/admin/in_admin.options.js'
 const app = express()
 app.use(adminJs.options.rootPath, routerAdminJs); //Подключение админки
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Passenger передаёт порт через PORT
 const DB_PATH = './database.sqlite'; // Local SQLite file
 
 const __filename = fileURLToPath(import.meta.url);
