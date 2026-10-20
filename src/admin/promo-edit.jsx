@@ -15,14 +15,14 @@ const appendRefresh = (url) => {
     return `${path}?${params.toString()}`
 }
 
-const Field = ({propertyPath, resource, record, onChange}) => {
+const Field = ({propertyPath, resource, record, onChange, disabled}) => {
     const property = resource.editProperties.find((p) => p.propertyPath === propertyPath)
     if (!property) return null
 
     return (
         <BasePropertyComponent
             where="edit"
-            property={property}
+            property={disabled ? {...property, isDisabled: true} : property}
             resource={resource}
             record={record}
             onChange={onChange}
@@ -86,7 +86,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 <Field propertyPath="name" {...fields}/>
                 <Box flex>
                     <Box flex="1" mr="default">
-                        <Field propertyPath="code" {...fields}/>
+                        <Field propertyPath="code" {...fields} disabled/>
                     </Box>
                     <Box flex="1" ml="default">
                         <Field propertyPath="priority" {...fields}/>
@@ -116,6 +116,11 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 <Field propertyPath="description" {...fields}/>
                 <H3 mt="lg" mb="default">Стили</H3>
                 <Field propertyPath="styles" {...fields}/>
+            </Card>
+
+            <Card>
+                <H3 mb="default">Содержимое страницы</H3>
+                <Field propertyPath="content" {...fields}/>
             </Card>
 
             <Box flex justifyContent="flex-end" alignItems="center">

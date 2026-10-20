@@ -80,6 +80,7 @@ export async function generationPagesForPromo(res, url) {
             data.photo1200 = promoItem.photo1200
             data.description =  promoItem.description && promoItem.description.split('\n').map(word => `<div>${word}</div>`).join('')
             data.styles = promoItem.styles
+            data.content = promoItem.content
             res.render('promo', data);  // шаблон из бакендной папки VIEWS
         } else {
             data.title = 'Данная акция неактивна'

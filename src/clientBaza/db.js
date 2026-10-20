@@ -62,6 +62,7 @@ const promo = sequelize.define('promo', {
     photo585: { type: DataTypes.TEXT },
     photo1200: { type: DataTypes.TEXT },
     styles: { type: DataTypes.TEXT },
+    content: { type: DataTypes.TEXT },
 }, {
     tableName: 'promo',
     timestamps: false,
@@ -82,6 +83,13 @@ const history_period = sequelize.define('Сколько дней висело', 
 // Passenger загружает ESM через require(), поэтому top-level await здесь нельзя
 sequelize.sync() // This will create tables if they don't exist
     .then(async () => {
+        // sync() не добавляет новые колонки в уже существующую таблицу
+        const [promoColumns] = await sequelize.query('PRAGMA table_info(promo)');
+        if (!promoColumns.some((column) => column.name === 'content')) {
+            await sequelize.query('ALTER TABLE promo ADD COLUMN content TEXT');
+            console.log('Добавлена колонка promo.content');
+        }
+
         // Дефолтный суперадмин при первом запуске (если таблица Admins пуста)
         if (await Admins.count() === 0) {
             await Admins.create({
@@ -127,7 +135,8 @@ function createTables(db) {
             photo278    TEXT,
             photo585    TEXT,
             photo1200   TEXT,
-            styles      TEXT
+            styles      TEXT,
+            content     TEXT
         )
     `;
 

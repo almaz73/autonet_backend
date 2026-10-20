@@ -143,6 +143,10 @@ export const adminJs = new AdminJS({
                         component: Components.PromoEdit,
                         isAccessible: (context) => !isManager(context),
                     },
+                    // режим просмотра не нужен: клик по строке открывает редактирование
+                    show: {
+                        isAccessible: () => false,
+                    },
                     new: hideForManager,
                     delete: hideForManager,
                     bulkDelete: hideForManager,
@@ -159,6 +163,10 @@ export const adminJs = new AdminJS({
                     },
                     styles: {
                         type: 'textarea',
+                    },
+                    content: {
+                        type: 'textarea',
+                        props: {rows: 16},
                     },
                 },
             },
@@ -217,6 +225,7 @@ export const adminJs = new AdminJS({
                             code: 'Ссылка',
                             description: 'Описание',
                             styles: 'Стили',
+                            content: 'Содержимое страницы',
                             photo278: 'Фото 278px',
                             photo585: 'Фото 585px',
                             photo1200: 'Фото 1200px',
