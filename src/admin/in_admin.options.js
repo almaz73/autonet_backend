@@ -11,6 +11,7 @@ const componentLoader = new ComponentLoader()
 const Components = {
     // абсолютный путь: относительный ломается в ESM на Windows
     PromoPhoto: componentLoader.add('PromoPhoto', path.join(__dirname, 'promo-photo.jsx')),
+    PromoLink: componentLoader.add('PromoLink', path.join(__dirname, 'promo-link.jsx')),
 }
 
 
@@ -96,15 +97,28 @@ export const adminJs = new AdminJS({
             resource: promo,
             options: {
                 tableName: 'promo',
-                listProperties: ['name', 'photo278', 'onMain', 'active', 'priority'],
+                listProperties: ['name', 'photo278', 'code', 'onMain', 'active', 'priority'],
                 navigation: null,
                 sort: {
-                    sortBy: 'id',
-                    direction: 'desc',
+                    sortBy: 'priority',
+                    direction: 'asc',
+                },
+                actions: {
+                    list: {
+                        before: (request) => {
+                            if (!request.query?.perPage) {
+                                request.query = {...request.query, perPage: 30}
+                            }
+                            return request
+                        },
+                    },
                 },
                 properties: {
                     photo278: {
                         components: {list: Components.PromoPhoto},
+                    },
+                    code: {
+                        components: {list: Components.PromoLink},
                     },
                 },
             },
@@ -156,6 +170,13 @@ export const adminJs = new AdminJS({
                     bulkDeleteSuccessful: 'Выбранные записи успешно удалены.',
                     errorPublishing: 'Ошибка при сохранении записи.',
                     noRecords: 'Записей пока нет.',
+                },
+                resources: {
+                    promo: {
+                        properties: {
+                            code: 'Ссылка',
+                        },
+                    },
                 },
                 properties: {
                     // Глобальный перевод названий полей, если они совпадают в разных моделях
