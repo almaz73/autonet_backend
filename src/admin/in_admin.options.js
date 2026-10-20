@@ -165,8 +165,7 @@ export const adminJs = new AdminJS({
                         type: 'textarea',
                     },
                     content: {
-                        type: 'textarea',
-                        props: {rows: 16},
+                        type: 'richtext',
                     },
                 },
             },

@@ -8,13 +8,6 @@ const photoSrc = (value) => {
     return value.startsWith('/') || /^https?:\/\//.test(value) ? value : `/pub_promo/${value}`
 }
 
-const appendRefresh = (url) => {
-    const [path, search = ''] = url.split('?')
-    const params = new URLSearchParams(search)
-    params.set('refresh', 'true')
-    return `${path}?${params.toString()}`
-}
-
 const Field = ({propertyPath, resource, record, onChange, disabled}) => {
     const property = resource.editProperties.find((p) => p.propertyPath === propertyPath)
     if (!property) return null
@@ -94,11 +87,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
 
     const onSubmit = (event) => {
         event.preventDefault()
-        submit().then((response) => {
-            if (response.data.redirectUrl) {
-                navigate(appendRefresh(response.data.redirectUrl))
-            }
-        })
+        submit()
     }
 
     return (
