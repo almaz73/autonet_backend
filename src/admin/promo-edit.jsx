@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react'
 import {useNavigate} from 'react-router'
 import {BasePropertyComponent, useRecord, useTranslation} from 'adminjs'
-import {Box, Button, H3, Icon} from '@adminjs/design-system'
+import {Box, Button, FormGroup, H3, Icon, Label} from '@adminjs/design-system'
 
 const photoSrc = (value) => {
     if (!value) return null
@@ -27,6 +27,28 @@ const Field = ({propertyPath, resource, record, onChange, disabled}) => {
             record={record}
             onChange={onChange}
         />
+    )
+}
+
+const CodeLinkField = ({resource, record}) => {
+    const property = resource.editProperties.find((p) => p.propertyPath === 'code')
+    const code = record.params?.code
+
+    return (
+        <FormGroup>
+            <Label htmlFor="code">Ссылка</Label>
+            {code
+                ? <a
+                    id="code"
+                    href={`/promo/${code}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{display: 'inline-block', paddingTop: 8}}
+                >
+                    {code}
+                </a>
+                : <Box color="grey40" style={{paddingTop: 8}}>—</Box>}
+        </FormGroup>
     )
 }
 
@@ -86,7 +108,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 <Field propertyPath="name" {...fields}/>
                 <Box flex>
                     <Box flex="1" mr="default">
-                        <Field propertyPath="code" {...fields} disabled/>
+                        <CodeLinkField resource={resource} record={record}/>
                     </Box>
                     <Box flex="1" ml="default">
                         <Field propertyPath="priority" {...fields}/>
