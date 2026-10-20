@@ -28,11 +28,24 @@ const isPromoManager = ({ currentAdmin }) => {
     return currentAdmin?.role?.toLowerCase() === 'promo_manager';
 };
 
+// Менеджеру разрешён только просмотр
+const isManager = ({ currentAdmin }) => {
+    return currentAdmin?.role?.toLowerCase() === 'manager';
+};
+
 const hideForPromoManager = {
     isAccessible: (context) => !isPromoManager(context),
 };
 
-console.log('isSuperAdmin = ',isSuperAdmin)
+// Раздел/действие скрыто для promo_manager и manager
+const hideForPromoManagerAndManager = {
+    isAccessible: (context) => !isPromoManager(context) && !isManager(context),
+};
+
+const hideForManager = {
+    isAccessible: (context) => !isManager(context),
+};
+
 
 AdminJS.registerAdapter({Database, Resource})
 
@@ -50,11 +63,12 @@ export const adminJs = new AdminJS({
                         // Кнопка "Создать" и вызов new доступны только суперадмину
                         isAccessible: (context) => isSuperAdmin(context) && !isPromoManager(context),
                     },
-                    list: hideForPromoManager,
-                    show: hideForPromoManager,
-                    edit: hideForPromoManager,
-                    delete: hideForPromoManager,
-                    bulkDelete: hideForPromoManager,
+                    list: hideForPromoManagerAndManager,
+                    show: hideForPromoManagerAndManager,
+                    edit: hideForPromoManagerAndManager,
+                    delete: hideForPromoManagerAndManager,
+                    bulkDelete: hideForPromoManagerAndManager,
+                    search: hideForPromoManagerAndManager,
                 },
             },
         },
@@ -67,10 +81,11 @@ export const adminJs = new AdminJS({
                 actions: {
                     list: hideForPromoManager,
                     show: hideForPromoManager,
-                    new: hideForPromoManager,
-                    edit: hideForPromoManager,
-                    delete: hideForPromoManager,
-                    bulkDelete: hideForPromoManager,
+                    new: hideForPromoManagerAndManager,
+                    edit: hideForPromoManagerAndManager,
+                    delete: hideForPromoManagerAndManager,
+                    bulkDelete: hideForPromoManagerAndManager,
+                    search: hideForPromoManager,
                 },
                 sort: {
                     sortBy: 'id',      // Поле для сортировки (можно заменить на 'createdAt' или 'startedDate')
@@ -82,15 +97,16 @@ export const adminJs = new AdminJS({
             resource: history_period,
             options: {
                 tableName: 'history_period',
-                listProperties: ['startDate', 'endDate', 'car', 'days'],
+                listProperties: ['endDate', 'car', 'days'],
                 navigation: null,
                 actions: {
                     list: hideForPromoManager,
                     show: hideForPromoManager,
-                    new: hideForPromoManager,
-                    edit: hideForPromoManager,
-                    delete: hideForPromoManager,
-                    bulkDelete: hideForPromoManager,
+                    new: hideForPromoManagerAndManager,
+                    edit: hideForPromoManagerAndManager,
+                    delete: hideForPromoManagerAndManager,
+                    bulkDelete: hideForPromoManagerAndManager,
+                    search: hideForPromoManager,
                 },
             },
         },
@@ -115,7 +131,11 @@ export const adminJs = new AdminJS({
                     },
                     edit: {
                         component: Components.PromoEdit,
+                        isAccessible: (context) => !isManager(context),
                     },
+                    new: hideForManager,
+                    delete: hideForManager,
+                    bulkDelete: hideForManager,
                 },
                 properties: {
                     photo278: {
@@ -190,6 +210,25 @@ export const adminJs = new AdminJS({
                             photo278: 'Фото 278px',
                             photo585: 'Фото 585px',
                             photo1200: 'Фото 1200px',
+                        },
+                    },
+                    history_period: {
+                        properties: {
+                            endDate: 'Дата реализации',
+                            days: 'Дни',
+                            car: 'Автомобиль',
+                        },
+                    },
+                    clientEmails:{
+                        properties: {
+                            fio: 'ФИО',
+                            address: 'Адрес',
+                            link: 'Ссылка',
+                            city: 'Город',
+                            type_form: 'Форма',
+                            credit:'Кредит',
+                            created_at:'Создано'
+
                         },
                     },
                 },
