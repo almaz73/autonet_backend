@@ -13,6 +13,8 @@ const Components = {
     PromoPhoto: componentLoader.add('PromoPhoto', path.join(__dirname, 'promo-photo.jsx')),
     PromoLink: componentLoader.add('PromoLink', path.join(__dirname, 'promo-link.jsx')),
     PromoEdit: componentLoader.add('PromoEdit', path.join(__dirname, 'promo-edit.jsx')),
+    ClientLink: componentLoader.add('ClientLink', path.join(__dirname, 'client-link.jsx')),
+    ClientAddress: componentLoader.add('ClientAddress', path.join(__dirname, 'client-address.jsx')),
 }
 
 
@@ -76,7 +78,7 @@ export const adminJs = new AdminJS({
             resource: clientEmails,
             options: {
                 tableName: 'clientEmails',
-                listProperties: ['fio', 'address', 'link', 'city', 'type_form', 'credit', 'created_at'],
+                listProperties: ['fio', 'phone', 'email', 'address', 'link', 'type_form', 'credit', 'created_at'],
                 navigation: null,
                 actions: {
                     list: hideForPromoManager,
@@ -90,6 +92,14 @@ export const adminJs = new AdminJS({
                 sort: {
                     sortBy: 'id',      // Поле для сортировки (можно заменить на 'createdAt' или 'startedDate')
                     direction: 'desc', // 'desc' — по убыванию (последние будут наверху), 'asc' — по возрастанию [1]
+                },
+                properties: {
+                    address: {
+                        components: {list: Components.ClientAddress},
+                    },
+                    link: {
+                        components: {list: Components.ClientLink},
+                    },
                 },
             },
         },
@@ -215,13 +225,15 @@ export const adminJs = new AdminJS({
                     history_period: {
                         properties: {
                             endDate: 'Дата реализации',
-                            days: 'Дни',
+                            days: 'За сколько дней',
                             car: 'Автомобиль',
                         },
                     },
                     clientEmails:{
                         properties: {
                             fio: 'ФИО',
+                            phone: 'Телефон',
+                            email: 'E-mail',
                             address: 'Адрес',
                             link: 'Ссылка',
                             city: 'Город',
