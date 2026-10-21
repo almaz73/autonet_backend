@@ -4,6 +4,7 @@ import {Database, Resource} from '@adminjs/sequelize'
 import path from 'path'
 import {fileURLToPath} from 'url'
 import {sequelize, Admins, history_period, clientEmails, promo} from '../clientBaza/db.js'
+import {uploadPromoPhotos} from './promo-upload-action.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -155,6 +156,13 @@ export const adminJs = new AdminJS({
                     },
                     delete: hideForManager,
                     bulkDelete: hideForManager,
+                    // вызывается кнопкой загрузки фото из PromoEdit, в интерфейсе не показывается
+                    uploadPhotos: {
+                        isVisible: false,
+                        method: 'post',
+                        isAccessible: hideForManager.isAccessible,
+                        handler: uploadPromoPhotos,
+                    },
                 },
                 properties: {
                     photo278: {

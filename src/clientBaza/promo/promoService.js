@@ -71,10 +71,18 @@ function savePromoPhoto(id, photoData) {
     });
 }
 
+// buffers: {photo278|photo585|photo1200: Buffer}
+async function savePromoPhotosById(id, buffers) {
+    const names = await promoDAO.savePromoPhotosById(id, buffers);
+    clearPromoCache()
+    return names;
+}
+
 export {
     getAllPromo,
     createPromo,
     updatePromo,
     deletePromo,
-    savePromoPhoto
+    savePromoPhoto,
+    savePromoPhotosById
 };

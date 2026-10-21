@@ -196,6 +196,53 @@ function savePromoPhoto(fileName, photo, callback) {
     if (fileName.includes('1200х501')) createPromoPhotos1200х501(newFileName, photo, promoPhotoDir).then(res => callback(null, res))
 }
 
+// колонка promo -> генератор всех размеров этой колонки
+const PHOTO_GENERATORS = {
+    photo278: createPromoPhotos278х402,
+    photo585: createPromoPhotos585х200,
+    photo1200: createPromoPhotos1200х501,
+}
+
+function updatePromoPhotos(id, names) {
+    const slots = Object.keys(names).filter((slot) => PHOTO_GENERATORS[slot]);
+    if (!slots.length) return Promise.resolve(names);
+
+    const db = getDB();
+    // language=SQLite
+    const sql = `UPDATE promo
+                 SET ${slots.map((slot) => `${slot} = ?`).join(', ')}
+                 WHERE id = ?`;
+    const values = slots.map((slot) => names[slot]).concat(id);
+
+    return new Promise((resolve, reject) => {
+        db.run(sql, values, function (err) {
+            if (err) {
+                console.error('Error updating promo photos', err.message);
+                return reject(err);
+            }
+            resolve(names);
+        });
+    });
+}
+
+// имена файлов строятся из номера записи, поэтому перезагрузка фото просто затирает прежние
+async function savePromoPhotosById(id, buffers) {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const promoPhotoDir = path.resolve(__dirname, '../../..', FolderPhotoForPromoActions);
+
+    fs.mkdirSync(promoPhotoDir, {recursive: true});
+
+    const names = {};
+    for (const [slot, buffer] of Object.entries(buffers)) {
+        const generate = PHOTO_GENERATORS[slot];
+        if (!generate) throw new Error(`Неизвестный размер фото: ${slot}`);
+        names[slot] = await generate(String(id), buffer, promoPhotoDir);
+    }
+
+    await updatePromoPhotos(id, names);
+    return names;
+}
+
 async function deletePromoPhoto(id) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -272,6 +319,7 @@ export {
     updatePromo,
     deletePromo,
     savePromoPhoto,
+    savePromoPhotosById,
     getMainPromoBanners,
     getActivePromoBanners
 };

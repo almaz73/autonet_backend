@@ -1,11 +1,28 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {useNavigate} from 'react-router'
-import {BasePropertyComponent, useRecord, useTranslation} from 'adminjs'
-import {Box, Button, FormGroup, H3, Icon, Label} from '@adminjs/design-system'
+import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
+import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
 
-const photoSrc = (value) => {
+// имя исходного файла должно содержать размер: 278х402, 585х200 или 1200х501
+const PHOTO_SLOTS = [
+    {field: 'file278', property: 'photo278', size: '278х402', digits: '278402'},
+    {field: 'file585', property: 'photo585', size: '585х200', digits: '585200'},
+    {field: 'file1200', property: 'photo1200', size: '1200х501', digits: '1200501'},
+]
+
+// «278x402», «278 х 402» и «278х402» приводим к «278402»
+const sizeDigits = (fileName) => fileName.replace(/\.[^.]+$/, '').replace(/[\s*xх×]/gi, '')
+
+const slotByFileName = (fileName) => {
+    const digits = sizeDigits(fileName)
+    return PHOTO_SLOTS.find((slot) => digits.includes(slot.digits)) ?? null
+}
+
+const photoSrc = (value, version) => {
     if (!value) return null
-    return value.startsWith('/') || /^https?:\/\//.test(value) ? value : `/pub_promo/${value}`
+    if (/^https?:\/\//.test(value)) return value
+    const url = value.startsWith('/') ? value : `/pub_promo/${value}`
+    return version ? `${url}?v=${version}` : url
 }
 
 const appendRefresh = (url) => {
@@ -52,8 +69,8 @@ const CodeLinkField = ({resource, record}) => {
     )
 }
 
-const PhotoField = ({propertyPath, resource, record, onChange}) => {
-    const src = photoSrc(record.params?.[propertyPath])
+const PhotoField = ({propertyPath, resource, record, onChange, previewVersion}) => {
+    const src = photoSrc(record.params?.[propertyPath], previewVersion)
 
     return (
         <Box flex="1" mr="default" mb="default">
@@ -75,6 +92,83 @@ const PhotoField = ({propertyPath, resource, record, onChange}) => {
     )
 }
 
+const PhotosUploader = ({resourceId, recordId, onUploaded}) => {
+    const inputRef = useRef(null)
+    const [uploading, setUploading] = useState(false)
+    const sendNotice = useNotice()
+
+    const upload = async (files) => {
+        const matched = new Map()
+        const rejected = []
+
+        files.forEach((file) => {
+            const slot = slotByFileName(file.name)
+            if (!slot || matched.has(slot.field)) rejected.push(file.name)
+            else matched.set(slot.field, {slot, file})
+        })
+
+        if (rejected.length) {
+            sendNotice({
+                type: 'error',
+                message: `Файл должен называться ${PHOTO_SLOTS.map((s) => s.size).join(', ')}: ${rejected.join(', ')}`,
+            })
+            return
+        }
+
+        const formData = new FormData()
+        formData.append('recordId', recordId)
+        matched.forEach(({slot, file}) => formData.append(slot.field, file))
+
+        setUploading(true)
+        try {
+            const {data} = await new ApiClient().resourceAction({
+                resourceId,
+                actionName: 'uploadPhotos',
+                data: formData,
+                method: 'POST',
+            })
+            onUploaded(data.photos)
+            sendNotice({type: 'success', message: 'Фото загружены'})
+        } catch (error) {
+            sendNotice({type: 'error', message: error.response?.data?.error ?? 'Не удалось загрузить фото'})
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const onFilesSelected = (event) => {
+        const files = Array.from(event.target.files ?? [])
+        event.target.value = '' // повторный выбор того же файла должен снова срабатывать
+        if (files.length) upload(files)
+    }
+
+    if (!recordId) {
+        return (
+            <Box mb="lg" color="grey60">
+                <Text>Сохраните запись, чтобы загрузить фото: имя файла строится из её номера.</Text>
+            </Box>
+        )
+    }
+
+    return (
+        <Box mb="lg" alignItems="center">
+            <input ref={inputRef} type="file" accept="image/*" multiple hidden onChange={onFilesSelected}/>
+            <Button
+                type="button"
+                variant="contained"
+                disabled={uploading}
+                onClick={() => inputRef.current?.click()}
+            >
+                {uploading ? <Icon icon="Loader" spin/> : <Icon icon="Upload"/>}
+                Загрузить фото
+            </Button>
+            <Text ml="default" color="grey60">
+                Файлы с именами {PHOTO_SLOTS.map((slot) => slot.size).join(', ')}
+            </Text>
+        </Box>
+    )
+}
+
 const Card = ({children}) => (
     <Box bg="white" p="xl" mb="lg" style={{borderRadius: 8, boxShadow: '0 1px 6px 0 rgba(137,138,154,0.4)'}}>
         {children}
@@ -85,12 +179,19 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     const navigate = useNavigate()
     const {translateButton} = useTranslation()
     const {record, handleChange, submit, loading, setRecord} = useRecord(initialRecord, resource.id)
+    // имена файлов не меняются при замене, поэтому превью сбрасываем версией в query
+    const [previewVersion, setPreviewVersion] = useState(0)
 
     useEffect(() => {
         if (initialRecord) setRecord(initialRecord)
     }, [initialRecord])
 
     const fields = {resource, record, onChange: handleChange}
+
+    const onPhotosUploaded = (photos) => {
+        Object.entries(photos ?? {}).forEach(([propertyPath, name]) => handleChange(propertyPath, name))
+        setPreviewVersion(Date.now())
+    }
 
     const onSubmit = (event) => {
         event.preventDefault()
@@ -126,10 +227,15 @@ const PromoEdit = ({record: initialRecord, resource}) => {
 
             <Card>
                 <H3 mb="default">Фотографии</H3>
+                <PhotosUploader
+                    resourceId={resource.id}
+                    recordId={record.id}
+                    onUploaded={onPhotosUploaded}
+                />
                 <Box flex flexWrap="wrap">
-                    <PhotoField propertyPath="photo278" {...fields}/>
-                    <PhotoField propertyPath="photo585" {...fields}/>
-                    <PhotoField propertyPath="photo1200" {...fields}/>
+                    <PhotoField propertyPath="photo278" previewVersion={previewVersion} {...fields}/>
+                    <PhotoField propertyPath="photo585" previewVersion={previewVersion} {...fields}/>
+                    <PhotoField propertyPath="photo1200" previewVersion={previewVersion} {...fields}/>
                 </Box>
             </Card>
 
