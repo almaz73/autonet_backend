@@ -18,7 +18,7 @@ const Components = {
     PromoBool: componentLoader.add('PromoBool', path.join(__dirname, 'promo-bool.jsx')),
 }
 
-
+const isDev = process.env.USERNAME === 'almaz' // на моем компе без пароля для разработки
 
 
 // Проверка: имеет ли текущий админ роль суперпользователя
@@ -119,6 +119,7 @@ export const adminJs = new AdminJS({
                     bulkDelete: hideForPromoManagerAndManager,
                     search: hideForPromoManager,
                 },
+
             },
         },
         {
@@ -135,20 +136,23 @@ export const adminJs = new AdminJS({
                     list: {
                         before: (request) => {
                             if (!request.query?.perPage) {
-                                request.query = {...request.query, perPage: 30}
+                                request.query = {...request.query, perPage: 50}
                             }
                             return request
                         },
                     },
                     edit: {
+                        isVisible: hideForManager,
                         component: Components.PromoEdit,
-                        isAccessible: (context) => !isManager(context),
                     },
                     // режим просмотра не нужен: клик по строке открывает редактирование
                     show: {
                         isAccessible: () => false,
                     },
-                    new: hideForManager,
+                    new: {
+                        isVisible: hideForManager,
+                        component: Components.PromoEdit,
+                    },
                     delete: hideForManager,
                     bulkDelete: hideForManager,
                 },
@@ -206,6 +210,8 @@ export const adminJs = new AdminJS({
                     reset: 'Сбросить',
                     confirmRemoval: 'Вы уверены, что хотите удалить эту запись?',
                     createFirstRecord: 'Создать первую запись',
+                    confirm: 'Да',
+                    cancel: 'Отмена',
                 },
                 labels: {
                     loginWelcome: 'Добро пожаловать в панель управления',
@@ -216,6 +222,7 @@ export const adminJs = new AdminJS({
                     clientEmails: 'Соглашения',
                     history_period: 'Время продаж',
                     promo: 'Акции',
+                    confirm: 'Подтверждение',
                 },
                 messages: {
                     successfullyCreated: 'Запись успешно создана.',
@@ -224,6 +231,7 @@ export const adminJs = new AdminJS({
                     bulkDeleteSuccessful: 'Выбранные записи успешно удалены.',
                     errorPublishing: 'Ошибка при сохранении записи.',
                     noRecords: 'Записей пока нет.',
+                    confirmDelete:'Вы уверены, что хотите удалить эту запись?'
                 },
                 resources: {
                     promo: {
@@ -289,12 +297,15 @@ const authenticate = async (email, password) => {
     return null;
 };
 
-export const routerAdminJs = AdminJSExpress.buildAuthenticatedRouter(adminJs, {
-    authenticate,
-    cookieName: 'adminjs',
-    cookiePassword: 'Adm1nJs_autonet_s3ssion_2026', // секрет для подписи сессии
-    maxRetries: 5, // не более 5 попыток входа подряд с одного IP
-}, null, {
-    resave: false,
-    saveUninitialized: true,
-}); // Создание роутера для Express с авторизацией по паролю
+// чтобы временно отключить авторизацию
+export const routerAdminJs = isDev ?
+    AdminJSExpress.buildRouter(adminJs) :
+    AdminJSExpress.buildAuthenticatedRouter(adminJs, {
+        authenticate,
+        cookieName: 'adminjs',
+        cookiePassword: 'Adm1nJs_autonet_s3ssion_2026', // секрет для подписи сессии
+        maxRetries: 5, // не более 5 попыток входа подряд с одного IP
+    }, null, {
+        resave: false,
+        saveUninitialized: true,
+    });

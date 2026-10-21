@@ -8,6 +8,13 @@ const photoSrc = (value) => {
     return value.startsWith('/') || /^https?:\/\//.test(value) ? value : `/pub_promo/${value}`
 }
 
+const appendRefresh = (url) => {
+    const [path, search = ''] = url.split('?')
+    const params = new URLSearchParams(search)
+    params.set('refresh', 'true')
+    return `${path}?${params.toString()}`
+}
+
 const Field = ({propertyPath, resource, record, onChange, disabled}) => {
     const property = resource.editProperties.find((p) => p.propertyPath === propertyPath)
     if (!property) return null
@@ -87,7 +94,11 @@ const PromoEdit = ({record: initialRecord, resource}) => {
 
     const onSubmit = (event) => {
         event.preventDefault()
-        submit()
+        submit().then((response) => {
+            if (response.data.redirectUrl) {
+                navigate(appendRefresh(response.data.redirectUrl))
+            }
+        })
     }
 
     return (
@@ -122,12 +133,12 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 </Box>
             </Card>
 
-            <Card>
-                <H3 mb="default">Описание</H3>
-                <Field propertyPath="description" {...fields}/>
-                <H3 mt="lg" mb="default">Стили</H3>
-                <Field propertyPath="styles" {...fields}/>
-            </Card>
+            {/*<Card>*/}
+            {/*    <H3 mb="default">Описание</H3>*/}
+            {/*    <Field propertyPath="description" {...fields}/>*/}
+            {/*    <H3 mt="lg" mb="default">Стили</H3>*/}
+            {/*    <Field propertyPath="styles" {...fields}/>*/}
+            {/*</Card>*/}
 
             <Card>
                 <H3 mb="default">Содержимое страницы</H3>
