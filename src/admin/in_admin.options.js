@@ -4,6 +4,7 @@ import {Database, Resource} from '@adminjs/sequelize'
 import path from 'path'
 import {fileURLToPath} from 'url'
 import {sequelize, Admins, history_period, clientEmails, promo} from '../clientBaza/db.js'
+import * as promoService from '../clientBaza/promo/promoService.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -153,6 +154,16 @@ export const adminJs = new AdminJS({
                     new: {
                         isVisible: hideForManager,
                         component: Components.PromoEdit,
+                        before: async (request) => {
+                            // код новой акции = максимальный существующий + 1
+                            if (!request.payload?.code) {
+                                request.payload = {
+                                    ...(request.payload ?? {}),
+                                    code: await promoService.getNextPromoCode(),
+                                }
+                            }
+                            return request
+                        },
                     },
                     delete: hideForManager,
                     bulkDelete: hideForManager,

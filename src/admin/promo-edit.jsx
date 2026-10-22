@@ -47,7 +47,7 @@ const Field = ({propertyPath, resource, record, onChange, disabled}) => {
     )
 }
 
-const CodeLinkField = ({resource, record}) => {
+const CodeLinkField = ({resource, record, isNew}) => {
     const property = resource.editProperties.find((p) => p.propertyPath === 'code')
     const code = record.params?.code
 
@@ -64,7 +64,9 @@ const CodeLinkField = ({resource, record}) => {
                 >
                     {code}
                 </a>
-                : <Box color="grey40" style={{paddingTop: 8}}>—</Box>}
+                : <Box color="grey40" style={{paddingTop: 8}}>
+                    {isNew ? 'Код будет присвоен при сохранении' : '—'}
+                </Box>}
         </FormGroup>
     )
 }
@@ -196,8 +198,14 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     const onSubmit = (event) => {
         event.preventDefault()
         submit().then((response) => {
-            if (response.data.redirectUrl) {
-                navigate(appendRefresh(response.data.redirectUrl))
+            const {record: savedRecord, redirectUrl} = response.data
+            // после создания остаёмся в редактировании записи: там уже доступна загрузка фото
+            if (!initialRecord?.id && savedRecord?.id) {
+                navigate(`/administrator/resources/${resource.id}/records/${savedRecord.id}/edit`)
+                return
+            }
+            if (redirectUrl) {
+                navigate(appendRefresh(redirectUrl))
             }
         })
     }
@@ -209,7 +217,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 <Field propertyPath="name" {...fields}/>
                 <Box flex>
                     <Box flex="1" mr="default">
-                        <CodeLinkField resource={resource} record={record}/>
+                        <CodeLinkField resource={resource} record={record} isNew={!initialRecord?.id}/>
                     </Box>
                     <Box flex="1" ml="default">
                         <Field propertyPath="priority" {...fields}/>

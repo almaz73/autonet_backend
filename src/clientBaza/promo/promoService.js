@@ -15,6 +15,19 @@ function getAllPromo() {
 }
 
 
+// следующий код акции для формы создания
+function getNextPromoCode() {
+    return new Promise((resolve, reject) => {
+        promoDAO.getNextPromoCode((err, code) => {
+            if (err) {
+                console.error('Error getting next promo code', err);
+                return reject(err);
+            }
+            resolve(code);
+        });
+    });
+}
+
 // Create new promo item
 function createPromo(promo) {
     return new Promise((resolve, reject) => {
@@ -80,6 +93,7 @@ async function savePromoPhotosById(id, buffers) {
 
 export {
     getAllPromo,
+    getNextPromoCode,
     createPromo,
     updatePromo,
     deletePromo,

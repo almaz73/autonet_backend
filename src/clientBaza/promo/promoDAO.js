@@ -39,6 +39,22 @@ function getPromoByCode(id, isEditor, callback) {
     });
 }
 
+// код новой акции: максимальный существующий + 1
+function getNextPromoCode(callback) {
+    const db = getDB();
+    // language=SQLite
+    const sql = `SELECT MAX(CAST(code AS INTEGER)) AS maxCode
+                 FROM promo`;
+
+    db.get(sql, [], (err, row) => {
+        if (err) {
+            console.error('Error getting max promo code', err.message);
+            return callback(err, null);
+        }
+        callback(null, String((row?.maxCode || 0) + 1));
+    });
+}
+
 function createPromo(promo, callback) {
     const db = getDB();
     // language=SQLite
@@ -315,6 +331,7 @@ async function getActivePromoBanners(isEditor) {
 export {
     getAllPromo,
     getPromoByCode,
+    getNextPromoCode,
     createPromo,
     updatePromo,
     deletePromo,
