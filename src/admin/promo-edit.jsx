@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react'
 import {useNavigate} from 'react-router'
 import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
 import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
+import PhotoTextEditor from './promo-photo-text.jsx'
 
 // имя исходного файла должно содержать размер: 278х402, 585х200 или 1200х501
 const PHOTO_SLOTS = [
@@ -71,14 +72,14 @@ const CodeLinkField = ({resource, record, isNew}) => {
     )
 }
 
-const PhotoField = ({propertyPath, resource, record, onChange, previewVersion}) => {
+const PhotoField = ({propertyPath, resource, record, onChange, previewVersion, onAddText}) => {
     const src = photoSrc(record.params?.[propertyPath], previewVersion)
 
     return (
         <Box flex="1" mr="default" mb="default">
             <Box
                 bg="grey20"
-                height={160}
+                height={250}
                 mb="default"
                 display="flex"
                 alignItems="center"
@@ -90,6 +91,17 @@ const PhotoField = ({propertyPath, resource, record, onChange, previewVersion}) 
                     : <span style={{color: '#898A9A'}}>Нет фото</span>}
             </Box>
             <Field propertyPath={propertyPath} resource={resource} record={record} onChange={onChange}/>
+            <Button
+                style={{ width: '100%' }}
+                type="button"
+                variant="light"
+                mt="default"
+                disabled={!src}
+                onClick={() => onAddText(propertyPath)}
+            >
+                <Icon icon="Edit"/>
+                Добавить текст
+            </Button>
         </Box>
     )
 }
@@ -183,6 +195,8 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     const {record, handleChange, submit, loading, setRecord} = useRecord(initialRecord, resource.id)
     // имена файлов не меняются при замене, поэтому превью сбрасываем версией в query
     const [previewVersion, setPreviewVersion] = useState(0)
+    // propertyPath фото, на котором открыт редактор текста
+    const [textEditing, setTextEditing] = useState(null)
 
     useEffect(() => {
         if (initialRecord) setRecord(initialRecord)
@@ -245,6 +259,20 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                     <PhotoField propertyPath="photo585" previewVersion={previewVersion} {...fields}/>
                     <PhotoField propertyPath="photo1200" previewVersion={previewVersion} {...fields}/>
                 </Box>
+                {textEditing && record.id ? (
+                    <PhotoTextEditor
+                        resourceId={resource.id}
+                        recordId={record.id}
+                        photoProperty={textEditing}
+                        photoName={record.params?.[textEditing]}
+                        previewVersion={previewVersion}
+                        onClose={() => setTextEditing(null)}
+                        onSaved={() => {
+                            setTextEditing(null)
+                            setPreviewVersion(Date.now())
+                        }}
+                    />
+                ) : null}
             </Card>
 
             {/*<Card>*/}

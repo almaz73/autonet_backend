@@ -6,6 +6,7 @@ import {fileURLToPath} from 'url'
 import {sequelize, Admins, history_period, clientEmails, promo} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
+import {applyPromoPhotoText} from './promo-text-action.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -173,6 +174,13 @@ export const adminJs = new AdminJS({
                         method: 'post',
                         isAccessible: hideForManager.isAccessible,
                         handler: uploadPromoPhotos,
+                    },
+                    // вызывается редактором текста из PromoEdit, в интерфейсе не показывается
+                    applyPhotoText: {
+                        isVisible: false,
+                        method: 'post',
+                        isAccessible: hideForManager.isAccessible,
+                        handler: applyPromoPhotoText,
                     },
                 },
                 properties: {

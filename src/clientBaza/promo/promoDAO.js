@@ -219,6 +219,71 @@ const PHOTO_GENERATORS = {
     photo1200: createPromoPhotos1200х501,
 }
 
+// колонка promo -> варианты файлов этой колонки, на которые лепится текст
+const SLOT_VARIANTS = {
+    photo278: ['v_b', 'v_l'],
+    photo585: ['h_b', 'h_l'],
+    photo1200: ['h_m'],
+}
+
+const escapeXmlText = (text) => text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+// текст рисуется SVG-слоем поверх фото; координаты и размер заданы в % от размеров фото,
+// поэтому одинаково ложатся на все варианты слота (у вариантов одинаковые пропорции)
+async function withTextOverlay(buffer, params) {
+    const {width, height} = await sharp(buffer).metadata()
+    const fontSize = Math.max(8, Math.round(height * params.fontSizePct / 100))
+    const lineHeight = Math.round(fontSize * 1.2)
+    const lines = params.text.split('\n')
+    const x = width * params.xPct / 100
+    // центр блока текста; первая базовая линия = центр минус полблока плюс подъём ~0.8em
+    const y0 = height * params.yPct / 100 - (lines.length * lineHeight) / 2 + fontSize * 0.8
+    const spans = lines.map((line, i) =>
+        `<tspan x="${x}"${i ? ` dy="${lineHeight}"` : ''}>${escapeXmlText(line)}</tspan>`).join('')
+
+    const svg = Buffer.from(
+        `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">` +
+        `<text x="${x}" y="${y0}" font-family="Arial, DejaVu Sans, sans-serif" font-size="${fontSize}" ` +
+        `font-weight="bold" fill="${params.color}" text-anchor="middle">${spans}</text></svg>`)
+
+    return sharp(buffer).composite([{input: svg}]).webp({quality: 92}).toBuffer()
+}
+
+// params: {text, color, fontSizePct, xPct, yPct}; пустой text = вернуть исходное фото без текста
+async function applyPromoPhotoTextById(id, slot, params) {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url))
+    const promoPhotoDir = path.resolve(__dirname, '../../..', FolderPhotoForPromoActions)
+
+    const variants = SLOT_VARIANTS[slot]
+    if (!variants) throw new Error(`Неизвестное фото: ${slot}`)
+
+    fs.mkdirSync(promoPhotoDir, {recursive: true})
+
+    let mainName = null
+    for (const variant of variants) {
+        const mainFile = path.join(promoPhotoDir, `${id}_${variant}.webp`)
+        const blankFile = path.join(promoPhotoDir, `${id}_${variant}_blank.webp`)
+
+        // при первой лепке текста сохраняем исходник с постфиксом _blank,
+        // чтобы позже можно было налепить другой текст на чистое фото
+        if (!fs.existsSync(blankFile)) {
+            if (!fs.existsSync(mainFile)) throw new Error(`Нет фото ${id}_${variant}.webp`)
+            await fs.promises.copyFile(mainFile, blankFile)
+        }
+
+        const original = await fs.promises.readFile(blankFile)
+        const result = params.text ? await withTextOverlay(original, params) : original
+        await fs.promises.writeFile(mainFile, result)
+        mainName = `${id}_${variant}.webp`
+    }
+
+    return {[slot]: mainName}
+}
+
 function updatePromoPhotos(id, names) {
     const slots = Object.keys(names).filter((slot) => PHOTO_GENERATORS[slot]);
     if (!slots.length) return Promise.resolve(names);
@@ -252,6 +317,11 @@ async function savePromoPhotosById(id, buffers) {
     for (const [slot, buffer] of Object.entries(buffers)) {
         const generate = PHOTO_GENERATORS[slot];
         if (!generate) throw new Error(`Неизвестный размер фото: ${slot}`);
+        // новое фото затирает прежнее, прежний исходник _blank больше не подходит
+        for (const variant of SLOT_VARIANTS[slot]) {
+            const blankFile = path.join(promoPhotoDir, `${id}_${variant}_blank.webp`);
+            await fs.promises.unlink(blankFile).catch(() => {});
+        }
         names[slot] = await generate(String(id), buffer, promoPhotoDir);
     }
 
@@ -264,7 +334,7 @@ async function deletePromoPhoto(id) {
     const __dirname = path.dirname(__filename);
     const uploadDir = path.resolve(__dirname, '../../..', FolderPhotoForPromoActions);
 
-    let names = ['_h_b', '_h_l', '_h_m', '_v_b', '_v_l']
+    let names = ['_h_b', '_h_l', '_h_m', '_v_b', '_v_l', '_h_b_blank', '_h_l_blank', '_h_m_blank', '_v_b_blank', '_v_l_blank']
     for (let name of names) {
         let filename = id + name + '.webp'
         try {
@@ -337,6 +407,7 @@ export {
     deletePromo,
     savePromoPhoto,
     savePromoPhotosById,
+    applyPromoPhotoTextById,
     getMainPromoBanners,
     getActivePromoBanners
 };
