@@ -185,15 +185,22 @@ async function carAlone(req, res) {
 
         let carData = await A_car.getAutoByParams(brand, model, linkId)
 
-        if (!carData) {
-            return res.render('404', {confirm: '☹ ВОЗМОЖНО АВТОМОБИЛЬ СНЯТ С ПРОДАЖИ'})
-        }
+        // авто удалено из системы: 410 Gone + noindex, чтобы поисковики убрали страницу из индекса
+        const gone = !carData
 
         // Generate title and description based on car data
-        const title = `${carData.brand} ${carData.model} ${carData.yearReleased}  ${carData.prop_address ? ' - ' + carData.prop_address : ''}`;
-        const description = `Купить ${carData.brand} ${carData.model} ${carData.yearReleased} года выпуска с пробегом в ${carData.city} за ${carData.price} рублей. Характеристики: ${carData.engineType} двигатель, ${carData.enginePower} л.с., ${carData.gearboxType} коробка передач, ${carData.driveType} привод.`;
-        const keywords = carData.configuration;
+        const title = gone
+            ? `Автомобиль ${brand} ${model} снят с продажи - Автосеть.РФ`
+            : `${carData.brand} ${carData.model} ${carData.yearReleased}  ${carData.prop_address ? ' - ' + carData.prop_address : ''}`;
+        const description = gone
+            ? 'Автомобиль снят с продажи и больше недоступен.'
+            : `Купить ${carData.brand} ${carData.model} ${carData.yearReleased} года выпуска с пробегом в ${carData.city} за ${carData.price} рублей. Характеристики: ${carData.engineType} двигатель, ${carData.enginePower} л.с., ${carData.gearboxType} коробка передач, ${carData.driveType} привод.`;
+        const keywords = gone ? '' : carData.configuration;
+
+        if (gone) res.status(410)
+
         res.render('car', {
+            gone,
             title,
             description,
             keywords,
