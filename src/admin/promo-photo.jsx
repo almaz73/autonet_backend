@@ -13,7 +13,7 @@ const PromoPhoto = ({ record, property }) => {
         <img
             src={src}
             alt=""
-            style={{width: 50, height: 'auto', display: 'block', borderRadius: 4}}
+            style={{width: 120, height: 'auto', display: 'block', borderRadius: 4}}
         />
     )
 }

@@ -4,6 +4,14 @@ import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} 
 import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
 import PhotoTextEditor from './promo-photo-text.jsx'
 
+// в тулбаре richtext скрываем последние кнопки: очистку форматирования и вставку картинки
+const HIDE_RICH_TEXT_BUTTONS = `
+    .adminjs_MenuBarWrapper > span:nth-last-of-type(2),
+    .adminjs_MenuBarWrapper > span:last-of-type {
+        display: none !important;
+    }
+`
+
 // имя исходного файла должно содержать размер: 278х402, 585х200 или 1200х501
 const PHOTO_SLOTS = [
     {field: 'file278', property: 'photo278', size: '278х402', digits: '278402'},
@@ -45,6 +53,62 @@ const Field = ({propertyPath, resource, record, onChange, disabled}) => {
             record={record}
             onChange={onChange}
         />
+    )
+}
+
+const HtmlContentField = ({propertyPath, resource, record, onChange}) => {
+    const property = resource.editProperties.find((p) => p.propertyPath === propertyPath)
+    const [showHtml, setShowHtml] = useState(false)
+    // richtext не подхватывает внешние изменения, поэтому после правки HTML пересоздаём его
+    const [editorVersion, setEditorVersion] = useState(0)
+
+    if (!property) return null
+
+    const html = record.params?.[propertyPath] ?? ''
+
+    return (
+        <>
+            <BasePropertyComponent
+                key={editorVersion}
+                where="edit"
+                property={property}
+                resource={resource}
+                record={record}
+                onChange={onChange}
+            />
+            <Button
+                type="button"
+                variant="light"
+                mt="default"
+                onClick={() => setShowHtml((visible) => !visible)}
+            >
+                HTML
+            </Button>
+            {showHtml ? (
+                <Box mt="default">
+                    <Label htmlFor={`${propertyPath}-html`}>HTML</Label>
+                    <textarea
+                        id={`${propertyPath}-html`}
+                        value={html}
+                        rows={14}
+                        spellCheck={false}
+                        onChange={(event) => onChange(propertyPath, event.target.value)}
+                        onBlur={() => setEditorVersion((version) => version + 1)}
+                        style={{
+                            width: '100%',
+                            padding: 8,
+                            border: '1px solid #B9BBC6',
+                            borderRadius: 4,
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                            lineHeight: 1.5,
+                            boxSizing: 'border-box',
+                            resize: 'vertical',
+                        }}
+                    />
+                </Box>
+            ) : null}
+        </>
     )
 }
 
@@ -226,6 +290,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
 
     return (
         <Box as="form" onSubmit={onSubmit} flex flexDirection="column">
+            <style>{HIDE_RICH_TEXT_BUTTONS}</style>
             <Card>
                 <H3 mb="default">Основное</H3>
                 <Field propertyPath="name" {...fields}/>
@@ -299,7 +364,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
 
             <Card>
                 <H3 mb="default">Содержимое страницы</H3>
-                <Field propertyPath="content" {...fields}/>
+                <HtmlContentField propertyPath="content" {...fields}/>
             </Card>
 
             <Box flex justifyContent="flex-end" alignItems="center">
