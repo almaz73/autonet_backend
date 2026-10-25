@@ -255,9 +255,24 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                     onUploaded={onPhotosUploaded}
                 />
                 <Box flex flexWrap="wrap">
-                    <PhotoField propertyPath="photo278" previewVersion={previewVersion} {...fields}/>
-                    <PhotoField propertyPath="photo585" previewVersion={previewVersion} {...fields}/>
-                    <PhotoField propertyPath="photo1200" previewVersion={previewVersion} {...fields}/>
+                    <PhotoField
+                        propertyPath="photo278"
+                        previewVersion={previewVersion}
+                        onAddText={setTextEditing}
+                        {...fields}
+                    />
+                    <PhotoField
+                        propertyPath="photo585"
+                        previewVersion={previewVersion}
+                        onAddText={setTextEditing}
+                        {...fields}
+                    />
+                    <PhotoField
+                        propertyPath="photo1200"
+                        previewVersion={previewVersion}
+                        onAddText={setTextEditing}
+                        {...fields}
+                    />
                 </Box>
                 {textEditing && record.id ? (
                     <PhotoTextEditor
