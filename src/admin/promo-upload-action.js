@@ -2,7 +2,7 @@ import fs from 'fs'
 import {promo} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 
-const MAX_FILE_SIZE_MB = 10
+const MAX_FILE_SIZE_MB = 5
 
 // поле формы -> колонка promo
 const UPLOAD_FIELDS = {

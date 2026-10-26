@@ -258,7 +258,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     const {translateButton} = useTranslation()
     const {record, handleChange, submit, loading, setRecord} = useRecord(initialRecord, resource.id)
     // имена файлов не меняются при замене, поэтому превью сбрасываем версией в query
-    const [previewVersion, setPreviewVersion] = useState(0)
+    const [previewVersion, setPreviewVersion] = useState(() => Date.now())
     // propertyPath фото, на котором открыт редактор текста
     const [textEditing, setTextEditing] = useState(null)
 

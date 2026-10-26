@@ -5,10 +5,11 @@ const PromoPhoto = ({ record, property }) => {
 
     if (!value) return null
 
-    const src = value.startsWith('/') || /^https?:\/\//.test(value)
+    let src = value.startsWith('/') || /^https?:\/\//.test(value)
         ? value
         : `/pub_promo/${value}`
 
+    src = src + '?v=' + Date.now()
     return (
         <img
             src={src}

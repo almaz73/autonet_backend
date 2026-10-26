@@ -43,7 +43,7 @@ const PhotoTextEditor = ({
     onSaved,
 }) => {
     const [text, setText] = useState('')
-    const [color, setColor] = useState('#ffffff')
+    const [color, setColor] = useState('#007aff')
     const [fontSizePct, setFontSizePct] = useState(7)
     const [pos, setPos] = useState({xPct: 50, yPct: 85})
     const [dragging, setDragging] = useState(false)
