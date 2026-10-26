@@ -53,9 +53,9 @@ const clientEmails = sequelize.define('clientEmails', {
 const promo = sequelize.define('promo', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: { type: DataTypes.TEXT, allowNull: false },
-    onMain: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    onMain: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     priority: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
-    active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     description: { type: DataTypes.TEXT },
     code: { type: DataTypes.TEXT },
     photo278: { type: DataTypes.TEXT },
