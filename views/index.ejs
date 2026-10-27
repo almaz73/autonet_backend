@@ -28,10 +28,9 @@
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 
 
-    <link rel="stylesheet" crossorigin href="/assets/<%- css1 %>">
-    <link rel="stylesheet" crossorigin href="/<%- css2 %>">
-    <link rel="stylesheet" crossorigin href="/<%- css3 %>">
-    <link rel="stylesheet" crossorigin href="/<%- css4 %>">
+    <% cssFiles.forEach(function (file) { %>
+    <link rel="stylesheet" crossorigin href="/<%- file %>">
+    <% }); %>
 
 
 </head>
@@ -421,16 +420,19 @@
         </div>
     </div>
 
-    <div class="main__provided--top">
-        <div class="page__flex">
-            <h2> Адреса дилерских центров Автосеть.РФ </h2>
-            <a href="/contacts/" class="page__link">
-                <img src="/st/red_arrow.svg" loading='lazy' alt=''>
-                <span>Все адреса</span>
-            </a>
+    <section class="dealers">
+        <h2>Адреса дилерских центров Автосеть.РФ</h2>
+        <div class="dealers__layout">
+            <div class="dealers__list" id="dealersList" aria-label="Список дилерских центров"></div>
+            <div class="dealers__map">
+                <!-- src — запасной вариант; актуальную карту со всеми метками собирает dealers-map.js -->
+                <iframe id="map_122491029" title="Карта дилерских центров Автосеть.РФ" frameborder="0"
+                        src="https://makemap.2gis.ru/widget?data=eJy9j0tPwzAQhP-LORK1tvOwG6mHKojSylR1QYKCeogaE4zcOLgO6kP572wTwZkTe1rNeMfznZF1hXKqmCq7U95ptUfp6xn5Y61Qim5V7hunUIBqZ2vlfOeDrb25-Hi-lF9-OsHrk2x8do2FWJVFlmDBpH-4kZ8L0NZ3q1KOxxBSqP3W6dprW8ExCFtrrIP1ClNO3igop1lVqANKCf6ZNkBlX-7Yfd03W1pd-S4BAHSV-654NBpgSkkYBnE84DThEdvAvS4gkGHeBn8nE8NVmUUlng-BMDtg8Sz9YipENjnePwrZfMz-i4hizhjtiHA4iukv0SgO202Adnm9tHvddzgjk3uU9o8ZY1GYEE5wHCBzsbu4mHDOYkIpZgT6WbuDsARSgcUa8_SulHnpVO8a1X4DgJKmIA"
+                        allow="fullscreen"
+                        sandbox="allow-modals allow-forms allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation"></iframe>
+            </div>
         </div>
-    </div>
-    <div class="contact_items" id="currentCity"></div>
+    </section>
     <div class="photo-modal" onclick="openPhoto(false)">
         <div class="pic"></div>
     </div>

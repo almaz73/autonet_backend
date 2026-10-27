@@ -6,6 +6,25 @@ import GetListService from "../API/GetListService.js";
 
 const router = new Router()
 
+// Собираем CSS из самого entry и всех чанков, которые он импортирует:
+// часть стилей Vite кладёт в чанки (например contacts), и в manifest.css entry их нет
+function collectCss(manifest, entryKey) {
+    const css = []
+    const seen = new Set()
+    const walk = (key) => {
+        if (!key || seen.has(key)) return
+        seen.add(key)
+        const entry = manifest[key]
+        if (!entry) return
+        if (entry.imports) entry.imports.forEach(walk)
+        if (entry.css) entry.css.forEach(file => {
+            if (!css.includes(file)) css.push(file)
+        })
+    }
+    walk(entryKey)
+    return css
+}
+
 // router.use(seoRedirects)
 
 router.get('/', indexPage);                                 // Главная страница
@@ -35,13 +54,7 @@ async function indexPage(req, res) {
     const js8 = manifest.imports && manifest.imports[7].slice(1)
     const js9 = manifest.file
 
-    let css1
-    const css2 = manifest.css && manifest.css[0]
-    const css3 = manifest.css && manifest.css[1]
-    const css4 = manifest.css && manifest.css[2]
-    for (const manifestKey in manifest_links) {
-        if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
-    }
+    const cssFiles = collectCss(manifest_links, 'index.html')
 
     const carCount = await A_car.getCarCount()
     carCount.length = 20
@@ -78,7 +91,7 @@ async function indexPage(req, res) {
 
     res.render('index', {
         js1, js2, js3, js4, js5, js6, js7, js8, js9,
-        css1, css2, css3, css4,
+        cssFiles,
         carCount,
         carList,
         page
