@@ -355,12 +355,11 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 ) : null}
             </Card>
 
-            {/*<Card>*/}
-            {/*    <H3 mb="default">Описание</H3>*/}
-            {/*    <Field propertyPath="description" {...fields}/>*/}
-            {/*    <H3 mt="lg" mb="default">Стили</H3>*/}
-            {/*    <Field propertyPath="styles" {...fields}/>*/}
-            {/*</Card>*/}
+            <Card>
+                <H3 mb="default">SEO подготовка</H3>
+                <Field propertyPath="title" {...fields}/>
+                <Field propertyPath="description" {...fields}/>
+            </Card>
 
             <Card>
                 <H3 mb="default">Содержимое страницы</H3>

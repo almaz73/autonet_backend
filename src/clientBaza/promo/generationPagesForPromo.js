@@ -79,11 +79,10 @@ export async function generationPagesForPromo(res, url) {
         };
 
         if (promoItem) {
-            data.title = promoItem.name
+            data.title = promoItem.title || promoItem.name
             data.photo278 = promoItem.photo278
             data.photo1200 = promoItem.photo1200
-            data.description =  promoItem.description && promoItem.description.split('\n').map(word => `<div>${word}</div>`).join('')
-            data.styles = promoItem.styles
+            data.description = promoItem.description
             data.content = promoItem.content
             res.render('promo', data);  // шаблон из бакендной папки VIEWS
         } else {

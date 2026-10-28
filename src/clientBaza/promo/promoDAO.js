@@ -66,8 +66,10 @@ function createPromo(promo, callback) {
                            code,
                            photo278,
                            photo585,
-                           photo1200)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                           photo1200,
+                           title,
+                           description)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -78,7 +80,9 @@ function createPromo(promo, callback) {
         promo.code || null,
         promo.photo278 || null,
         promo.photo585 || null,
-        promo.photo1200 || null
+        promo.photo1200 || null,
+        promo.title || null,
+        promo.description || null
     ];
 
     db.run(sql, values, function (err) {
@@ -97,20 +101,22 @@ function updatePromo(id, promo, callback) {
     const sql = `
         UPDATE promo
         SET name        = ?,
+            title       = ?,
             onMain      = ?,
             priority    = ?,
             active      = ?,
-            code = ?,
+            code        = ?,
             photo278    = ?,
             photo585    = ?,
             photo1200   = ?,
-            description   = ?,
-            styles   = ?
+            description = ?,
+            styles      = ?
         WHERE id = ?
     `;
 
     const values = [
         promo.name,
+        promo.title || null,
         promo.onMain ? 1 : 0,
         promo.priority,
         promo.active !== undefined ? (promo.active ? 1 : 0) : 1,

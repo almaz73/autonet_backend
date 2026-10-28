@@ -289,7 +289,8 @@ export const adminJs = new AdminJS({
                     promo: {
                         properties: {
                             code: 'Ссылка',
-                            description: 'Описание',
+                            title: 'SEO Title',
+                            description: 'Meta Description',
                             styles: 'Стили',
                             content: 'Содержимое страницы',
                             photo278: 'Фото 278px',

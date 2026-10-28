@@ -54,6 +54,7 @@ const clientEmails = sequelize.define('clientEmails', {
 const promo = sequelize.define('promo', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: { type: DataTypes.TEXT, allowNull: false },
+    title: { type: DataTypes.TEXT },
     onMain: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     priority: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
@@ -111,6 +112,10 @@ sequelize.sync() // This will create tables if they don't exist
             await sequelize.query('ALTER TABLE promo ADD COLUMN content TEXT');
             console.log('Добавлена колонка promo.content');
         }
+        if (!promoColumns.some((column) => column.name === 'title')) {
+            await sequelize.query('ALTER TABLE promo ADD COLUMN title TEXT');
+            console.log('Добавлена колонка promo.title');
+        }
 
         // Дефолтный суперадмин при первом запуске (если таблица Admins пуста)
         if (await Admins.count() === 0) {
@@ -149,6 +154,7 @@ function createTables(db) {
         (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             name        TEXT    NOT NULL,
+            title       TEXT,
             onMain      BOOLEAN NOT NULL DEFAULT 1,
             priority    INTEGER NOT NULL DEFAULT 0,
             active      BOOLEAN NOT NULL DEFAULT 1,
