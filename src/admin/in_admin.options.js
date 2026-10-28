@@ -3,7 +3,7 @@ import AdminJSExpress from '@adminjs/express'
 import {Database, Resource} from '@adminjs/sequelize'
 import path from 'path'
 import {fileURLToPath} from 'url'
-import {sequelize, Admins, history_period, clientEmails, promo} from '../clientBaza/db.js'
+import {sequelize, Admins, history_period, clientEmails, promo, dealers} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
 import {applyPromoPhotoText} from './promo-text-action.js'
@@ -17,6 +17,7 @@ const Components = {
     PromoLink: componentLoader.add('PromoLink', path.join(__dirname, 'promo-link.jsx')),
     PromoEdit: componentLoader.add('PromoEdit', path.join(__dirname, 'promo-edit.jsx')),
     ClientLink: componentLoader.add('ClientLink', path.join(__dirname, 'client-link.jsx')),
+    DealerLink: componentLoader.add('DealerLink', path.join(__dirname, 'dealer-link.jsx')),
     ClientAddress: componentLoader.add('ClientAddress', path.join(__dirname, 'client-address.jsx')),
     PromoBool: componentLoader.add('PromoBool', path.join(__dirname, 'promo-bool.jsx')),
 }
@@ -207,6 +208,26 @@ export const adminJs = new AdminJS({
                     },
                 },
             },
+        },
+        {
+            resource: dealers,
+            options: {
+                tableName: 'dealers',
+                navigation: null,
+                listProperties: ['id', 'city', 'address', 'tel', 'profile',  'link'],
+                properties: {
+                    // days: {
+                    //     isVisible: {list: false, filter: false, show: true, edit: true},
+                    // },
+                    // coords: {
+                    //     isVisible: {list: false, filter: false, show: true, edit: true},
+                    // },
+                    link: {
+                        isDisabled: true,
+                        components: {list: Components.DealerLink},
+                    },
+                },
+            },
         }],
     rootPath: '/administrator',
     loginPath: '/administrator/login',
@@ -215,6 +236,9 @@ export const adminJs = new AdminJS({
         logo: '/st/logo_20.svg',
         companyName: 'Автосеть.РФ',
         softwareBrothers: true
+    },
+    assets: {
+        styles: ['/admin-assets/admin.css'],
     },
     // Настройка локализации
     locale: {
@@ -249,6 +273,7 @@ export const adminJs = new AdminJS({
                     clientEmails: 'Соглашения',
                     history_period: 'Время продаж',
                     promo: 'Акции',
+                    dealers: 'Контакты',
                     confirm: 'Подтверждение',
                 },
                 messages: {
@@ -291,6 +316,19 @@ export const adminJs = new AdminJS({
                             credit:'Кредит',
                             created_at:'Создано'
 
+                        },
+                    },
+                    dealers: {
+                        properties: {
+                            city: 'Город',
+                            url: 'Фото',
+                            coords: 'Координаты',
+                            address: 'Адрес',
+                            tel: 'Телефон',
+                            days: 'Режим работы',
+                            profile: 'Профиль',
+                            brands: 'Марки',
+                            link: 'Ссылка',
                         },
                     },
                 },

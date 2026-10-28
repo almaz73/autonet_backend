@@ -30,6 +30,7 @@ app.set('view engine', 'ejs');// Установка EJS как движка ша
 app.use(express.json({ limit: '30mb' }))
 app.use('/', router_ssr)
 app.use(express.static(frontendPath)); // 2. Раздаем статику
+app.use('/admin-assets', express.static(path.join(__dirname, 'src', 'admin', 'assets')));
 app.use(express.urlencoded({limit: '30mb',extended: true}));
 
 app.use('/api/auth', routerAuth)

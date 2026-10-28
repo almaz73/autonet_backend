@@ -3,6 +3,7 @@ import Controllers from "../xml_import/Controllers.js";
 import Post from '../post/Post.js'
 import multer from "multer";
 import {getActiveBanners, getMainBanners} from '../clientBaza/promo/generationPagesForPromo.js'
+import {getDealers} from '../clientBaza/dealers/dealersDAO.js'
 
 const router = new Router()
 
@@ -57,6 +58,7 @@ router.post('/postEmail', Post.postEmailYa)
 router.post('/postEmailWithAttachement', upload.single('file'), Post.postEmailWithAttachementYa)
 router.get('/getMainBanners', getMainBanners) // баннеры карусели на главном
 router.get('/getActiveBanners', getActiveBanners) // все активные промо-баннеры
+router.get('/getDealers', getDealers) // дилерские центры для карты на главной
 
 
 router.get('/test', Controllers.test)

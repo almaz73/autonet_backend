@@ -4,6 +4,7 @@ import sqlite3 from 'sqlite3';
 import path from "path";
 import fs from "fs";
 import {fileURLToPath} from 'url';
+import {buildDealerLink} from './dealers/dealerLink.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,6 +67,27 @@ const promo = sequelize.define('promo', {
 }, {
     tableName: 'promo',
     timestamps: false,
+});
+
+const dealers = sequelize.define('dealers', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    city: { type: DataTypes.TEXT, allowNull: false },
+    url: { type: DataTypes.TEXT },
+    coords: { type: DataTypes.TEXT },
+    address: { type: DataTypes.TEXT, allowNull: false },
+    tel: { type: DataTypes.TEXT },
+    days: { type: DataTypes.TEXT },
+    profile: { type: DataTypes.TEXT, allowNull: false, defaultValue: 'Дилерский центр' },
+    brands: { type: DataTypes.TEXT, allowNull: true, defaultValue: '' },
+    link: { type: DataTypes.TEXT, allowNull: false, unique: true },
+}, {
+    tableName: 'dealers',
+    timestamps: false,
+});
+
+// ссылка read-only: генерируем из города и адреса, если её ещё нет
+dealers.beforeValidate((dealer) => {
+    if (!dealer.link) dealer.link = buildDealerLink(dealer.city, dealer.address)
 });
 
 // Define User model if not already defined
@@ -179,4 +201,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, Admins, history_period, clientEmails, promo };
+export { sequelize, Admins, history_period, clientEmails, promo, dealers };
