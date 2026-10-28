@@ -1,0 +1,4 @@
+/* Служебный заголовок над списком разделов меню */
+.adminjs_Resources > .adminjs_Box > .adminjs_Label {
+    display: none;
+}
