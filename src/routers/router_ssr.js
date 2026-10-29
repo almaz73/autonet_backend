@@ -1,10 +1,16 @@
 import Router from 'express'
+import zlib from 'node:zlib'
 import A_car from "../API/A_car.js";
+import {dealers} from '../clientBaza/db.js'
 import {manifest_links, transliterate, RussianBrandsRus, RussianBrandsLat} from '../constants.js';
 import GetListService from "../API/GetListService.js";
 // import {seoRedirects} from "./htaccess_middleware.js"
 
 const router = new Router()
+
+const MAP_WIDGET_URL = 'https://makemap.2gis.ru/widget'
+const DEALER_ZOOM = 16
+const DEALER_MARKER_COLOR = '#E22427'
 
 // Собираем CSS из самого entry и всех чанков, которые он импортирует:
 // часть стилей Vite кладёт в чанки (например contacts), и в manifest.css entry их нет
@@ -25,6 +31,86 @@ function collectCss(manifest, entryKey) {
     return css
 }
 
+/** подготовка к работе с отдельными контактами **/
+const escapeHtml = (value) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+
+const stripTags = (value) => String(value ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+
+// в адресах из CMS встречается <br> — разрешаем только его, остальное экранируем
+const formatMultiline = (value) => escapeHtml(value).replace(/&lt;br\s*\/?&gt;/gi, '<br>')
+
+const telHref = (tel) => `tel:${String(tel ?? '').replace(/[^\d+]/g, '')}`
+
+function parseCoords(value) {
+    if (!value) return null
+    const [lat, lon] = String(value).split(',').map((part) => parseFloat(part.trim()))
+    return Number.isFinite(lat) && Number.isFinite(lon) ? {lat, lon} : null
+}
+
+// виджет 2ГИС принимает data = base64url(zlib(JSON))
+function buildDealerMapSrc(dealer) {
+    const point = parseCoords(dealer.coords)
+    if (!point) return ''
+
+    const popup = `
+        <div style="font:14px/1.45 Gilroy,Arial,sans-serif;min-width:180px;background:white">
+            <div style="font-weight:700;color:#111;margin-bottom:2px">${escapeHtml(dealer.city)}</div>
+            <div style="color:#333">${formatMultiline(dealer.address)}</div>
+            <div style="margin-top:4px"><a style="color:#E22427;text-decoration:none" href="${escapeHtml(telHref(dealer.tel))}">${escapeHtml(dealer.tel)}</a></div>
+            <div style="color:#8a8a95;font-size:12px;margin-top:2px">${escapeHtml(dealer.days)}</div>
+        </div>`
+
+    const data = {
+        orderedGeometries: [{
+            type: 'Feature',
+            properties: {
+                description: Buffer.from(popup, 'utf8').toString('base64'),
+                color: DEALER_MARKER_COLOR,
+                zIndex: 1000000000,
+            },
+            geometry: {
+                type: 'Point',
+                coordinates: [point.lon, point.lat],
+            },
+            id: dealer.id,
+        }],
+        mapPosition: {...point, zoom: DEALER_ZOOM},
+        scrollWheelZoom: false,
+    }
+
+    const compressed = zlib.deflateSync(Buffer.from(JSON.stringify(data), 'utf8'))
+    return `${MAP_WIDGET_URL}?data=${compressed.toString('base64url')}`
+}
+
+// чанки страницы контактов: в манифесте нет html-entry contacts, берём их по префиксу
+function findChunk(prefix, ext) {
+    for (const key of Object.keys(manifest_links)) {
+        if (!key.startsWith(prefix)) continue
+        const entry = manifest_links[key]
+        if (entry && entry.file && entry.file.endsWith(ext)) return entry
+    }
+    return {}
+}
+
+function contactAssets() {
+    const style = findChunk('_style-', '.js')
+    const main = findChunk('_main-', '.js')
+    const contacts = findChunk('_contacts-', '.js')
+    return {
+        styleJs: style.file || '',
+        styleCss: (style.css && style.css[0]) || '',
+        mainJs: main.file || '',
+        contactsCss: (contacts.css && contacts.css[0]) || '',
+    }
+}
+
+/** КОНЕЦ подготовка к работе с отдельными контактами **/
+
 // router.use(seoRedirects)
 
 router.get('/', indexPage);                                 // Главная страница
@@ -37,6 +123,8 @@ router.get('/cars/:brand(\\D+)/:model/:linkId', carAlone);  // Страница 
 //http://localhost:3000/cars/Chevrolet/Camaro/2021-Tver-3250000-66525km
 
 router.get('/buyout', buyoutPage);
+
+router.get('/contacts/:slug', dealerPage);                  // Страница дилерского центра (контакты)
 
 
 async function indexPage(req, res) {
@@ -256,6 +344,41 @@ async function buyoutPage(req, res) {
         js1, js2,
         css1,
     })
+    return res
+}
+
+async function dealerPage(req, res) {
+    try {
+        const dealer = await dealers.findOne({
+            where: {link: `/contacts/${req.params.slug}`},
+            attributes: ['id', 'city', 'url', 'coords', 'address', 'tel', 'days', 'profile', 'brands', 'link'],
+            raw: true,
+        })
+
+        if (!dealer) return res.status(404).render('404', {confirm: ''})
+
+        const addressText = stripTags(dealer.address)
+        const title = `${dealer.city}, ${addressText} — дилерский центр Автосеть.РФ`
+        const description = `Дилерский центр Автосеть.РФ: ${dealer.city}, ${addressText}.`
+            + (dealer.tel ? ` Телефон: ${dealer.tel}.` : '')
+            + (dealer.days ? ` Режим работы: ${dealer.days}.` : '')
+
+        res.render('dealer', {
+            ...contactAssets(),
+            dealer,
+            addressHtml: formatMultiline(dealer.address),
+            addressText,
+            brands: String(dealer.brands || '').split(',').map((brand) => brand.trim()).filter(Boolean),
+            photoUrl: dealer.url ? encodeURI(dealer.url) : '',
+            mapSrc: buildDealerMapSrc(dealer),
+            telHref: telHref(dealer.tel),
+            title,
+            description,
+        })
+    } catch (error) {
+        console.error('Error rendering dealer page:', error)
+        res.status(500).send('Internal Server Error')
+    }
     return res
 }
 
