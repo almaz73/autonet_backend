@@ -218,8 +218,16 @@ export const adminJs = new AdminJS({
             options: {
                 tableName: 'dealers',
                 navigation: null,
-                listProperties: ['city', 'address', 'tel', 'profile', 'link'],
+                listProperties: ['city', 'address',  'profile', 'link'],
                 actions: {
+                    list: {
+                        before: (request) => {
+                            if (!request.query?.perPage) {
+                                request.query = {...request.query, perPage: 300}
+                            }
+                            return request
+                        },
+                    },
                     edit: {
                         component: Components.DealerEdit,
                     },
@@ -345,6 +353,7 @@ export const adminJs = new AdminJS({
                             coords: 'Координаты',
                             address: 'Адрес',
                             tel: 'Телефон',
+                            email: 'Email',
                             days: 'Режим работы',
                             profile: 'Профиль',
                             brands: 'Марки',

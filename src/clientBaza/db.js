@@ -80,6 +80,7 @@ const dealers = sequelize.define('dealers', {
     days: { type: DataTypes.TEXT },
     profile: { type: DataTypes.TEXT, allowNull: false, defaultValue: 'Дилерский центр' },
     brands: { type: DataTypes.TEXT, allowNull: true, defaultValue: '' },
+    email: { type: DataTypes.TEXT, allowNull: true },
     link: { type: DataTypes.TEXT, allowNull: false, unique: true },
 }, {
     tableName: 'dealers',
@@ -115,6 +116,12 @@ sequelize.sync() // This will create tables if they don't exist
         if (!promoColumns.some((column) => column.name === 'title')) {
             await sequelize.query('ALTER TABLE promo ADD COLUMN title TEXT');
             console.log('Добавлена колонка promo.title');
+        }
+
+        const [dealerColumns] = await sequelize.query('PRAGMA table_info(dealers)');
+        if (!dealerColumns.some((column) => column.name === 'email')) {
+            await sequelize.query('ALTER TABLE dealers ADD COLUMN email TEXT');
+            console.log('Добавлена колонка dealers.email');
         }
 
         // Дефолтный суперадмин при первом запуске (если таблица Admins пуста)

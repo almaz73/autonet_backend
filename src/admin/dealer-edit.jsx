@@ -162,7 +162,7 @@ const DealerEdit = ({record: initialRecord, resource}) => {
     return (
         <Box as="form" onSubmit={onSubmit} flex flexDirection="column">
             <Card>
-                <H3 mb="default">Дилерский центр</H3>
+                <H3 mb="default">Контакт</H3>
                 <Field propertyPath="city" {...fields}/>
                 <Field propertyPath="address" {...fields}/>
                 <Box flex>
@@ -170,11 +170,10 @@ const DealerEdit = ({record: initialRecord, resource}) => {
                         <Field propertyPath="profile" {...fields}/>
                     </Box>
                 </Box>
-                <Box flex>
-                    <Box flex="1" ml="default">
-                        <Field propertyPath="tel" {...fields}/>
-                    </Box>
-                </Box>
+
+                <Field propertyPath="tel" {...fields}/>
+                <Field propertyPath="email" {...fields}/>
+
                 <Box flex>
                     <Box flex="1" mr="default">
                         <Field propertyPath="days" {...fields}/>
@@ -183,6 +182,7 @@ const DealerEdit = ({record: initialRecord, resource}) => {
                         <Field propertyPath="brands" {...fields}/>
                     </Box>
                 </Box>
+
                 <Field propertyPath="coords" {...fields}/>
             </Card>
 

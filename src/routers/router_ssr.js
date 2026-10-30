@@ -351,7 +351,7 @@ async function dealerPage(req, res) {
     try {
         const dealer = await dealers.findOne({
             where: {link: `/contacts/${req.params.slug}`},
-            attributes: ['id', 'city', 'url', 'coords', 'address', 'tel', 'days', 'profile', 'brands', 'link'],
+            attributes: ['id', 'city', 'url', 'coords', 'address', 'tel', 'days', 'profile', 'brands', 'email', 'link'],
             raw: true,
         })
 
@@ -361,6 +361,7 @@ async function dealerPage(req, res) {
         const splitList = (value) => String(value || '').split(',').map((part) => part.trim()).filter(Boolean)
         const tels = splitList(dealer.tel).map((value) => ({value, href: telHref(value)}))
         const profiles = splitList(dealer.profile)
+        const email = String(dealer.email || '').trim()
         const title = `${dealer.city}, ${addressText} — дилерский центр Автосеть.РФ`
         const description = `Дилерский центр Автосеть.РФ: ${dealer.city}, ${addressText}.`
             + (dealer.tel ? ` Телефон: ${dealer.tel}.` : '')
@@ -374,6 +375,7 @@ async function dealerPage(req, res) {
             brands: String(dealer.brands || '').split(',').map((brand) => brand.trim()).filter(Boolean),
             profiles,
             tels,
+            email,
             photoUrl: dealer.url ? encodeURI(dealer.url) : '',
             mapSrc: buildDealerMapSrc(dealer),
             title,

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <meta charset='UTF-8'/>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title><%= title %></title>
+    <meta property='og:type' content='website'>
+    <meta property='og:title' content='<%= title %>'>
+    <meta property='og:image' content='<%= photoUrl ? `https://автосеть.рф${photoUrl}` : "https://xn--80aej9aped4f.xn--p1ai/st/auto.webp" %>'>
+    <link rel='canonical' href='https://автосеть.рф<%= dealer.link %>'>
+    <meta property='og:url' content='https://автосеть.рф<%= dealer.link %>'>
+    <meta property='og:locale' content='ru_RU'>
+    <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='index, follow'>
+    <meta name='description' content='<%= description %>'>
+
+    <link rel='stylesheet' crossorigin href='/<%= styleCss %>'>
+    <link rel='stylesheet' crossorigin href='/<%= contactsCss %>'>
+    <link rel='sitemap' type='application/xml' title='Sitemap' href='/sitemap.xml'>
+
+    <script type='module' crossorigin src='/<%= styleJs %>'></script>
+    <script type='module' crossorigin src='/<%= mainJs %>'></script>
+</head>
+<body>
+
+<%- include('partials/verbox') %>
+<%- include('partials/ya_metrica') %>
+<%- include('partials/header') %>
+
+<main class='contacts dealer-page'>
+    <div class='page_padding_20'>
+        <div class='bread_cranbs'>
+            <a href='/'>Главная</a> /
+            <a href='/contacts/'>Контакты</a> /
+            <span><%= dealer.city %>, <%= addressText %></span>
+        </div>
+    </div>
+
+    <h1><%= dealer.profile %> в г. <%= dealer.city %></h1>
+
+    <article class='dealer-page__card<%= photoUrl ? '' : ' dealer-page__card--no-photo' %>'>
+        <div class='dealer-page__info'>
+            <div class='dealer-block__profile'><%= dealer.city %></div>
+            <dl class='dealer-page__rows'>
+                <div class='dealer-page__row'>
+                    <dt>Адрес</dt>
+                    <dd><%- addressHtml %></dd>
+                </div>
+                <% if (tels.length) { %>
+                <div class='dealer-page__row'>
+                    <dt>Телефоны</dt>
+                    <dd class='dealer-page__list'>
+                        <% tels.forEach((tel) => { %>
+                        <a class='dealer-block__phone' href='<%= tel.href %>'><%= tel.value %></a>
+                        <% }) %>
+                    </dd>
+                </div>
+                <% } %>
+
+                <% if (email) { %>
+                    <div class='dealer-page__row'>
+                        <dt>Email</dt>
+                        <dd><a class='dealer-block__email' href='mailto:<%= email %>'><%= email %></a></dd>
+                    </div>
+                <% } %>
+
+                <% if (dealer.days) { %>
+                <div class='dealer-page__row'>
+                    <dt>Режим работы</dt>
+                    <dd><%= dealer.days %></dd>
+                </div>
+                <% } %>
+                <% if (profiles.length) { %>
+                <div class='dealer-page__row'>
+                    <dt>Профили</dt>
+                    <dd class='dealer-page__list dealer-page__list--panel'>
+                        <% profiles.forEach((profile) => { %>
+                        <span class='dealer-page__profile'><%= profile %></span>
+                        <% }) %>
+                    </dd>
+                </div>
+                <% } %>
+                <% if (brands.length) { %>
+                <div class='dealer-page__row'>
+                    <dt>Бренды</dt>
+                    <dd><%= brands.join(', ') %></dd>
+                </div>
+                <% } %>
+
+            </dl>
+            <div class='dealer-page__actions'>
+                <a class='dealer-page__back' href='/contacts/'>Все контакты</a>
+            </div>
+        </div>
+        <% if (photoUrl) { %>
+        <div class='dealer-page__photo'>
+            <img src='<%= photoUrl %>' alt='Фото дилерского центра <%= dealer.city %>' loading='lazy'
+                 onerror="this.closest('.dealer-page__card').classList.add('dealer-page__card--no-photo'); this.parentElement.remove()">
+        </div>
+        <% } %>
+    </article>
+
+    <% if (mapSrc) { %>
+    <div class='dealer-page__map'>
+        <iframe src='<%= mapSrc %>' title='Дилерский центр <%= dealer.city %> на карте'></iframe>
+    </div>
+    <% } %>
+</main>
+
+<%- include('partials/footer') %>
+
+</body>
+</html>
