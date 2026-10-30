@@ -1,6 +1,6 @@
 import React from 'react'
 import {useNavigate} from 'react-router'
-import {BasePropertyComponent, useRecord, useTranslation} from 'adminjs'
+import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
 import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
 import {buildDealerLink} from '../clientBaza/dealers/dealerLink.js'
 
@@ -52,6 +52,81 @@ const appendRefresh = (url) => {
     return `${path}?${params.toString()}`
 }
 
+const PhotoField = ({record, resourceId, previewVersion, onUploaded}) => {
+    const inputRef = React.useRef(null)
+    const [uploading, setUploading] = React.useState(false)
+    const sendNotice = useNotice()
+    const url = record.params?.url
+    const src = url ? `${url}?v=${previewVersion}` : ''
+
+    const upload = async (file) => {
+        const formData = new FormData()
+        formData.append('recordId', record.id)
+        formData.append('photo', file)
+
+        setUploading(true)
+        try {
+            const {data} = await new ApiClient().resourceAction({
+                resourceId,
+                actionName: 'uploadPhoto',
+                data: formData,
+                method: 'POST',
+            })
+            onUploaded(data.url)
+            sendNotice({type: 'success', message: 'Фото загружено'})
+        } catch (error) {
+            sendNotice({type: 'error', message: error.response?.data?.error ?? 'Не удалось загрузить фото'})
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const onFilesSelected = (event) => {
+        const file = event.target.files?.[0]
+        event.target.value = '' // повторный выбор того же файла должен снова срабатывать
+        if (file) upload(file)
+    }
+
+    return (
+        <Box>
+            <Box
+                bg="grey20"
+                mb="default"
+                style={{
+                    width: 220,
+                    aspectRatio: '1 / 1.618',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    borderRadius: 8,
+                }}
+            >
+                {src
+                    ? <img
+                        src={src}
+                        alt=""
+                        style={{width: '100%', height: '100%', objectFit: 'cover', display: 'block'}}
+                    />
+                    : <Text color="grey40">Нет фото</Text>}
+            </Box>
+            <input ref={inputRef} type="file" accept="image/*" hidden onChange={onFilesSelected}/>
+            <Button
+                type="button"
+                variant="contained"
+                disabled={uploading || !record.id}
+                onClick={() => inputRef.current?.click()}
+            >
+                {uploading ? <Icon icon="Loader" spin/> : <Icon icon="Upload"/>}
+                Загрузить фото
+            </Button>
+            <Text color="grey60" mt="default">
+                JPG, PNG или WebP — сохраним в WebP и сразу обновим фото на сайте.
+            </Text>
+        </Box>
+    )
+}
+
 const Card = ({children}) => (
     <Box bg="white" p="xl" mb="lg" style={{borderRadius: 8, boxShadow: '0 1px 6px 0 rgba(137,138,154,0.4)'}}>
         {children}
@@ -69,6 +144,12 @@ const DealerEdit = ({record: initialRecord, resource}) => {
 
     const fields = {resource, record, onChange: handleChange}
     const params = record.params ?? {}
+    const [previewVersion, setPreviewVersion] = React.useState(() => Date.now())
+
+    const onPhotoUploaded = (url) => {
+        handleChange('url', url)
+        setPreviewVersion(Date.now())
+    }
 
     const onSubmit = (event) => {
         event.preventDefault()
@@ -88,6 +169,8 @@ const DealerEdit = ({record: initialRecord, resource}) => {
                     <Box flex="1" mr="default">
                         <Field propertyPath="profile" {...fields}/>
                     </Box>
+                </Box>
+                <Box flex>
                     <Box flex="1" ml="default">
                         <Field propertyPath="tel" {...fields}/>
                     </Box>
@@ -101,12 +184,21 @@ const DealerEdit = ({record: initialRecord, resource}) => {
                     </Box>
                 </Box>
                 <Field propertyPath="coords" {...fields}/>
-                <Field propertyPath="url" {...fields}/>
             </Card>
 
             <Card>
                 <H3 mb="default">Ссылка</H3>
                 <LinkField params={params}/>
+            </Card>
+
+            <Card>
+                <H3 mb="default">Фото</H3>
+                <PhotoField
+                    record={record}
+                    resourceId={resource.id}
+                    previewVersion={previewVersion}
+                    onUploaded={onPhotoUploaded}
+                />
             </Card>
 
             <Box flex justifyContent="flex-end" alignItems="center">

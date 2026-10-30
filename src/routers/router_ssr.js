@@ -358,6 +358,9 @@ async function dealerPage(req, res) {
         if (!dealer) return res.status(404).render('404', {confirm: ''})
 
         const addressText = stripTags(dealer.address)
+        const splitList = (value) => String(value || '').split(',').map((part) => part.trim()).filter(Boolean)
+        const tels = splitList(dealer.tel).map((value) => ({value, href: telHref(value)}))
+        const profiles = splitList(dealer.profile)
         const title = `${dealer.city}, ${addressText} — дилерский центр Автосеть.РФ`
         const description = `Дилерский центр Автосеть.РФ: ${dealer.city}, ${addressText}.`
             + (dealer.tel ? ` Телефон: ${dealer.tel}.` : '')
@@ -369,9 +372,10 @@ async function dealerPage(req, res) {
             addressHtml: formatMultiline(dealer.address),
             addressText,
             brands: String(dealer.brands || '').split(',').map((brand) => brand.trim()).filter(Boolean),
+            profiles,
+            tels,
             photoUrl: dealer.url ? encodeURI(dealer.url) : '',
             mapSrc: buildDealerMapSrc(dealer),
-            telHref: telHref(dealer.tel),
             title,
             description,
         })

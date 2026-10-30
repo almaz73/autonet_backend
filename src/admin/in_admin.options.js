@@ -7,6 +7,7 @@ import {sequelize, Admins, history_period, clientEmails, promo, dealers} from '.
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
 import {applyPromoPhotoText} from './promo-text-action.js'
+import {uploadDealerPhoto} from './dealer-photo-action.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -225,6 +226,12 @@ export const adminJs = new AdminJS({
                     // режим просмотра не нужен: клик по строке открывает редактирование
                     show: {
                         isAccessible: () => false,
+                    },
+                    // вызывается кнопкой загрузки фото из DealerEdit, в интерфейсе не показывается
+                    uploadPhoto: {
+                        isVisible: false,
+                        method: 'post',
+                        handler: uploadDealerPhoto,
                     },
                 },
                 properties: {

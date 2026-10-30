@@ -16,6 +16,7 @@ export const FolderForSitemap = FRONT_DIR
 export const FolderLINKS = path.join(FRONT_DIR, 'LINKS') // тут ссылки для новых фоток, ссылки существующих фоток и ссылки фоток для удаления
 export const FolderPhotoForPromoActions = '../front/pub_promo'
 export const FolderPhotoForArticle = '../front/pub_article'
+export const FolderDealerPhotos = path.join(FRONT_DIR, 'st/photo/contacts')
 
 export const receivedDataTypes = {
     '1': 'Обратный звонок',
