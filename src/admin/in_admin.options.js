@@ -11,6 +11,8 @@ import {applyPromoPhotoText} from './promo-text-action.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const componentLoader = new ComponentLoader()
+componentLoader.override('SidebarBranding', path.join(__dirname, 'site-logo.jsx'))
+
 const Components = {
     // абсолютный путь: относительный ломается в ESM на Windows
     PromoPhoto: componentLoader.add('PromoPhoto', path.join(__dirname, 'promo-photo.jsx')),
