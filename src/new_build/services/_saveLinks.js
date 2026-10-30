@@ -26,6 +26,10 @@ export async function _saveLinks(fileName, data) {
     }
 }
 
+export async function _saveNewAutoIds(ids) {
+    return _saveLinks('_newAutoIDS.js', {generatedAt: new Date().toISOString(), ids})
+}
+
 export async function _saveNewLinks(newLinks) {
     return new Promise((resolve, reject) => {
         const filePath = path.join(FolderForSitemap, 'newLinks.txt');

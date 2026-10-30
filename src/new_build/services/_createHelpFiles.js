@@ -1,10 +1,18 @@
-import {FolderForSitemap, FolderLINKS, FolderPhoto, isToday, transliterate} from "../../constants.js";
+import {
+    FolderForSitemap,
+    FolderLINKS,
+    FolderPhoto,
+    isToday,
+    transliterate,
+    getNewAutoIds,
+    isFreshNewAutoIds,
+} from "../../constants.js";
 import fs from "fs";
 import xml2js from "xml2js";
 import path from "path";
 import {fileURLToPath} from 'url';
 import {access} from 'fs/promises';
-import {_saveLinks, _saveNewLinks} from "./_saveLinks.js"
+import {_saveLinks, _saveNewAutoIds, _saveNewLinks} from "./_saveLinks.js"
 
 // Настройки для парсера и билдера
 const parser = new xml2js.Parser({explicitArray: false});
@@ -33,7 +41,7 @@ export async function _createHelpFiles(db) {
     await _saveLinks('_newPhotos.js', newPhotos)
     await _saveLinks('_oldAuto.js', oldAuto)
     await _saveLinks('_newAuto.js', newAuto)
-    await _saveLinks('_newAutoIDS.js', newAutoIDS)
+    await _saveNewAutoIds(newAutoIDS)
     await _saveNewLinks(newLinks)
 
     return `Новых авто: ${newAuto.length}, Удаляемых авто:${oldAuto.length}, Новых фото: ${newPhotos.length}`
@@ -44,8 +52,9 @@ function getNewAutoIdsFromFile() {
         const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
         const fileContent = fs.readFileSync(filePath, 'utf8');
         const timeUpdateFile = fs.statSync(filePath);
-        // Если файл сегодняшний, забираем
-        if (fileContent && isToday(new Date(timeUpdateFile.mtime))) newAutoIDS = JSON.parse(fileContent)
+        const data = JSON.parse(fileContent);
+        // Если файл свежий, забираем накопленные за сутки id
+        if (isFreshNewAutoIds(data, timeUpdateFile.mtime.getTime())) newAutoIDS = getNewAutoIds(data)
     } catch (e) {
         return []
     }

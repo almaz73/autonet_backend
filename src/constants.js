@@ -1,13 +1,19 @@
 import * as os from "node:os";
-export const Version = 'ver.3.520'
+import path from "node:path";
+import {fileURLToPath} from "node:url";
+export const Version = 'ver.3.521'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования
 
+// абсолютные пути: не зависят от cwd процесса (nodemon, Passenger, воркер стартуют из разных папок)
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const FRONT_DIR = path.resolve(__dirname, '../../front')
+
 export const FolderPhoto = '../front/pub_auto'
 export const FolderXML = '../front/XML'
-export const FolderForSitemap = '../front'
-export const FolderLINKS = '../front/LINKS' // тут ссылки для новых фоток, ссылки существующих фоток и ссылки фоток для удаления
+export const FolderForSitemap = FRONT_DIR
+export const FolderLINKS = path.join(FRONT_DIR, 'LINKS') // тут ссылки для новых фоток, ссылки существующих фоток и ссылки фоток для удаления
 export const FolderPhotoForPromoActions = '../front/pub_promo'
 export const FolderPhotoForArticle = '../front/pub_article'
 
@@ -95,15 +101,19 @@ export function addReportAboutUpdate(val) {
     reportAboutUpdate += val
 }
 
-export const isLastUpdate = (date) => { // для определения даты изменения файла, забираем до 6:45 следующего дня
-    const now = new Date();
-    const endDate = new Date();
-    // 1. Сдвигаем дату на +1 день вперед
-    endDate.setDate(endDate.getDate() + 1);
-    // 2. Устанавливаем ровно 06:45
-    endDate.setHours(6, 45, 0, 0);
-    return date.toDateString() === now.toDateString() || (date >= now && date < endDate);
-};
+// _newAutoIDS.js: новый формат {generatedAt, ids}, старый — просто массив id
+export const NEW_AUTO_IDS_TTL_MS = 24 * 60 * 60 * 1000
+
+export const getNewAutoIds = (data) => {
+    if (Array.isArray(data)) return data
+    return Array.isArray(data?.ids) ? data.ids : []
+}
+
+// свежесть по timestamp внутри файла (не зависит от TZ), для старого формата — по mtime
+export const isFreshNewAutoIds = (data, mtimeMs) => {
+    const updatedAt = Array.isArray(data) ? mtimeMs : Date.parse(data?.generatedAt)
+    return Number.isFinite(updatedAt) && Date.now() - updatedAt <= NEW_AUTO_IDS_TTL_MS
+}
 export const isToday = (date) => { // для определения даты изменения файла, забираем до 6:45 следующего дня
     const today = new Date();
     return date.toDateString() === today.toDateString();

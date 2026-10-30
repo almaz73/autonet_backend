@@ -1,4 +1,11 @@
-import {RussianBrandsLat, RussianBrandsRus, FolderLINKS, isLastUpdate} from "../constants.js";
+import {
+    RussianBrandsLat,
+    RussianBrandsRus,
+    FolderLINKS,
+    NEW_AUTO_IDS_TTL_MS,
+    getNewAutoIds,
+    isFreshNewAutoIds,
+} from "../constants.js";
 import fs from 'fs';
 import path from "path";
 
@@ -63,16 +70,33 @@ class CityListService {
     async getLatestCarArrivials(startPage) {
         let pageSize = 5
         let ids = []
+        const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
         try {
-            const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
             const fileContent = fs.readFileSync(filePath, 'utf8');
-            const timeUpdateFile = fs.statSync(filePath);
-            if (isLastUpdate(new Date(timeUpdateFile.mtime))) ids = JSON.parse(fileContent) // Если файл сегодняшний, берем его данные
+            const mtime = fs.statSync(filePath).mtime;
+            const data = JSON.parse(fileContent);
+            if (isFreshNewAutoIds(data, mtime.getTime())) ids = getNewAutoIds(data)
+            else console.log('[getLatestCarArrivials] файл устарел', {
+                file: filePath,
+                mtime: mtime.toString(),
+                generatedAt: data?.generatedAt,
+                now: new Date().toString(),
+                tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                ttlHours: NEW_AUTO_IDS_TTL_MS / 3600000,
+            })
         } catch (e) {
-            console.log('ошибка получения списка сегодняшних авто = ', e)
+            console.log('[getLatestCarArrivials] не удалось прочитать файл', {
+                file: filePath,
+                cwd: process.cwd(),
+                error: e.message,
+            })
         }
         if (!ids || ids.length === 0) {
-            console.log('Сегодня не добавлен не один автомобиль')
+            console.log('[getLatestCarArrivials] нет актуальных id новых авто', {
+                file: filePath,
+                cwd: process.cwd(),
+                now: new Date().toString(),
+            })
             return null
         }
 
