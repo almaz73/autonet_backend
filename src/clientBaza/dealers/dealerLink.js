@@ -1,4 +1,4 @@
-import {transliterate} from '../../constants.js'
+import {transliterate} from '../../shared/transliterate.js'
 
 // /contacts/kazan-prPobedy212k2 — город латиницей + адрес в camelCase
 export function buildDealerLink(city, address) {

@@ -20,6 +20,7 @@ const Components = {
     PromoEdit: componentLoader.add('PromoEdit', path.join(__dirname, 'promo-edit.jsx')),
     ClientLink: componentLoader.add('ClientLink', path.join(__dirname, 'client-link.jsx')),
     DealerLink: componentLoader.add('DealerLink', path.join(__dirname, 'dealer-link.jsx')),
+    DealerEdit: componentLoader.add('DealerEdit', path.join(__dirname, 'dealer-edit.jsx')),
     ClientAddress: componentLoader.add('ClientAddress', path.join(__dirname, 'client-address.jsx')),
     PromoBool: componentLoader.add('PromoBool', path.join(__dirname, 'promo-bool.jsx')),
 }
@@ -216,14 +217,23 @@ export const adminJs = new AdminJS({
             options: {
                 tableName: 'dealers',
                 navigation: null,
-                listProperties: ['id', 'city', 'address', 'tel', 'profile',  'link'],
+                listProperties: ['city', 'address', 'tel', 'profile', 'link'],
+                actions: {
+                    edit: {
+                        component: Components.DealerEdit,
+                    },
+                    // режим просмотра не нужен: клик по строке открывает редактирование
+                    show: {
+                        isAccessible: () => false,
+                    },
+                },
                 properties: {
-                    // days: {
-                    //     isVisible: {list: false, filter: false, show: true, edit: true},
-                    // },
-                    // coords: {
-                    //     isVisible: {list: false, filter: false, show: true, edit: true},
-                    // },
+                    id: {
+                        isVisible: {list: false, filter: false, show: false, edit: false},
+                    },
+                    address: {
+                        type: 'textarea',
+                    },
                     link: {
                         isDisabled: true,
                         components: {list: Components.DealerLink},

@@ -86,9 +86,9 @@ const dealers = sequelize.define('dealers', {
     timestamps: false,
 });
 
-// ссылка read-only: генерируем из города и адреса, если её ещё нет
+// ссылка read-only: всегда выводится из города и адреса
 dealers.beforeValidate((dealer) => {
-    if (!dealer.link) dealer.link = buildDealerLink(dealer.city, dealer.address)
+    dealer.link = buildDealerLink(dealer.city, dealer.address)
 });
 
 // Define User model if not already defined
