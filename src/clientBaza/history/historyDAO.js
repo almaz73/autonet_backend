@@ -96,14 +96,18 @@ function getHistoryPeriodDays(callback, page = 1, pageSize = 10) {
     const offset = (page - 1) * pageSize;
 
     // language=SQLite
-    let sql = `SELECT endDate, COUNT(*) AS count, GROUP_CONCAT(car) AS carsPerDay
-    FROM history_period GROUP BY endDate`;
+    let sql = `SELECT date(endDate) AS endDate, COUNT(*) AS count, GROUP_CONCAT(car) AS carsPerDay
+               FROM history_period
+               GROUP BY date(endDate)`;
 
     // Add ordering and pagination
     sql += ` ORDER BY endDate DESC LIMIT ? OFFSET ?`;
 
     // language=SQLite
-    let countSql = `SELECT COUNT(*) AS total FROM history_period`;
+    let countSql = `SELECT COUNT(*) AS total
+                    FROM (SELECT date(endDate) AS day
+                          FROM history_period
+                          GROUP BY day)`;
     const params = [];
     const countParams = [];
 
@@ -117,6 +121,7 @@ function getHistoryPeriodDays(callback, page = 1, pageSize = 10) {
             console.error('Error getting item count', err.message);
             return callback(err, null);
         }
+        results.total = row.total;
 
         db.all(sql, params, (err, rows) => {
             if (err) {
@@ -124,35 +129,15 @@ function getHistoryPeriodDays(callback, page = 1, pageSize = 10) {
                 return callback(err, null);
             }
 
-            rows = addRepeatDate(rows) // объединяем по датам
-
             results.items = rows.map(row => ({
                 date: row.endDate,
                 count: row.count,
                 carsPerDay: row.carsPerDay
             }));
-            let pagesCount = results.items.map(el => el.count)
-            results.total = pagesCount.length;
 
             callback(null, results);
         });
     });
-}
-
-function addRepeatDate(rows) {
-    // сливаем в одну, если за один день было несколько удалений
-    let newRows = []
-    for (let row of rows) {
-        let time = new Date(row.endDate).getDate()
-        let repeated = newRows.find(el => new Date(el.endDate).getDate() === time)
-        if (repeated) {
-            repeated.carsPerDay += ',' + row.carsPerDay
-            repeated.count = repeated.carsPerDay.split(',').length
-        } else {
-            newRows.push(row)
-        }
-    }
-    return newRows
 }
 
 export {
