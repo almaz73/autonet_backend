@@ -33,10 +33,10 @@ export const applyPromoPhotoText = async (request, response, context) => {
 
         const params = {
             text: String(request.payload?.text ?? '').slice(0, 500),
-            color: /^#[0-9a-fA-F]{6}$/.test(request.payload?.color ?? '') ? request.payload.color : '#007aff',
-            fontSizePct: clamp(parseFloat(request.payload?.fontSizePct) || 7, 1, 25),
+            color: /^#[0-9a-fA-F]{6}$/.test(request.payload?.color ?? '') ? request.payload.color : '#ffffff',
+            fontSizePct: clamp(parseFloat(request.payload?.fontSizePct) || 3, 1, 25),
             xPct: clamp(parseFloat(request.payload?.xPct) || 50, 0, 100),
-            yPct: clamp(parseFloat(request.payload?.yPct) || 85, 0, 100),
+            yPct: clamp(parseFloat(request.payload?.yPct) || 95, 0, 100),
         }
 
         const photos = await promoService.applyPromoPhotoTextById(recordId, photoSlot, params)
