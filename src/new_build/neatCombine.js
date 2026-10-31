@@ -42,7 +42,6 @@ export async function startUpdate(step = 0) {
     // 7. Публикация БД
     // 8. Сохранение истории`)
     const startTime = performance.now();
-    let rowsGlobal = []
     let abortedStep = 0
 
     // критичный шаг: при ошибке следующие не выполняем, чтобы не опубликовать неполные данные
@@ -68,7 +67,7 @@ export async function startUpdate(step = 0) {
     await runStep(5, true, () => _createHelpFiles(db))
     await runStep(6, false, _addNewPhotos)
     await runStep(7, true, () => _publicBD(db))
-    // await runStep(8, false, () => _updHistory(rowsGlobal))
+    await runStep(8, false, () => _updHistory())
 
     if (abortedStep) addReportAboutUpdate(`\n:: Обновление остановлено на шаге ${abortedStep} ::`)
 
