@@ -218,17 +218,32 @@ async function carsList(req, res) {
     let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
     if (placeRusBrand !== -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
 
-    const carList = await GetListService.getList({offset: ssr_page * 20, limit: 20, brand: ssr_brandSearch})
+    // те же параметры, что клиент отправляет в /api/getList
+    const filters = {}
+    for (const key of CARS_FILTER_KEYS) {
+        if (req.query[key] !== undefined && req.query[key] !== '') filters[key] = req.query[key]
+    }
+    const brandFilter = filters.brand || ssr_brandSearch
+
+    const carList = await GetListService.getList({
+        ...filters,
+        brand: brandFilter,
+        offset: ssr_page * 20,
+        limit: 20
+    })
     carCount.forEach(el => {
         if (RussianBrandsRus.includes(el.name)) el.latBrand = transliterate(el.name).replaceAll(" ", "");
         else el.latBrand = el.name
     })
 
-    carList.items.forEach(el => {
-        if (RussianBrandsRus.includes(el.brand)) el.latBrand = transliterate(el.brand).replaceAll(" ", "");
-        else el.latBrand = el.brand
-    })
+    const carsView = buildCarsView(carList.items)
+    const filterActive = Boolean(brandFilter)
 
+    let vitrinaName = 'Автомобили'
+    if (filterActive) {
+        vitrinaName = 'Автомобили ' + (brandFilter || '') + ' ' + (filters.model || '')
+            + (filters.city ? `(город ${filters.city})` : '')
+    }
 
     let page = ''
     let ssr_page_total = Math.ceil(carList.totalCount / 20)
@@ -241,18 +256,75 @@ async function carsList(req, res) {
     let title = 'Авто с пробегом (БУ). Купить авто в автосалонах Казани и всей России - Автосеть.РФ'
     if (brand) title = `Автомобили ${ssr_brandSearch} с пробегом.`
 
+    const carsSSRJson = JSON.stringify({
+        items: carList.items,
+        totalCount: carList.totalCount
+    }).replaceAll('<', '\\u003c')
+
+    // сохранённый пользователем вид витрины, чтобы SSR сразу рисовал нужную сетку
+    const viewMatch = /(?:^|;\s*)TYPE_VIEW=(dot8|dot4|dot1)/.exec(req.headers.cookie || '')
+    const viewClass = viewMatch ? viewMatch[1] : 'dot8'
+
     res.render('cars', {
         js1, js2, js3, js4, js5, js6, js7,
         carsjs,
         css1, css2, css3,
         carCount,
         carList,
+        carsView,
+        carsSSRJson,
+        vitrinaName,
+        filterActive,
+        viewClass,
         page,
         brand,
         ssr_page, ssr_page_total, ssr_brandSearch,
         title
     })
     return res
+}
+
+const CARS_FILTER_KEYS = [
+    'brand', 'modelId', 'city', 'color', 'gearboxType', 'engineType', 'bodyType', 'wheelType',
+    'driveType', 'engineCapacity', 'yearReleasedFrom', 'yearReleasedTo',
+    'priceFrom', 'priceTo', 'milleageFrom', 'milleageTo', 'priceOrder'
+]
+
+const formatPrice = (val) => parseInt(val).toLocaleString('ru-RU')
+
+const getBrandLat = (brandName) => {
+    const place = RussianBrandsRus.indexOf(brandName)
+    return place !== -1 ? RussianBrandsLat[place] : brandName
+}
+
+// повторяет prepareCars + createNode из src/js/filter, чтобы SSR и клиент давали одинаковую вёрстку
+function buildCarsView(items) {
+    return items.map(el => {
+        let images = (el.images || []).map(src => src || '/st/photo/nophoto.webp')
+        if (!images.length) images = ['/st/photo/nophoto.webp']
+
+        const info = formatPrice(el.milleage) + ' км, '
+            + (el.engineCapacity ? escapeHtml(el.engineCapacity) : '')
+            + (el.gearboxType ? ' ' + escapeHtml(el.gearboxType) : '')
+            + (el.enginePower ? ' (' + escapeHtml(el.enginePower) + '&nbsp;л.с)' : '')
+            + (el.bodyType ? ', ' + escapeHtml(el.bodyType) : '')
+            + ', ' + escapeHtml(el.driveType || '')
+            + (el.engineType ? ', ' + escapeHtml(el.engineType) : '')
+
+        const frendly = transliterate(`${el.yearReleased}-${el.city}-${el.price}-${el.milleage}km`.replaceAll(' ', ''))
+
+        return {
+            id: el.id,
+            href: `/cars/${getBrandLat(el.brand)}/${transliterate(el.model).replaceAll(' ', '')}/${frendly}`,
+            name: `${el.brand} ${el.model}`,
+            yearReleased: el.yearReleased,
+            price: formatPrice(el.price),
+            fromPerMonth: formatPrice(parseInt(el.price / 90.12)),
+            info,
+            address: `${el.city || ''} ${el.fullAddress || ''}`,
+            images
+        }
+    })
 }
 
 async function carAlone(req, res) {

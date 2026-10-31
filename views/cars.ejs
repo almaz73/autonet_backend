@@ -25,9 +25,6 @@
           content='Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Уфе, Набережных челнах, Нижнекамске, Самаре и других городах России.
           ✅ Купить автомобили с пробегом из каталога - иномарки, Lada в наличии. ☎ Звоните по телефону 8-800-500-11-56.'>
 
-    <link rel='stylesheet' href='../src/css/style.css'/>
-    <link rel='stylesheet' href='../src/css/filter-controls.css'/>
-
     <link rel="stylesheet" crossorigin href="/assets/<%- css1 %>">
     <link rel="stylesheet" crossorigin href="/<%- css2 %>">
     <link rel="stylesheet" crossorigin href="/<%- css3 %>">
@@ -37,13 +34,16 @@
     <script type="module" crossorigin src="/<%- carsjs %>"></script>
 
 
-    <link rel='stylesheet' href='../src/css/swiper-bundle.min.css'/>
-    <link rel='stylesheet' href='../src/css/swiper.css'/>
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <link rel="preload" href="/st/fonts/Gilroy-Light.otf" as="font" type="font/otf" crossorigin>
+    <link rel="preload" href="/st/fonts/Gilroy-ExtraBold.otf" as="font" type="font/otf" crossorigin>
     <script>
         var ssr_page = '<%- ssr_page %>';
         var ssr_brandSearch = '<%- ssr_brandSearch %>'
         var ssr_page_total = '<%- ssr_page_total %>'
+    </script>
+    <script>
+        window.__carsSSR = <%- carsSSRJson %>;
     </script>
 </head>
 <body>
@@ -65,10 +65,10 @@
     </div>
 
     <div id='filter_cars'>
-        <div class="filter-white" style="min-height: 106px"></div>
+        <%- include('partials/filter_cars', {filterActive: filterActive}) %>
     </div>
 
-    <div id='brands_dynamic' class='container main__top--block'>
+    <div id='brands_dynamic' class='container main__top--block'<% if (filterActive) { %> style="display: none"<% } %>>
         <div class='list_brands'>
             <% carCount.forEach(function(el) { %>
                 <% if (el.count) { %>
@@ -85,35 +85,40 @@
     </div>
 
     <div id='car-vitrina' class='container'>
-        <div class="car_vitrina"><h1 id="vitrina_name">Автомобили</h1></div>
-        <cards class="cards dot8">
-            <% carList.items.forEach(function(el) { %>
-                <%= el.items %>
-                <div class='cart' id='galery_${N}'>
-                    <div class='cart__slide'>
-                        <% if(el.images && el.images.length){ %><img class='photo' alt='' src="<%- el.images[0] %>"></div><%}%>
-                    <a class="big_link" href="../<% if (!brand){ %>cars/<% } %><%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>">
-                        <div class='name'>
-                            <%= el.brand %> <%= el.model %> <%= el.yearReleased %>
-                        </div>
-                        <div class='cart__price'>
-                            <div class='total'><%= el.price %> ₽</div>
-                        </div>
-                        <div class='cart__info'>
-                            <%= el.milleage %>км, <%- el.engineCapacity %> <%- el.gearboxType %> (<%- el.enginePower %> л.с.)
-                            <%= el.bodyType %> <%= el.driveType %> <%= el.engineType %>
-                        </div>
-                    </a>
-                </div>
+        <div class="car_vitrina">
+            <h1 id="vitrina_name"><%= vitrinaName %></h1>
 
-            <% }); %>
-        </cards>
+            <span class="view_buttons">
+                <span class='type_views'>
+                    <div class='dot8<% if (viewClass === 'dot8') { %> active<% } %>'>
+                        <img src='/st/svg/dot8.svg' alt="">
+                    </div>
+                    <div class='dot4<% if (viewClass === 'dot4') { %> active<% } %>'>
+                        <img src='/st/svg/dot4.svg' alt="">
+                    </div>
+                    <div class='dot1<% if (viewClass === 'dot1') { %> active<% } %>'>
+                        <img src='/st/svg/dot1.svg' alt="">
+                    </div>
+                </span>
 
-        <div class="pager">Страницы:
-            <span id="pager">
-                <%- page  %>
+                <span class='coin' title="Отсортируйте по цене">
+                    <span>цена <img src="/st/svg/arrow-down.svg" alt="" loading="lazy"
+                     width='10' style="transform: rotate(-90deg)"></span>
+                </span>
             </span>
         </div>
+        <cards class="cards <%= viewClass %>">
+            <% carsView.forEach(function(car, i) { %>
+                <%- include('partials/car_card', {car: car, idx: i + 1}) %>
+                <% if (i === 0) { %>
+                    <div style="min-width: 200px; max-width: 730px"><swiper_buy></swiper_buy></div>
+                <% } %>
+                <% if (i === 2) { %>
+                    <abdul><%- include('partials/abdul_block') %></abdul>
+                <% } %>
+            <% }); %>
+            <div class="pager">Страницы: <span id="pager"><%- page %></span></div>
+        </cards>
         <br><br>
     </div>
 
