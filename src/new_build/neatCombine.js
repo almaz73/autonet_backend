@@ -4,6 +4,8 @@
 
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
+import path from "path";
+import {fileURLToPath} from "url";
 import {getTime, Version, reportAboutUpdate, addReportAboutUpdate, isLocal} from "../constants.js";
 import {_copyXml} from "../new_build/services/_copyXml.js"
 import {_clearTables} from "../new_build/services/_clearTables.js";
@@ -17,16 +19,19 @@ import {_updHistory} from "../new_build/services/_updHistory.js";
 import {sendEmail} from "../post/sendEmail.js";
 
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const DB_PATH = path.resolve(__dirname, '../../database.sqlite')
+
 const db = await open({
-    filename: './database.sqlite',
+    filename: DB_PATH,
     driver: sqlite3.Database
 });
 addReportAboutUpdate(`\n\n:: ${getTime()} :: Отчет ${Version} ::`)
 
-const step = process.argv[2];  // если запускают файл с параметром step (только один узел) // для отладки
-await startUpdate(+step)
+const step = Number(process.argv[2]) || 0;  // если запускают файл с параметром step (только один узел) // для отладки
+await startUpdate(step)
 
-export async function startUpdate(step) {
+export async function startUpdate(step = 0) {
     // console.log(`   Идет обновление ...
     // 1. Загрузка XML
     // 2. Очистка таблиц
@@ -38,86 +43,34 @@ export async function startUpdate(step) {
     // 8. Сохранение истории`)
     const startTime = performance.now();
     let rowsGlobal = []
+    let abortedStep = 0
 
-    if (!step || step === 1) {
-        try {
-            // Копируем XML в свою папку
-            let text = await _copyXml()
-            addReportAboutUpdate(`\n     1. ${text}`); //1
-        } catch (e) {
-            addReportAboutUpdate('\n ошибка копирования XML')
-        }
-    }
-    if (!step || step === 2) {
-        try {
-            // Чистим БД перед парсингом
-            let text = await _clearTables(db)
-            addReportAboutUpdate(`\n     2. ${text}`); //2
-        } catch (e) {
-            addReportAboutUpdate('\n ошибка очистки баз ', e)
-        }
-    }
-    if (!step || step === 3) {
-        try {
-            // Парсинг XML и БД
-            let text = await _parseXMLToBD(db)
-            addReportAboutUpdate(`\n     3. ${text}`); //1
-        } catch (e) {
-            addReportAboutUpdate('\n ошибка парсинга XML = ', e)
-        }
-    }
-    if (!step || step === 4) {
-        try {
-            // Удаляем плохие ссылки на фото из обновленного БД, которые не открываются
-            let text = await _clearBadPhotos(db)
-            addReportAboutUpdate(`\n     4. ${text}`); //1
-        } catch (e) {
-            addReportAboutUpdate('\n ошибка удаления плохих ссылок на фото, авто без фоток =', e)
-        }
-    }
-    if (!step || step === 5) {
-        try {
-            //Используя предыдущий список sitemap и новый список бд создаем вспомогательные файлы:
-            //_newPhotos.js'
-            //_oldAuto.js'
-            //_newAuto.js'
-            //_newAutoIDS.js'
+    // критичный шаг: при ошибке следующие не выполняем, чтобы не опубликовать неполные данные
+    const runStep = async (number, critical, action) => {
+        if (abortedStep) return
+        if (step && step !== number) return
 
-            let text = await _createHelpFiles(db)
-            addReportAboutUpdate(`\n     5.  ${text}`)
-        } catch (e) {
-            addReportAboutUpdate('\n Не получилось создать вспомогательные файлы', e)
-        }
-    }
-    if (!step || step === 6) {
         try {
-            // добавление новых фото
-            // читает _newPhotos.js и забрасывает в папку фотки
-            let text = await _addNewPhotos()
-            addReportAboutUpdate(`\n     6.  Добавление новых фоток: ${text} ${isLocal?"(не более 5 из-за режима dev)":""}`); //1
+            const text = await action()
+            addReportAboutUpdate(`\n     ${number}. ${text}`)
         } catch (e) {
-            addReportAboutUpdate('\n Не получилось фотки', e)
+            const message = e?.message || String(e)
+            console.error(`Ошибка шага ${number}:`, e)
+            addReportAboutUpdate(`\n     ${number}. Ошибка: ${message}`)
+            if (critical) abortedStep = number
         }
     }
-    if (!step || step === 7) {
-        try {
-            // публикация
-            let text = await _publicBD(db)
-            addReportAboutUpdate(`\n     7.  Публикация новой БД ${text}`);
-        } catch (e) {
-            addReportAboutUpdate('\n Не получилось опубликовать', e)
-        }
-    }
-    // if (!step || step === 8) {
-    //     try {
-    //         // запись истории удаленных, добавленных
-    //         let text = await _updHistory(rowsGlobal)
-    //         addReportAboutUpdate(`\n     8.  ${text}`);
-    //     } catch (e) {
-    //         addReportAboutUpdate('\n Неудача сохранении истории', e)
-    //     }
-    // }
 
+    await runStep(1, false, _copyXml) // если XML не скачался, парсер возьмёт копию прошлого запуска
+    await runStep(2, true, () => _clearTables(db))
+    await runStep(3, true, () => _parseXMLToBD(db))
+    await runStep(4, false, () => _clearBadPhotos(db))
+    await runStep(5, true, () => _createHelpFiles(db))
+    await runStep(6, false, _addNewPhotos)
+    await runStep(7, true, () => _publicBD(db))
+    // await runStep(8, false, () => _updHistory(rowsGlobal))
+
+    if (abortedStep) addReportAboutUpdate(`\n:: Обновление остановлено на шаге ${abortedStep} ::`)
 
     const endTime = performance.now();
     const duration = parseInt((endTime - startTime) / 1000);

@@ -1,24 +1,21 @@
 export async function _clearBadPhotos(db) {
-    try {
-        // language=SQLite
-        const results = await db.all(`
-            SELECT id, images, prop_city, name
-            FROM cars_table
-            WHERE images LIKE '%kopiya%' OR images LIKE '%pdf%'
-                AND images != ''
-        `);
+    // language=SQLite
+    const results = await db.all(`
+        SELECT id, images, prop_city, name
+        FROM cars_table
+        WHERE images IS NOT NULL
+          AND images != ''
+          AND (images LIKE '%kopiya%' OR images LIKE '%pdf%')
+    `);
 
-        const badFields = results.map(record => {
-            return {id:record.id, city: record.prop_city, name:  record.name}
-        });
+    const badFields = results.map(record => {
+        return {id: record.id, city: record.prop_city, name: record.name}
+    });
 
-        const deleted =  await deleteBadLinkToPhoto (db, badFields)
-        if(deleted && badFields.length) return ` Удалены плохие фото-ссылки на ${badFields.length} авто (kopiya, pdf)`
-        else return ' Плохих фото-ссылок нет'
-    } catch (error) {
-        throw error;
-    }
-
+    const deleted = await deleteBadLinkToPhoto(db, badFields)
+    if (deleted) return ` Удалены плохие фото-ссылки у ${deleted} авто (kopiya, pdf)`
+    if (badFields.length) return ` Плохие фото-ссылки есть у ${badFields.length} авто, но не изменены`
+    return ' Плохих фото-ссылок нет'
 }
 
 
@@ -28,7 +25,7 @@ async function deleteBadLinkToPhoto(db, badFields) {
     }
 
     // Create placeholders for the SQL query
-    const idsPlaceholder = badFields.map((_, i) => `$${i + 1}`).join(', ');
+    const idsPlaceholder = badFields.map(() => '?').join(', ');
     const idsToDelete = badFields.map(field => field.id);
 
     // language=SQLite
@@ -45,7 +42,7 @@ async function deleteBadLinkToPhoto(db, badFields) {
         // Prepare update statements for each record
         const updatePromises = records.map(record => {
             // Split images by comma
-            const images = record.images.split(',');
+            const images = record.images.split(',').map(image => image.trim());
             
             // Filter out bad links
             const filteredImages = images.filter(image => {
@@ -61,7 +58,7 @@ async function deleteBadLinkToPhoto(db, badFields) {
                     WHERE id = $id
                 `, {
                     $id: record.id,
-                    $images: filteredImages.join(',')
+                    $images: filteredImages.join(', ')
                 });
             }
             
@@ -72,8 +69,7 @@ async function deleteBadLinkToPhoto(db, badFields) {
         const results = await Promise.all(updatePromises);
         
         // Calculate total changes
-        const totalChanges = results.reduce((sum, result) => sum + result.changes, 0);
-        return totalChanges;
+        return results.reduce((sum, result) => sum + (result?.changes || 0), 0);
     } catch (error) {
         console.error('Error updating bad links:', error);
         throw error;

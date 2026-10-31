@@ -1,43 +1,46 @@
 import fs from "fs";
 import {FolderXML, isLocal, xmlUrls, xmlUrls_forDev} from "../../constants.js";
 import path from "path";
+import {fileURLToPath} from "url";
 import axios from "axios";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const XML_DIR = path.join(__dirname, '../../..', FolderXML)
 
 
 export async function _copyXml() {
-    try {
-        // создаем папку, если нет
-        if (!fs.existsSync(FolderXML)) fs.mkdirSync(FolderXML, {recursive: true});
+    // создаем папку, если нет
+    if (!fs.existsSync(XML_DIR)) fs.mkdirSync(XML_DIR, {recursive: true});
 
-        const savedFiles = [];
+    const savedFiles = [];
+    const failed = [];
 
-        let URLS = xmlUrls
+    let URLS = xmlUrls
+    if (isLocal) URLS = xmlUrls_forDev
 
-        if (isLocal) URLS = xmlUrls_forDev
-        for (const xmlUrl of URLS) {
-            try {
-                const urlParts = xmlUrl.split('/');
-                const fileName = urlParts[urlParts.length - 1];
-                const filePath = path.join(FolderXML, fileName);
+    for (const xmlUrl of URLS) {
+        const urlParts = xmlUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const filePath = path.join(XML_DIR, fileName);
 
-                const response = await axios.get(xmlUrl, {
-                    timeout: 30000,
-                    headers: {'User-Agent': 'Mozilla/5.0 (compatible; AutoNetBot/1.0)'},
-                    responseType: 'text' // Ensure we get the raw text content
-                });
+        try {
+            const response = await axios.get(xmlUrl, {
+                timeout: 30000,
+                headers: {'User-Agent': 'Mozilla/5.0 (compatible; AutoNetBot/1.0)'},
+                responseType: 'text' // Ensure we get the raw text content
+            });
 
-                // Write the XML content to the file
-                await fs.writeFile(filePath, response.data, 'utf8', (err) => {
-                    if (err) console.error(`Error writing file ${filePath}:`, err);
-                });
-
-                savedFiles.push({url: xmlUrl,filePath: filePath,fileName: fileName});
-            } catch (error) {
-                console.error(`Error saving XML file from ${xmlUrl}:`, error.message);
-            }
+            await fs.promises.writeFile(filePath, response.data, 'utf8');
+            savedFiles.push(fileName);
+        } catch (error) {
+            failed.push(`${fileName}: ${error.message}`);
+            console.error(`Error saving XML file from ${xmlUrl}:`, error.message);
         }
-        return ` Скопированы ${savedFiles.length} XML`;
-    } catch (error) {
-        return 'Ошибка копирования XML: ' + error.message;
     }
+
+    // при ошибке на диске остаются файлы прошлого запуска — их использует парсер,
+    // но об этом нужно явно сообщить, чтобы отчёт не выглядел успешным
+    if (failed.length) throw new Error(`не обновлены ${failed.length} XML (${failed.join('; ')})`);
+
+    return ` Скопированы ${savedFiles.length} XML`;
 }

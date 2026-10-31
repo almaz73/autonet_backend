@@ -15,7 +15,7 @@ export async function _saveLinks(fileName, data) {
             fs.writeFile(filePath, JSON.stringify(data), 'utf8', (err) => {
                 if (err) {
                     console.error(`Error writing file ${filePath}:`, err);
-                    reject(err);
+                    return reject(err);
                 }
                 resolve();
             });
@@ -36,13 +36,13 @@ export async function _saveNewLinks(newLinks) {
         fs.mkdir(FolderForSitemap, {recursive: true}, (err) => {
             if (err) {
                 console.error(`Error creating directory ${FolderForSitemap}:`, err);
-                reject(err);
+                return reject(err);
             }
 
             fs.writeFile(filePath, newLinks.join('\n'), (err) => {
                 if (err) {
                     console.error(`Error writing newLinks file ${filePath}:`, err);
-                    reject(err);
+                    return reject(err);
                 }
                 resolve();
             });

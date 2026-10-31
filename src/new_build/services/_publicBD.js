@@ -1,64 +1,48 @@
 import {transliterate} from "../../constants.js";
 
 async function deleteFromTableIfExists(db, tableName) {
-    try {
-        // Check if the table exists
-        const result = await db.get(`SELECT name
-                                         FROM sqlite_master
-                                         WHERE type = 'table'
-                                           AND name = '${tableName}'`);
+    const result = await db.get(`SELECT name
+                                 FROM sqlite_master
+                                 WHERE type = 'table'
+                                   AND name = '${tableName}'`);
 
-        if (result) {
-            // Table exists, proceed with deletion
-            await db.exec(`DELETE
-                               FROM ${tableName};`);
-        } else {
-            // Table doesn't exist, log and continue
-            console.log(`Table ${tableName} does not exist, skipping...`);
-        }
-    } catch (error) {
-        console.warn(`Warning: Could not clear table ${tableName}:`, error.message);
+    if (result) {
+        await db.exec(`DELETE
+                       FROM ${tableName};`);
+    } else {
+        console.log(`Table ${tableName} does not exist, skipping...`);
     }
 }
 
 async function copyTableData(db, sourceTable, targetTable) {
-    try {
-        // Check if source table exists
-        const sourceExists = await db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${sourceTable}'`);
+    // Check if source table exists
+    const sourceExists = await db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${sourceTable}'`);
 
-        if (!sourceExists) {
-            console.log(`⚡ Source table ${sourceTable} does not exist, skipping copy to ${targetTable}`);
-            return;
-        }
-
-        // Get all data from source table
-        const sourceData = await db.all(`SELECT * FROM ${sourceTable}`);
-
-        if (sourceData.length > 0) {
-            // Build the column list dynamically
-            const columns = Object.keys(sourceData[0]).join(', ');
-
-            // Prepare placeholders for the INSERT statement
-            const placeholders = Array(Object.keys(sourceData[0]).length).fill('?').join(', ');
-
-            // Create INSERT statement
-            const insertSql = `INSERT INTO ${targetTable} (${columns}) VALUES (${placeholders})`;
-
-            // Insert all rows
-            for (const row of sourceData) {
-                const values = Object.values(row);
-                await db.run(insertSql, values);
-            }
-
-            // console.log(`⚡ Copied ${sourceData.length} rows from ${sourceTable} to ${targetTable}`);
-            // console.log(`⚡   Скопировано ${sourceData.length} строк в ${targetTable}`)
-        } else {
-            console.log(`No data to copy from ${sourceTable} to ${targetTable}`);
-        }
-    } catch (error) {
-        console.error(`Error copying data from ${sourceTable} to ${targetTable}:`, error.message);
-        // Don't throw the error, just log it to allow the process to continue
+    if (!sourceExists) {
+        throw new Error(`Source table ${sourceTable} does not exist`);
     }
+
+    // Get all data from source table
+    const sourceData = await db.all(`SELECT * FROM ${sourceTable}`);
+
+    if (!sourceData.length) return 0;
+
+    // Build the column list dynamically
+    const columns = Object.keys(sourceData[0]).join(', ');
+
+    // Prepare placeholders for the INSERT statement
+    const placeholders = Array(Object.keys(sourceData[0]).length).fill('?').join(', ');
+
+    // Create INSERT statement
+    const insertSql = `INSERT INTO ${targetTable} (${columns}) VALUES (${placeholders})`;
+
+    // Insert all rows
+    for (const row of sourceData) {
+        const values = Object.values(row);
+        await db.run(insertSql, values);
+    }
+
+    return sourceData.length;
 }
 
 async function makeLinkid(db) {
@@ -78,7 +62,8 @@ async function makeLinkid(db) {
 }
 
 export async function _publicBD(db) {
-
+    // публикация в одной транзакции: при ошибке старая витрина остаётся нетронутой
+    await db.exec('BEGIN')
     try {
         await deleteFromTableIfExists(db, 'a_car');
         await deleteFromTableIfExists(db, 'a_section');
@@ -126,16 +111,23 @@ export async function _publicBD(db) {
         `);
 
         // Copy data from cars_table to a_car
-        await copyTableData(db, 'cars_table', 'a_car');
+        const copiedCars = await copyTableData(db, 'cars_table', 'a_car');
 
         // Copy data from sections_table to a_section
         await copyTableData(db, 'sections_table', 'a_section');
 
+        // публикуем только если скопировалось всё
+        const publicCars = await db.get('SELECT COUNT(*) AS count FROM a_car');
+        if (publicCars.count !== copiedCars) {
+            throw new Error(`Опубликовано ${publicCars.count} из ${copiedCars} авто`);
+        }
+
         await makeLinkid(db)
+        await db.exec('COMMIT')
 
-        return 'успешно'
-
+        return `успешно, авто: ${copiedCars}`
     } catch (error) {
-        return 'Error copying data to info tables:' + error.message;
+        await db.exec('ROLLBACK')
+        throw error
     }
 }

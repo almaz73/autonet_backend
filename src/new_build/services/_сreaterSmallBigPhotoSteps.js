@@ -20,30 +20,33 @@ class CreaterSmallBigPhoto {
             const urlObj = new URL(imageUrl);
             let originalFilename = path.basename(urlObj.pathname);
             const baseName = path.parse(originalFilename).name;
+            if (!baseName) return {error: 'Не удалось определить имя файла ' + imageUrl};
             console.log(' ⚡ добавим фотки для = ', baseName)
 
-            await createSmallPhoto(baseName, uploadDir, imageUrl);
-            await createBigPhoto(baseName, uploadDir, imageUrl)
+            // один запрос на фотографию: оригинал нужен и для small, и для big
+            const response = await axios({
+                method: 'GET',
+                url: imageUrl,
+                responseType: 'arraybuffer',
+                timeout: 60000
+            });
 
+            await createSmallPhoto(baseName, uploadDir, response.data);
+            await createBigPhoto(baseName, uploadDir, response.data)
+            return true
         } catch (error) {
-
-            return {error: 'ЕСЛИ НЕТ ПАПКИ - ЭТО ЛОКАЛЬНЫЙ ТЕСТ:  '+ error.message};
+            console.log('savePhotoToServer: не удалось сохранить', imageUrl, error.message)
+            return {error: error.message};
         }
     }
 }
 
-async function createSmallPhoto(baseName, uploadDir, imageUrl) {
+async function createSmallPhoto(baseName, uploadDir, imageBuffer) {
     const filename = `${baseName + '_small'}.webp`;
     const filePath = path.join(uploadDir, filename);
 
-    const response = await axios({
-        method: 'GET',
-        url: imageUrl,
-        responseType: 'arraybuffer' // Get raw image data
-    });
-
     // Process the image using Sharp and convert to WebP
-    const processedBuffer = await sharp(response.data)
+    const processedBuffer = await sharp(imageBuffer)
         .webp({quality: 73})
         .resize(600, 400, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
@@ -52,17 +55,11 @@ async function createSmallPhoto(baseName, uploadDir, imageUrl) {
     // console.log('  ⚡ small')
 }
 
-async function createBigPhoto(baseName, uploadDir, imageUrl) {
+async function createBigPhoto(baseName, uploadDir, imageBuffer) {
     const filename = `${baseName + '_big'}.webp`;
     const filePath = path.join(uploadDir, filename);
 
-    const response = await axios({
-        method: 'GET',
-        url: imageUrl,
-        responseType: 'arraybuffer'
-    });
-
-    const processedBuffer = await sharp(response.data)
+    const processedBuffer = await sharp(imageBuffer)
         .webp({quality: 90})
         .resize(1200, 800, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();

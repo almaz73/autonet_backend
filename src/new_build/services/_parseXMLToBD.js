@@ -1,7 +1,11 @@
 import {FolderXML, isLocal, xmlNames, xmlNames_forDev} from "../../constants.js";
 import path from "path";
 import fs from "fs";
+import {fileURLToPath} from "url";
 import {parseString} from "xml2js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const XML_DIR = path.join(__dirname, '../../..', FolderXML)
 
 export async function _parseXMLToBD(db) {
     let countCars = 0
@@ -11,7 +15,7 @@ export async function _parseXMLToBD(db) {
 
     for (const xmlName of ARR) {
         let xmlData = '';
-        const filePath = path.join(FolderXML, xmlName);
+        const filePath = path.join(XML_DIR, xmlName);
         const fileContent = fs.readFileSync(filePath, 'utf8');
         xmlData += fileContent; // Combine all XML files content
 
@@ -41,42 +45,30 @@ async function processXmlData(parsedData, db) {
     let sectionsCount = 0;
     let carsCount = 0;
 
-    // Process the XML data to find sections and cars
-    if (parsedData.catalog) {
-        // Process sections
-        if (parsedData.catalog.sections && parsedData.catalog.sections.section) {
-            const sections = Array.isArray(parsedData.catalog.sections.section)
-                ? parsedData.catalog.sections.section
-                : [parsedData.catalog.sections.section];
+    if (!parsedData.catalog) throw new Error('Неизвестный формат XML: нет узла <catalog>');
 
-            sectionsCount = await insertSections(sections, db);
-        }
+    // Process sections
+    if (parsedData.catalog.sections && parsedData.catalog.sections.section) {
+        const sections = Array.isArray(parsedData.catalog.sections.section)
+            ? parsedData.catalog.sections.section
+            : [parsedData.catalog.sections.section];
 
-        // Process cars
-        if (parsedData.catalog.cars && parsedData.catalog.cars.car) {
-            const cars = Array.isArray(parsedData.catalog.cars.car)
-                ? parsedData.catalog.cars.car
-                : [parsedData.catalog.cars.car];
-
-            carsCount = await insertCars(cars, db);
-            await processSections(db)
-
-            if (!sectionsCount || !carsCount) return `☹ Пустая Таблица sectionsCount: ${sectionsCount} carsCount: ${carsCount}`;
-            return carsCount;
-        }
-    } else {
-        // If catalog doesn't exist, try to find sections and cars anywhere in the structure
-        sectionsCount = await findAndProcessSections(parsedData, db);
-        carsCount = await findAndProcessCars(parsedData, db);
+        sectionsCount = await insertSections(sections, db);
     }
 
+    // Process cars
+    if (parsedData.catalog.cars && parsedData.catalog.cars.car) {
+        const cars = Array.isArray(parsedData.catalog.cars.car)
+            ? parsedData.catalog.cars.car
+            : [parsedData.catalog.cars.car];
 
-    // console.log(`⚡     добавлено СЕКЦИЙ: ${sectionsCount}, АВТОМОБИЛЕЙ: ${carsCount}`);
-    return {
-        sectionsImported: sectionsCount,
-        carsImported: carsCount,
-        total: sectionsCount + carsCount
-    };
+        carsCount = await insertCars(cars, db);
+        await processSections(db)
+    }
+
+    if (!carsCount) throw new Error(`В XML не найдено автомобилей (секций: ${sectionsCount})`);
+
+    return carsCount;
 }
 
 async function processSections(db) {
@@ -173,9 +165,9 @@ async function processSectionRecursive(sections, db, parentInfo) {
 
         // Extract parentId - check various possible locations
         let parentId = parentInfo; // default to parentInfo passed from parent
+        const attrs = sectionData.$ || {}
 
-
-        parentId = sectionData.$.parentid || sectionData.$.parentId || sectionData.$.parent_id || parentId;
+        parentId = attrs.parentid || attrs.parentId || attrs.parent_id || parentId;
 
 
         // Extract Brand and Model from the section data
@@ -246,39 +238,6 @@ async function insertCars(cars, db) {
     return insertedCount;
 }
 
-async function findAndProcessCars(data, db, path = '') {
-    let count = 0;
-
-    if (data && typeof data === 'object') {
-        // Check if this object contains carsif (data.cars && data.cars.car) {
-        const cars = Array.isArray(data.cars.car)
-            ? data.cars.car
-            : [data.cars.car];
-        count += await insertCars(cars, db);
-    }
-
-    // Also check for cars arrays that mightnot be nested in a "cars" container
-    for (const key in data) {
-        if (key.toLowerCase() === 'car' && Array.isArray(data[key])) {
-            count += await insertCars(data[key], db);
-        } else if (data[key] && typeof data[key] === 'object' && !Array.isArray(data[key])) {
-            //Lookfor individual car objects
-            if (looksLikeCarObject(data[key])) {
-                // This looks like a car object
-                count += await insertCars([data[key]], db);
-            }
-            count += await this.findAndProcessCars(data[key], db, `${path}.${key}`);
-        } else if (Array.isArray(data[key])) {
-            //Process arrays that might contain cars
-            for (const item of data[key]) {
-                if (item && typeof item === 'object' && looksLikeCarObject(item)) {
-                    count += await insertCars([item], db);
-                }
-            }
-        }
-    }
-}
-
 async function insertIntoCarsTable(car, db) {
     // Extract values from the car object, handling nested properties
     const id = extractValue(car, ['id', 'Id', '_id']);
@@ -302,12 +261,12 @@ async function insertIntoCarsTable(car, db) {
     const prop_model = extractValue(car, ['Модель', 'model', 'car_model']);
     const prop_VIN = extractValue(car, ['VIN', 'vin']);
 
-    let images = null;
-    let imgArr = []
-
-    if(car && car.Images && car.Images.Image) {
-        car.Images.Image.forEach((img) => imgArr.push(img.$.url))
-        if (imgArr) images = imgArr.join(', ')
+    let images = null
+    if (car && car.Images && car.Images.Image) {
+        // при explicitArray: false единственная картинка приходит объектом, а не массивом
+        const imageNodes = Array.isArray(car.Images.Image) ? car.Images.Image : [car.Images.Image]
+        const imgArr = imageNodes.map((img) => img?.$?.url).filter(Boolean)
+        if (imgArr.length) images = imgArr.join(', ')
     }
 
     // Insert into the structured cars_table
