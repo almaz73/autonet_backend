@@ -65,6 +65,8 @@ const promo = sequelize.define('promo', {
     photo1200: { type: DataTypes.TEXT },
     styles: { type: DataTypes.TEXT },
     content: { type: DataTypes.TEXT },
+    // текст надписи, который наносится на фото акции
+    inscription: { type: DataTypes.TEXT },
 }, {
     tableName: 'promo',
     timestamps: false,
@@ -116,6 +118,10 @@ sequelize.sync() // This will create tables if they don't exist
         if (!promoColumns.some((column) => column.name === 'title')) {
             await sequelize.query('ALTER TABLE promo ADD COLUMN title TEXT');
             console.log('Добавлена колонка promo.title');
+        }
+        if (!promoColumns.some((column) => column.name === 'inscription')) {
+            await sequelize.query('ALTER TABLE promo ADD COLUMN inscription TEXT');
+            console.log('Добавлена колонка promo.inscription');
         }
 
         const [dealerColumns] = await sequelize.query('PRAGMA table_info(dealers)');

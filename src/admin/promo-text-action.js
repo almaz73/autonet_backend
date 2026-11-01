@@ -40,7 +40,9 @@ export const applyPromoPhotoText = async (request, response, context) => {
         }
 
         const photos = await promoService.applyPromoPhotoTextById(recordId, photoSlot, params)
-        return {recordId, photos, restored: !params.text}
+        // запоминаем текст надписи в promo.inscription, чтобы редактор открывался с ним
+        await record.update({inscription: params.text})
+        return {recordId, photos, inscription: params.text, restored: !params.text}
     } catch (error) {
         console.error('Error applying promo photo text:', error)
         return fail(response, 500, 'Не удалось сохранить текст на фото')

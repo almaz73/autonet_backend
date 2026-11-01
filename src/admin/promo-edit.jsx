@@ -376,10 +376,20 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                         photoProperty={textEditing}
                         photoName={record.params?.[textEditing]}
                         previewVersion={previewVersion}
+                        initialText={record.params?.inscription ?? ''}
                         onClose={() => setTextEditing(null)}
-                        onSaved={() => {
-                            setTextEditing(null)
-                            setPreviewVersion(Date.now())
+                        onSaved={async (inscription) => {
+                            // редактор пишет текст в promo.inscription и сразу сохраняет всю запись,
+                            // как общая кнопка «Сохранить», но без перехода в список
+                            handleChange('inscription', inscription)
+                            try {
+                                await submit({inscription})
+                            } catch {
+                                // об ошибке сохранения записи уже сообщает useRecord
+                            } finally {
+                                setTextEditing(null)
+                                setPreviewVersion(Date.now())
+                            }
                         }}
                     />
                 ) : null}

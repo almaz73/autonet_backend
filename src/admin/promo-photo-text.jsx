@@ -39,10 +39,11 @@ const PhotoTextEditor = ({
     photoProperty,
     photoName,
     previewVersion,
+    initialText = '',
     onClose,
     onSaved,
 }) => {
-    const [text, setText] = useState('')
+    const [text, setText] = useState(initialText)
     const [color, setColor] = useState('#ffffff')
     const [fontSizePct, setFontSizePct] = useState(3)
     const [pos, setPos] = useState({xPct: 50, yPct: 95})
@@ -62,6 +63,10 @@ const PhotoTextEditor = ({
         ? `/pub_promo/${photoName.replace(/\.webp$/, '')}_blank.webp${previewVersion ? `?v=${previewVersion}` : ''}`
         : null
     const canvasSrc = !blankFailed && blankSrc ? blankSrc : mainSrc
+
+    useEffect(() => {
+        setText(initialText)
+    }, [initialText])
 
     useEffect(() => {
         const syncHeight = () => {
@@ -120,7 +125,8 @@ const PhotoTextEditor = ({
                 return
             }
             sendNotice({type: 'success', message: text ? 'Текст сохранён на фото' : 'Фото восстановлено без текста'})
-            onSaved()
+            // сохраняем всю запись целиком, поэтому ждём окончания записи
+            await onSaved(data?.inscription ?? text)
         } catch (error) {
             sendNotice({type: 'error', message: error.response?.data?.error ?? 'Не удалось сохранить текст'})
         } finally {
