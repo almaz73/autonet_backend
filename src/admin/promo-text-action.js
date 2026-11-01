@@ -8,7 +8,16 @@ const fail = (response, status, error) => {
     return {error}
 }
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+// promo.styles: массив настроек надписи по фото; раньше здесь лежал CSS текста акции,
+// поэтому нечитаемое значение считаем пустым
+const parseStyles = (value) => {
+    try {
+        const parsed = JSON.parse(value ?? '[]')
+        return Array.isArray(parsed) ? parsed : []
+    } catch {
+        return []
+    }
+}
 
 // «лепим» текст на фото акции: рисуем SVG-слой поверх исходника (_blank)
 export const applyPromoPhotoText = async (request, response, context) => {
@@ -34,15 +43,24 @@ export const applyPromoPhotoText = async (request, response, context) => {
         const params = {
             text: String(request.payload?.text ?? '').slice(0, 500),
             color: /^#[0-9a-fA-F]{6}$/.test(request.payload?.color ?? '') ? request.payload.color : '#ffffff',
-            fontSizePct: clamp(parseFloat(request.payload?.fontSizePct) || 3, 1, 25),
-            xPct: clamp(parseFloat(request.payload?.xPct) || 50, 0, 100),
-            yPct: clamp(parseFloat(request.payload?.yPct) || 95, 0, 100),
+            fontSize: request.payload?.fontSize,
+            x: request.payload?.x,
+            y: request.payload?.y,
         }
 
-        const photos = await promoService.applyPromoPhotoTextById(recordId, photoSlot, params)
-        // запоминаем текст надписи в promo.inscription, чтобы редактор открывался с ним
-        await record.update({inscription: params.text})
-        return {recordId, photos, inscription: params.text, restored: !params.text}
+        const {photos, style} = await promoService.applyPromoPhotoTextById(recordId, photoSlot, params)
+
+        // храним настройки массивом по фото, чтобы панель открывалась с прошлыми значениями
+        const others = parseStyles(record.styles).filter((item) => item?.photo !== photoSlot)
+        const styles = PHOTO_SLOTS
+            .map((slot) => slot === photoSlot
+                ? {photo: slot, ...style}
+                : others.find((item) => item?.photo === slot))
+            .filter(Boolean)
+
+        // запоминаем текст надписи и её настройки, чтобы редактор открывался с ними
+        await record.update({inscription: params.text, styles: JSON.stringify(styles)})
+        return {recordId, photos, inscription: params.text, styles, restored: !params.text}
     } catch (error) {
         console.error('Error applying promo photo text:', error)
         return fail(response, 500, 'Не удалось сохранить текст на фото')

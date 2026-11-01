@@ -238,16 +238,30 @@ const escapeXmlText = (text) => text
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 
-// текст рисуется SVG-слоем поверх фото; координаты и размер заданы в % от размеров фото,
-// поэтому одинаково ложатся на все варианты слота (у вариантов одинаковые пропорции)
-async function withTextOverlay(buffer, params) {
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+
+// надпись задана в пикселях базового файла слота; значения вне фото подрезаем
+function normalizeTextStyle(params, {width, height}) {
+    const number = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback
+    return {
+        color: params.color,
+        fontSize: Math.round(clamp(number(params.fontSize, height * 0.03), 4, height)),
+        x: Math.round(clamp(number(params.x, width / 2), 0, width)),
+        y: Math.round(clamp(number(params.y, height * 0.95), 0, height)),
+    }
+}
+
+// текст рисуется SVG-слоем поверх фото; размер и координаты — в пикселях базового файла слота,
+// остальные варианты масштабируются, чтобы надпись стояла на них так же
+async function withTextOverlay(buffer, params, baseWidth) {
     const {width, height} = await sharp(buffer).metadata()
-    const fontSize = Math.max(8, Math.round(height * params.fontSizePct / 100))
+    const scale = baseWidth > 0 ? width / baseWidth : 1
+    const fontSize = Math.max(1, Math.round(params.fontSize * scale))
     const lineHeight = Math.round(fontSize * 1.2)
     const lines = params.text.split('\n')
-    const x = width * params.xPct / 100
+    const x = params.x * scale
     // центр блока текста; первая базовая линия = центр минус полблока плюс подъём ~0.8em
-    const y0 = height * params.yPct / 100 - (lines.length * lineHeight) / 2 + fontSize * 0.8
+    const y0 = params.y * scale - (lines.length * lineHeight) / 2 + fontSize * 0.8
     const spans = lines.map((line, i) =>
         `<tspan x="${x}"${i ? ` dy="${lineHeight}"` : ''}>${escapeXmlText(line)}</tspan>`).join('')
 
@@ -259,7 +273,8 @@ async function withTextOverlay(buffer, params) {
     return sharp(buffer).composite([{input: svg}]).webp({quality: 92}).toBuffer()
 }
 
-// params: {text, color, fontSizePct, xPct, yPct}; пустой text = вернуть исходное фото без текста
+// params: {text, color, fontSize, x, y} — пиксели базового фото слота;
+// пустой text = вернуть исходное фото без текста
 async function applyPromoPhotoTextById(id, slot, params) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url))
     const promoPhotoDir = path.resolve(__dirname, '../../..', FolderPhotoForPromoActions)
@@ -269,7 +284,7 @@ async function applyPromoPhotoTextById(id, slot, params) {
 
     fs.mkdirSync(promoPhotoDir, {recursive: true})
 
-    let mainName = null
+    const sources = {}
     for (const variant of variants) {
         const mainFile = path.join(promoPhotoDir, `${id}_${variant}.webp`)
         const blankFile = path.join(promoPhotoDir, `${id}_${variant}_blank.webp`)
@@ -280,14 +295,22 @@ async function applyPromoPhotoTextById(id, slot, params) {
             if (!fs.existsSync(mainFile)) throw new Error(`Нет фото ${id}_${variant}.webp`)
             await fs.promises.copyFile(mainFile, blankFile)
         }
+        sources[variant] = await fs.promises.readFile(blankFile)
+    }
 
-        const original = await fs.promises.readFile(blankFile)
-        const result = params.text ? await withTextOverlay(original, params) : original
-        await fs.promises.writeFile(mainFile, result)
+    // базовый файл — тот, что открыт в панели (первый вариант слота)
+    const base = await sharp(sources[variants[0]]).metadata()
+    const style = normalizeTextStyle(params, base)
+    const overlay = params.text ? {...style, text: params.text} : null
+
+    let mainName = null
+    for (const variant of variants) {
+        const result = overlay ? await withTextOverlay(sources[variant], overlay, base.width) : sources[variant]
+        await fs.promises.writeFile(path.join(promoPhotoDir, `${id}_${variant}.webp`), result)
         mainName = `${id}_${variant}.webp`
     }
 
-    return {[slot]: mainName}
+    return {photos: {[slot]: mainName}, style}
 }
 
 function updatePromoPhotos(id, names) {

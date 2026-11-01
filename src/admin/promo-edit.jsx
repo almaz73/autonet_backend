@@ -41,6 +41,21 @@ const appendRefresh = (url) => {
     return `${path}?${params.toString()}`
 }
 
+// promo.styles: массив настроек надписи по фото; исторически здесь лежал CSS текста акции,
+// поэтому нечитаемое значение считаем пустым
+const parsePhotoStyles = (value) => {
+    if (Array.isArray(value)) return value
+    try {
+        const parsed = JSON.parse(value ?? '[]')
+        return Array.isArray(parsed) ? parsed : []
+    } catch {
+        return []
+    }
+}
+
+const styleForPhoto = (styles, photoProperty) =>
+    parsePhotoStyles(styles).find((style) => style?.photo === photoProperty) ?? null
+
 const Field = ({propertyPath, resource, record, onChange, disabled}) => {
     const property = resource.editProperties.find((p) => p.propertyPath === propertyPath)
     if (!property) return null
@@ -377,13 +392,20 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                         photoName={record.params?.[textEditing]}
                         previewVersion={previewVersion}
                         initialText={record.params?.inscription ?? ''}
+                        initialStyle={styleForPhoto(record.params?.styles, textEditing)}
                         onClose={() => setTextEditing(null)}
-                        onSaved={async (inscription) => {
-                            // редактор пишет текст в promo.inscription и сразу сохраняет всю запись,
-                            // как общая кнопка «Сохранить», но без перехода в список
+                        onSaved={async ({inscription, styles}) => {
+                            // панель уже записала настройки в promo.styles; повторяем их в форме,
+                            // чтобы общее сохранение не затёрло их старым значением
                             handleChange('inscription', inscription)
+                            const savedStyles = parsePhotoStyles(styles)
+                            const customParams = {inscription}
+                            if (savedStyles.length) {
+                                customParams.styles = JSON.stringify(savedStyles)
+                                handleChange('styles', customParams.styles)
+                            }
                             try {
-                                await submit({inscription})
+                                await submit(customParams)
                             } catch {
                                 // об ошибке сохранения записи уже сообщает useRecord
                             } finally {

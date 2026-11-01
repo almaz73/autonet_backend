@@ -10,11 +10,11 @@ const SLOT_LABELS = {
     photo1200: '1200х501',
 }
 
-// как в promoDAO: текст центрируется в точке (xPct, yPct), размер — % от высоты фото
-const textOverlayStyle = ({pos, color, fontSizePx, dragging, ghost}) => ({
+// как в promoDAO: текст центрируется в точке (x, y), размер — в пикселях базового фото
+const textOverlayStyle = ({leftPct, topPct, color, fontSizePx, dragging, ghost}) => ({
     position: 'absolute',
-    left: `${pos.xPct}%`,
-    top: `${pos.yPct}%`,
+    left: `${leftPct}%`,
+    top: `${topPct}%`,
     transform: 'translate(-50%, -50%)',
     fontFamily: 'Arial, sans-serif',
     fontWeight: 'bold',
@@ -40,20 +40,24 @@ const PhotoTextEditor = ({
     photoName,
     previewVersion,
     initialText = '',
+    initialStyle = null,
     onClose,
     onSaved,
 }) => {
+    // размер и положение храним в пикселях базового файла фото
     const [text, setText] = useState(initialText)
-    const [color, setColor] = useState('#ffffff')
-    const [fontSizePct, setFontSizePct] = useState(3)
-    const [pos, setPos] = useState({xPct: 50, yPct: 95})
+    const [color, setColor] = useState(initialStyle?.color ?? '#ffffff')
+    const [fontSize, setFontSize] = useState(initialStyle?.fontSize ?? 0)
+    const [pos, setPos] = useState({x: initialStyle?.x ?? 0, y: initialStyle?.y ?? 0})
+    const [natural, setNatural] = useState({width: 0, height: 0})
+    const [box, setBox] = useState({width: 0, height: 0})
     const [dragging, setDragging] = useState(false)
     const [saving, setSaving] = useState(false)
     const [blankFailed, setBlankFailed] = useState(false)
-    const [imgHeight, setImgHeight] = useState(0)
     const sendNotice = useNotice()
     const imgRef = useRef(null)
     const dragStart = useRef(null)
+    const hasInitialStyle = useRef(Number(initialStyle?.fontSize) > 0)
 
     const isAbsoluteUrl = (value) => /^https?:/.test(value) || value.startsWith('/')
     const mainSrc = photoName && !isAbsoluteUrl(photoName)
@@ -69,31 +73,53 @@ const PhotoTextEditor = ({
     }, [initialText])
 
     useEffect(() => {
-        const syncHeight = () => {
-            if (imgRef.current) setImgHeight(imgRef.current.getBoundingClientRect().height)
+        const syncBox = () => {
+            if (!imgRef.current) return
+            const rect = imgRef.current.getBoundingClientRect()
+            setBox({width: rect.width, height: rect.height})
         }
-        window.addEventListener('resize', syncHeight)
-        return () => window.removeEventListener('resize', syncHeight)
+        window.addEventListener('resize', syncBox)
+        return () => window.removeEventListener('resize', syncBox)
     }, [])
 
+    // предел ползунка — четверть высоты фото, как и прежние 25%
+    const maxFontSize = Math.max(8, Math.round((natural.height || 400) * 0.25))
+    // панель показывает фото уменьшенным, поэтому размер текста пересчитываем в экранный
+    const scale = natural.width && box.width ? box.width / natural.width : 1
+
     const onImgLoad = (event) => {
-        setImgHeight(event.currentTarget.getBoundingClientRect().height)
+        const img = event.currentTarget
+        const width = img.naturalWidth
+        const height = img.naturalHeight
+        const rect = img.getBoundingClientRect()
+        setNatural({width, height})
+        setBox({width: rect.width, height: rect.height})
+
+        if (hasInitialStyle.current) {
+            // фото могли заменить на другого размера — держим надпись в границах
+            setFontSize((size) => clamp(size, 4, Math.max(8, Math.round(height * 0.25))))
+            setPos((point) => ({x: clamp(point.x, 0, width), y: clamp(point.y, 0, height)}))
+            return
+        }
+        hasInitialStyle.current = true
+        setFontSize(Math.max(4, Math.round(height * 0.03)))
+        setPos({x: Math.round(width / 2), y: Math.round(height * 0.95)})
     }
 
     const onTextPointerDown = (event) => {
         event.preventDefault()
         event.currentTarget.setPointerCapture(event.pointerId)
-        dragStart.current = {px: event.clientX, py: event.clientY, xPct: pos.xPct, yPct: pos.yPct}
+        dragStart.current = {px: event.clientX, py: event.clientY, x: pos.x, y: pos.y}
         setDragging(true)
     }
 
     const onTextPointerMove = (event) => {
-        if (!dragStart.current || !imgRef.current) return
+        if (!dragStart.current || !imgRef.current || !natural.width) return
         const rect = imgRef.current.getBoundingClientRect()
         const start = dragStart.current
         setPos({
-            xPct: clamp(start.xPct + (event.clientX - start.px) / rect.width * 100, 0, 100),
-            yPct: clamp(start.yPct + (event.clientY - start.py) / rect.height * 100, 0, 100),
+            x: clamp(start.x + (event.clientX - start.px) / rect.width * natural.width, 0, natural.width),
+            y: clamp(start.y + (event.clientY - start.py) / rect.height * natural.height, 0, natural.height),
         })
     }
 
@@ -108,9 +134,9 @@ const PhotoTextEditor = ({
         formData.append('photoSlot', photoProperty)
         formData.append('text', text)
         formData.append('color', color)
-        formData.append('fontSizePct', String(fontSizePct))
-        formData.append('xPct', String(pos.xPct))
-        formData.append('yPct', String(pos.yPct))
+        formData.append('fontSize', String(Math.round(fontSize)))
+        formData.append('x', String(Math.round(pos.x)))
+        formData.append('y', String(Math.round(pos.y)))
 
         setSaving(true)
         try {
@@ -126,7 +152,7 @@ const PhotoTextEditor = ({
             }
             sendNotice({type: 'success', message: text ? 'Текст сохранён на фото' : 'Фото восстановлено без текста'})
             // сохраняем всю запись целиком, поэтому ждём окончания записи
-            await onSaved(data?.inscription ?? text)
+            await onSaved({inscription: data?.inscription ?? text, styles: data?.styles ?? null})
         } catch (error) {
             sendNotice({type: 'error', message: error.response?.data?.error ?? 'Не удалось сохранить текст'})
         } finally {
@@ -134,8 +160,15 @@ const PhotoTextEditor = ({
         }
     }
 
-    const fontSizePx = Math.round(imgHeight * fontSizePct / 100)
-    const overlayStyle = textOverlayStyle({pos, color, fontSizePx, dragging, ghost: !text})
+    const fontSizePx = Math.max(6, Math.round(fontSize * scale))
+    const overlayStyle = textOverlayStyle({
+        leftPct: natural.width ? pos.x / natural.width * 100 : 50,
+        topPct: natural.height ? pos.y / natural.height * 100 : 95,
+        color,
+        fontSizePx,
+        dragging,
+        ghost: !text,
+    })
 
     return (
         <Box
@@ -226,14 +259,14 @@ const PhotoTextEditor = ({
                         </Box>
 
                         <Box mt="lg">
-                            <Label>Размер текста: {fontSizePct}%</Label>
+                            <Label>Размер текста: {Math.round(fontSize)} px</Label>
                             <input
                                 type="range"
-                                min="1"
-                                max="25"
-                                step="0.5"
-                                value={fontSizePct}
-                                onChange={(event) => setFontSizePct(parseFloat(event.target.value))}
+                                min="4"
+                                max={maxFontSize}
+                                step="1"
+                                value={clamp(Math.round(fontSize) || 4, 4, maxFontSize)}
+                                onChange={(event) => setFontSize(parseInt(event.target.value, 10))}
                                 style={{width: '100%'}}
                             />
                         </Box>

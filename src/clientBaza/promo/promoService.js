@@ -91,11 +91,11 @@ async function savePromoPhotosById(id, buffers) {
     return names;
 }
 
-// «лепим» текст на фото: params = {text, color, fontSizePct, xPct, yPct}
+// «лепим» текст на фото: params = {text, color, fontSize, x, y} в пикселях базового фото слота
 async function applyPromoPhotoTextById(id, slot, params) {
-    const names = await promoDAO.applyPromoPhotoTextById(id, slot, params);
+    const result = await promoDAO.applyPromoPhotoTextById(id, slot, params);
     clearPromoCache()
-    return names;
+    return result;
 }
 
 export {
