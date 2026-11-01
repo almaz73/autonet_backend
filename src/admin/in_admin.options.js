@@ -59,6 +59,12 @@ const hideForManager = {
     isAccessible: (context) => !isManager(context),
 };
 
+// Раздел «Администраторы» (и пароли) — только суперадмину;
+// локально авторизация отключена, поэтому доступ не ограничиваем
+const superAdminOnly = {
+    isAccessible: (context) => isDev || isSuperAdmin(context),
+};
+
 
 AdminJS.registerAdapter({Database, Resource})
 
@@ -72,16 +78,14 @@ export const adminJs = new AdminJS({
                 // navigation: {name: 'Пользователи', icon: 'User'},
                 navigation: null,
                 actions: {
-                    new: {
-                        // Кнопка "Создать" и вызов new доступны только суперадмину
-                        isAccessible: (context) => isSuperAdmin(context) && !isPromoManager(context),
-                    },
-                    list: hideForPromoManagerAndManager,
-                    show: hideForPromoManagerAndManager,
-                    edit: hideForPromoManagerAndManager,
-                    delete: hideForPromoManagerAndManager,
-                    bulkDelete: hideForPromoManagerAndManager,
-                    search: hideForPromoManagerAndManager,
+                    // доступ к администраторам и паролям только у superadmin
+                    new: superAdminOnly,
+                    list: superAdminOnly,
+                    show: superAdminOnly,
+                    edit: superAdminOnly,
+                    delete: superAdminOnly,
+                    bulkDelete: superAdminOnly,
+                    search: superAdminOnly,
                 },
             },
         },
@@ -152,7 +156,7 @@ export const adminJs = new AdminJS({
                         },
                     },
                     edit: {
-                        isVisible: hideForManager,
+                        isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
                     },
                     // режим просмотра не нужен: клик по строке открывает редактирование
@@ -160,7 +164,7 @@ export const adminJs = new AdminJS({
                         isAccessible: () => false,
                     },
                     new: {
-                        isVisible: hideForManager,
+                        isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
                         before: async (request) => {
                             // код новой акции = максимальный существующий + 1
@@ -231,16 +235,21 @@ export const adminJs = new AdminJS({
                         },
                     },
                     edit: {
+                        isAccessible: hideForManager.isAccessible,
                         component: Components.DealerEdit,
                     },
                     // режим просмотра не нужен: клик по строке открывает редактирование
                     show: {
                         isAccessible: () => false,
                     },
+                    new: hideForManager,
+                    delete: hideForManager,
+                    bulkDelete: hideForManager,
                     // вызывается кнопкой загрузки фото из DealerEdit, в интерфейсе не показывается
                     uploadPhoto: {
                         isVisible: false,
                         method: 'post',
+                        isAccessible: hideForManager.isAccessible,
                         handler: uploadDealerPhoto,
                     },
                 },
