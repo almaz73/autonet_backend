@@ -13,6 +13,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const componentLoader = new ComponentLoader()
 componentLoader.override('SidebarBranding', path.join(__dirname, 'site-logo.jsx'))
+// подсветка только что отредактированной акции в списке
+componentLoader.override('RecordsTable', path.join(__dirname, 'promo-list-table.jsx'))
 
 const Components = {
     // абсолютный путь: относительный ломается в ESM на Windows

@@ -1,8 +1,10 @@
 import React, {useEffect, useRef, useState} from 'react'
+import {createPortal} from 'react-dom'
 import {useNavigate} from 'react-router'
 import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
 import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
 import PhotoTextEditor from './promo-photo-text.jsx'
+import {LAST_EDITED_KEY} from './promo-list-table.jsx'
 
 // в тулбаре richtext скрываем последние кнопки: очистку форматирования и вставку картинки
 const HIDE_RICH_TEXT_BUTTONS = `
@@ -299,10 +301,39 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     const [previewVersion, setPreviewVersion] = useState(() => Date.now())
     // propertyPath фото, на котором открыт редактор текста
     const [textEditing, setTextEditing] = useState(null)
+    // слот в штатной шапке AdminJS рядом с «Удалить» для верхних кнопок
+    const [headerSlot, setHeaderSlot] = useState(null)
+    const formRef = useRef(null)
+
+    // шапку рисует AdminJS, поэтому свою группу кнопок вставляем в неё отдельным слотом
+    useEffect(() => {
+        if (!initialRecord?.id) return
+        const deleteButton = document.querySelector(`[data-css="${resource.id}-delete-button"]`)
+        const group = deleteButton?.parentElement
+        if (!group) return
+        const slot = document.createElement('span')
+        slot.style.display = 'contents'
+        group.appendChild(slot)
+        setHeaderSlot(slot)
+        return () => {
+            setHeaderSlot(null)
+            slot.remove()
+        }
+    }, [resource.id, initialRecord?.id])
 
     useEffect(() => {
         if (initialRecord) setRecord(initialRecord)
     }, [initialRecord])
+
+    // список при возврате подсветит именно эту акцию
+    useEffect(() => {
+        if (!initialRecord?.id) return
+        try {
+            window.sessionStorage.setItem(LAST_EDITED_KEY, String(initialRecord.id))
+        } catch {
+            // sessionStorage недоступен — просто не подсветим
+        }
+    }, [initialRecord?.id])
 
     const fields = {resource, record, onChange: handleChange}
     // акция публикуется только с полным набором: три фото, заголовок и описание
@@ -333,8 +364,33 @@ const PromoEdit = ({record: initialRecord, resource}) => {
         })
     }
 
+    const onCancel = () => navigate(resource.href || `/administrator/resources/${resource.id}`)
+
     return (
-        <Box as="form" onSubmit={onSubmit} flex flexDirection="column">
+        <Box as="form" ref={formRef} onSubmit={onSubmit} flex flexDirection="column">
+            {headerSlot ? createPortal(
+                <>
+                    <Button
+                        type="button"
+                        variant="light"
+                        ml="md"
+                        mr="md"
+                        onClick={onCancel}
+                    >
+                        Отмена
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="contained"
+                        disabled={loading}
+                        onClick={() => formRef.current?.requestSubmit()}
+                    >
+                        {loading ? <Icon icon="Loader" spin/> : null}
+                        {translateButton('save', resource.id)}
+                    </Button>
+                </>,
+                headerSlot,
+            ) : null}
             <style>{HIDE_RICH_TEXT_BUTTONS}</style>
             <Card>
                 <H3 mb="default">Основное</H3>
@@ -455,7 +511,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                     type="button"
                     variant="light"
                     mr="default"
-                    onClick={() => navigate(resource.href || `/administrator/resources/${resource.id}`)}
+                    onClick={onCancel}
                 >
                     Отмена
                 </Button>
