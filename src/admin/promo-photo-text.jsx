@@ -152,7 +152,7 @@ const PhotoTextEditor = ({
             }
             sendNotice({type: 'success', message: text ? 'Текст сохранён на фото' : 'Фото восстановлено без текста'})
             // сохраняем всю запись целиком, поэтому ждём окончания записи
-            await onSaved({inscription: data?.inscription ?? text, styles: data?.styles ?? null})
+            await onSaved({inscriptions: data?.inscriptions ?? null, styles: data?.styles ?? null})
         } catch (error) {
             sendNotice({type: 'error', message: error.response?.data?.error ?? 'Не удалось сохранить текст'})
         } finally {

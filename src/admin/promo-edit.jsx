@@ -56,6 +56,24 @@ const parsePhotoStyles = (value) => {
 const styleForPhoto = (styles, photoProperty) =>
     parsePhotoStyles(styles).find((style) => style?.photo === photoProperty) ?? null
 
+// promo.inscription: массив текстов по фото; ранее здесь хранился один текст на всю акцию
+const parseInscriptions = (value) => {
+    if (Array.isArray(value)) return value
+    try {
+        const parsed = JSON.parse(value ?? '[]')
+        return Array.isArray(parsed) ? parsed : []
+    } catch {
+        return []
+    }
+}
+
+const inscriptionForPhoto = (value, photoProperty) => {
+    const entry = parseInscriptions(value).find((item) => item?.photo === photoProperty)
+    if (entry) return entry.text ?? ''
+    // старый формат — один текст на всю акцию
+    return typeof value === 'string' && value.trim() && !value.trim().startsWith('[') ? value : ''
+}
+
 const Field = ({propertyPath, resource, record, onChange, disabled}) => {
     const property = resource.editProperties.find((p) => p.propertyPath === propertyPath)
     if (!property) return null
@@ -391,15 +409,19 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                         photoProperty={textEditing}
                         photoName={record.params?.[textEditing]}
                         previewVersion={previewVersion}
-                        initialText={record.params?.inscription ?? ''}
+                        initialText={inscriptionForPhoto(record.params?.inscription, textEditing)}
                         initialStyle={styleForPhoto(record.params?.styles, textEditing)}
                         onClose={() => setTextEditing(null)}
-                        onSaved={async ({inscription, styles}) => {
-                            // панель уже записала настройки в promo.styles; повторяем их в форме,
-                            // чтобы общее сохранение не затёрло их старым значением
-                            handleChange('inscription', inscription)
+                        onSaved={async ({inscriptions, styles}) => {
+                            // панель уже записала тексты и настройки в запись; повторяем их в форме,
+                            // чтобы общее сохранение не затёрло их старыми значениями
+                            const savedInscriptions = parseInscriptions(inscriptions)
                             const savedStyles = parsePhotoStyles(styles)
-                            const customParams = {inscription}
+                            const customParams = {}
+                            if (savedInscriptions.length) {
+                                customParams.inscription = JSON.stringify(savedInscriptions)
+                                handleChange('inscription', customParams.inscription)
+                            }
                             if (savedStyles.length) {
                                 customParams.styles = JSON.stringify(savedStyles)
                                 handleChange('styles', customParams.styles)
