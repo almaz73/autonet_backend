@@ -1,8 +1,10 @@
 import React from 'react'
+import {createPortal} from 'react-dom'
 import {useNavigate} from 'react-router'
 import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
 import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
 import {buildDealerLink} from '../clientBaza/dealers/dealerLink.js'
+import {writeLastEditedId} from './promo-list-table.jsx'
 
 const Field = ({propertyPath, resource, record, onChange}) => {
     const property = resource.editProperties.find((p) => p.propertyPath === propertyPath)
@@ -142,6 +144,31 @@ const DealerEdit = ({record: initialRecord, resource}) => {
         if (initialRecord) setRecord(initialRecord)
     }, [initialRecord])
 
+    // список при возврате подсветит и прокрутит к этому контакту
+    React.useEffect(() => {
+        if (initialRecord?.id) writeLastEditedId(resource.id, initialRecord.id)
+    }, [resource.id, initialRecord?.id])
+
+    // слот в штатной шапке AdminJS рядом с «Удалить» для верхних кнопок
+    const [headerSlot, setHeaderSlot] = React.useState(null)
+    const formRef = React.useRef(null)
+
+    // шапку рисует AdminJS, поэтому свою группу кнопок вставляем в неё отдельным слотом
+    React.useEffect(() => {
+        if (!initialRecord?.id) return
+        const deleteButton = document.querySelector(`[data-css="${resource.id}-delete-button"]`)
+        const group = deleteButton?.parentElement
+        if (!group) return
+        const slot = document.createElement('span')
+        slot.style.display = 'contents'
+        group.appendChild(slot)
+        setHeaderSlot(slot)
+        return () => {
+            setHeaderSlot(null)
+            slot.remove()
+        }
+    }, [resource.id, initialRecord?.id])
+
     const fields = {resource, record, onChange: handleChange}
     const params = record.params ?? {}
     const [previewVersion, setPreviewVersion] = React.useState(() => Date.now())
@@ -159,8 +186,33 @@ const DealerEdit = ({record: initialRecord, resource}) => {
         })
     }
 
+    const onCancel = () => navigate(resource.href || `/administrator/resources/${resource.id}`)
+
     return (
-        <Box as="form" onSubmit={onSubmit} flex flexDirection="column">
+        <Box as="form" ref={formRef} onSubmit={onSubmit} flex flexDirection="column">
+            {headerSlot ? createPortal(
+                <>
+                    <Button
+                        type="button"
+                        variant="light"
+                        ml="md"
+                        mr="md"
+                        onClick={onCancel}
+                    >
+                        Отмена
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="contained"
+                        disabled={loading}
+                        onClick={() => formRef.current?.requestSubmit()}
+                    >
+                        {loading ? <Icon icon="Loader" spin/> : null}
+                        {translateButton('save', resource.id)}
+                    </Button>
+                </>,
+                headerSlot,
+            ) : null}
             <Card>
                 <H3 mb="default">Контакт</H3>
                 <Field propertyPath="city" {...fields}/>

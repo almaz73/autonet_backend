@@ -4,7 +4,7 @@ import {useNavigate} from 'react-router'
 import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
 import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
 import PhotoTextEditor from './promo-photo-text.jsx'
-import {LAST_EDITED_KEY} from './promo-list-table.jsx'
+import {writeLastEditedId} from './promo-list-table.jsx'
 
 // в тулбаре richtext скрываем последние кнопки: очистку форматирования и вставку картинки
 const HIDE_RICH_TEXT_BUTTONS = `
@@ -327,13 +327,8 @@ const PromoEdit = ({record: initialRecord, resource}) => {
 
     // список при возврате подсветит именно эту акцию
     useEffect(() => {
-        if (!initialRecord?.id) return
-        try {
-            window.sessionStorage.setItem(LAST_EDITED_KEY, String(initialRecord.id))
-        } catch {
-            // sessionStorage недоступен — просто не подсветим
-        }
-    }, [initialRecord?.id])
+        if (initialRecord?.id) writeLastEditedId(resource.id, initialRecord.id)
+    }, [resource.id, initialRecord?.id])
 
     const fields = {resource, record, onChange: handleChange}
     // акция публикуется только с полным набором: три фото, заголовок и описание
