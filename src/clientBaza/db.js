@@ -94,6 +94,19 @@ dealers.beforeValidate((dealer) => {
     dealer.link = buildDealerLink(dealer.city, dealer.address)
 });
 
+// история изменений акций: кто, когда и какую акцию менял (для обновления sitemap.xml)
+const changeHistory = sequelize.define('changeHistory', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    admin_name: { type: DataTypes.TEXT },
+    action: { type: DataTypes.TEXT, allowNull: false },
+    promo_id: { type: DataTypes.INTEGER, allowNull: false },
+    promo_name: { type: DataTypes.TEXT },
+    created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+}, {
+    tableName: 'changeHistory',
+    timestamps: false,
+});
+
 // Define User model if not already defined
 const history_period = sequelize.define('Сколько дней висело', {
     startedDate: { type: DataTypes.TEXT, allowNull: false },
@@ -220,4 +233,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, Admins, history_period, clientEmails, promo, dealers };
+export { sequelize, Admins, history_period, clientEmails, promo, dealers, changeHistory };

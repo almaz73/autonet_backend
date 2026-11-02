@@ -3,7 +3,7 @@ import AdminJSExpress from '@adminjs/express'
 import {Database, Resource} from '@adminjs/sequelize'
 import path from 'path'
 import {fileURLToPath} from 'url'
-import {sequelize, Admins, history_period, clientEmails, promo, dealers} from '../clientBaza/db.js'
+import {sequelize, Admins, history_period, clientEmails, promo, dealers, changeHistory} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
 import {applyPromoPhotoText} from './promo-text-action.js'
@@ -63,6 +63,23 @@ const hideForManager = {
 // локально авторизация отключена, поэтому доступ не ограничиваем
 const superAdminOnly = {
     isAccessible: (context) => isDev || isSuperAdmin(context),
+};
+
+// пишем в changeHistory только успешные изменения акций: кто, когда, какую акцию и что с ней сделал
+const logPromoChange = (action) => async (response, request, context) => {
+    if (request.method !== 'post' || response?.notice?.type !== 'success') return response
+
+    const changed = response.records ?? (response.record ? [response.record] : [])
+    const adminName = context.currentAdmin?.name ?? context.currentAdmin?.email ?? null
+
+    await Promise.all(changed.map((record) => changeHistory.create({
+        admin_name: adminName,
+        action,
+        promo_id: record.id ?? record.params?.id,
+        promo_name: record.params?.name ?? null,
+    })))
+
+    return response
 };
 
 
@@ -158,6 +175,7 @@ export const adminJs = new AdminJS({
                     edit: {
                         isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
+                        after: logPromoChange('update'),
                     },
                     // режим просмотра не нужен: клик по строке открывает редактирование
                     show: {
@@ -166,6 +184,7 @@ export const adminJs = new AdminJS({
                     new: {
                         isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
+                        after: logPromoChange('create'),
                         before: async (request) => {
                             // код новой акции = максимальный существующий + 1
                             if (!request.payload?.code) {
@@ -177,8 +196,14 @@ export const adminJs = new AdminJS({
                             return request
                         },
                     },
-                    delete: hideForManager,
-                    bulkDelete: hideForManager,
+                    delete: {
+                        ...hideForManager,
+                        after: logPromoChange('delete'),
+                    },
+                    bulkDelete: {
+                        ...hideForManager,
+                        after: logPromoChange('delete'),
+                    },
                     // вызывается кнопкой загрузки фото из PromoEdit, в интерфейсе не показывается
                     uploadPhotos: {
                         isVisible: false,
