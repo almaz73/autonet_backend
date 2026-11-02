@@ -94,13 +94,15 @@ dealers.beforeValidate((dealer) => {
     dealer.link = buildDealerLink(dealer.city, dealer.address)
 });
 
-// история изменений акций: кто, когда и какую акцию менял (для обновления sitemap.xml)
+// история изменений акций и контактов: кто, когда и что менял (для обновления sitemap.xml)
 const changeHistory = sequelize.define('changeHistory', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     admin_name: { type: DataTypes.TEXT },
     action: { type: DataTypes.TEXT, allowNull: false },
-    promo_id: { type: DataTypes.INTEGER, allowNull: false },
+    promo_id: { type: DataTypes.INTEGER },
     promo_name: { type: DataTypes.TEXT },
+    dealer_id: { type: DataTypes.INTEGER },
+    dealer_city: { type: DataTypes.TEXT },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 }, {
     tableName: 'changeHistory',
@@ -141,6 +143,19 @@ sequelize.sync() // This will create tables if they don't exist
         if (!dealerColumns.some((column) => column.name === 'email')) {
             await sequelize.query('ALTER TABLE dealers ADD COLUMN email TEXT');
             console.log('Добавлена колонка dealers.email');
+        }
+
+        // changeHistory сначала была только для акций: пересоздаём таблицу с полями контактов
+        const [historyColumns] = await sequelize.query('PRAGMA table_info(changeHistory)');
+        if (!historyColumns.some((column) => column.name === 'dealer_id')) {
+            await sequelize.query('ALTER TABLE changeHistory RENAME TO changeHistory_old');
+            await changeHistory.sync();
+            await sequelize.query(`
+                INSERT INTO changeHistory (id, admin_name, action, promo_id, promo_name, created_at)
+                SELECT id, admin_name, action, promo_id, promo_name, created_at FROM changeHistory_old
+            `);
+            await sequelize.query('DROP TABLE changeHistory_old');
+            console.log('Таблица changeHistory дополнена полями контактов');
         }
 
         // Дефолтный суперадмин при первом запуске (если таблица Admins пуста)

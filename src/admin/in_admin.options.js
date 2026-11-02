@@ -65,8 +65,8 @@ const superAdminOnly = {
     isAccessible: (context) => isDev || isSuperAdmin(context),
 };
 
-// пишем в changeHistory только успешные изменения акций: кто, когда, какую акцию и что с ней сделал
-const logPromoChange = (action) => async (response, request, context) => {
+// пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
+const logChange = (entity, action) => async (response, request, context) => {
     if (request.method !== 'post' || response?.notice?.type !== 'success') return response
 
     const changed = response.records ?? (response.record ? [response.record] : [])
@@ -75,8 +75,9 @@ const logPromoChange = (action) => async (response, request, context) => {
     await Promise.all(changed.map((record) => changeHistory.create({
         admin_name: adminName,
         action,
-        promo_id: record.id ?? record.params?.id,
-        promo_name: record.params?.name ?? null,
+        ...(entity === 'promo'
+            ? { promo_id: record.id ?? record.params?.id, promo_name: record.params?.name ?? null }
+            : { dealer_id: record.id ?? record.params?.id, dealer_city: record.params?.city ?? null }),
     })))
 
     return response
@@ -175,7 +176,7 @@ export const adminJs = new AdminJS({
                     edit: {
                         isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
-                        after: logPromoChange('update'),
+                        after: logChange('promo', 'update'),
                     },
                     // режим просмотра не нужен: клик по строке открывает редактирование
                     show: {
@@ -184,7 +185,7 @@ export const adminJs = new AdminJS({
                     new: {
                         isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
-                        after: logPromoChange('create'),
+                        after: logChange('promo', 'create'),
                         before: async (request) => {
                             // код новой акции = максимальный существующий + 1
                             if (!request.payload?.code) {
@@ -198,11 +199,11 @@ export const adminJs = new AdminJS({
                     },
                     delete: {
                         ...hideForManager,
-                        after: logPromoChange('delete'),
+                        after: logChange('promo', 'delete'),
                     },
                     bulkDelete: {
                         ...hideForManager,
-                        after: logPromoChange('delete'),
+                        after: logChange('promo', 'delete'),
                     },
                     // вызывается кнопкой загрузки фото из PromoEdit, в интерфейсе не показывается
                     uploadPhotos: {
@@ -262,14 +263,24 @@ export const adminJs = new AdminJS({
                     edit: {
                         isAccessible: hideForManager.isAccessible,
                         component: Components.DealerEdit,
+                        after: logChange('dealer', 'update'),
                     },
                     // режим просмотра не нужен: клик по строке открывает редактирование
                     show: {
                         isAccessible: () => false,
                     },
-                    new: hideForManager,
-                    delete: hideForManager,
-                    bulkDelete: hideForManager,
+                    new: {
+                        ...hideForManager,
+                        after: logChange('dealer', 'create'),
+                    },
+                    delete: {
+                        ...hideForManager,
+                        after: logChange('dealer', 'delete'),
+                    },
+                    bulkDelete: {
+                        ...hideForManager,
+                        after: logChange('dealer', 'delete'),
+                    },
                     // вызывается кнопкой загрузки фото из DealerEdit, в интерфейсе не показывается
                     uploadPhoto: {
                         isVisible: false,
