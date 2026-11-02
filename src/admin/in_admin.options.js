@@ -26,6 +26,7 @@ const Components = {
     DealerEdit: componentLoader.add('DealerEdit', path.join(__dirname, 'dealer-edit.jsx')),
     ClientAddress: componentLoader.add('ClientAddress', path.join(__dirname, 'client-address.jsx')),
     PromoBool: componentLoader.add('PromoBool', path.join(__dirname, 'promo-bool.jsx')),
+    ChangeHistoryCell: componentLoader.add('ChangeHistoryCell', path.join(__dirname, 'change-history-cell.jsx')),
 }
 
 const isDev = process.env.USERNAME === 'almaz' // на моем компе без пароля для разработки
@@ -302,6 +303,36 @@ export const adminJs = new AdminJS({
                     },
                 },
             },
+        },
+        {
+            resource: changeHistory,
+            options: {
+                tableName: 'changeHistory',
+                navigation: null,
+                listProperties: ['admin_name', 'promo_id', 'promo_name', 'created_at'],
+                sort: {
+                    sortBy: 'created_at',
+                    direction: 'desc',
+                },
+                actions: {
+                    // журнал изменений — только просмотр и только суперадмину
+                    list: superAdminOnly,
+                    search: superAdminOnly,
+                    show: {isAccessible: () => false},
+                    new: {isAccessible: () => false},
+                    edit: {isAccessible: () => false},
+                    delete: {isAccessible: () => false},
+                    bulkDelete: {isAccessible: () => false},
+                },
+                properties: {
+                    promo_id: {
+                        components: {list: Components.ChangeHistoryCell},
+                    },
+                    promo_name: {
+                        components: {list: Components.ChangeHistoryCell},
+                    },
+                },
+            },
         }],
     rootPath: '/administrator',
     loginPath: '/administrator/login',
@@ -348,6 +379,7 @@ export const adminJs = new AdminJS({
                     history_period: 'Время продаж',
                     promo: 'Акции',
                     dealers: 'Контакты',
+                    changeHistory: 'История изменений',
                     confirm: 'Подтверждение',
                 },
                 messages: {
@@ -405,6 +437,15 @@ export const adminJs = new AdminJS({
                             profile: 'Профиль',
                             brands: 'Марки',
                             link: 'Ссылка',
+                        },
+                    },
+                    changeHistory: {
+                        properties: {
+                            admin_name: 'Кто менял',
+                            promo_id: 'Акция/Контакт',
+                            promo_name: 'Название / город',
+                            created_at: 'Время',
+                            action: 'Действие',
                         },
                     },
                 },
