@@ -297,6 +297,15 @@ export const adminJs = new AdminJS({
                     address: {
                         type: 'textarea',
                     },
+                    // при создании можно выбрать только один из допустимых профилей,
+                    // несколько профилей отмечаются потом в форме редактирования
+                    profile: {
+                        availableValues: [
+                            {value: 'Новые бренды', label: 'Новые бренды'},
+                            {value: 'Авто с пробегом', label: 'Авто с пробегом'},
+                            {value: 'Сервис', label: 'Сервис'},
+                        ],
+                    },
                     link: {
                         isDisabled: true,
                         components: {list: Components.DealerLink},

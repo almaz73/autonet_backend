@@ -2,7 +2,7 @@ import React from 'react'
 import {createPortal} from 'react-dom'
 import {useNavigate} from 'react-router'
 import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
-import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
+import {Box, Button, CheckBox, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
 import {buildDealerLink} from '../clientBaza/dealers/dealerLink.js'
 import {writeLastEditedId} from './promo-list-table.jsx'
 
@@ -18,6 +18,72 @@ const Field = ({propertyPath, resource, record, onChange}) => {
             record={record}
             onChange={onChange}
         />
+    )
+}
+
+const PROFILE_OPTIONS = ['Новые бренды', 'Авто с пробегом', 'Сервис']
+
+const splitProfiles = (value) => String(value ?? '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+const sameProfile = (a, b) => a.toLowerCase() === b.toLowerCase()
+
+// профиль хранится строкой через запятую; менять можно только тремя значениями,
+// а старые значения сохраняются, пока оператор не снимет их сам
+const ProfileField = ({record, onChange}) => {
+    const values = splitProfiles(record.params?.profile)
+    const selected = PROFILE_OPTIONS.filter((option) => values.some((value) => sameProfile(value, option)))
+    const legacy = values.filter((value) => !PROFILE_OPTIONS.some((option) => sameProfile(value, option)))
+
+    const toggle = (option) => {
+        const next = selected.includes(option)
+            ? selected.filter((value) => value !== option)
+            : [...selected, option]
+        const ordered = PROFILE_OPTIONS.filter((value) => next.includes(value))
+        onChange('profile', [...ordered, ...legacy].join(', '))
+    }
+
+    const removeLegacy = (value) => {
+        onChange('profile', [...selected, ...legacy.filter((item) => item !== value)].join(', '))
+    }
+
+    return (
+        <FormGroup>
+            <Label>Профиль</Label>
+            <Box>
+                {PROFILE_OPTIONS.map((option) => (
+                    <React.Fragment key={option}>
+                        <CheckBox
+                            id={`profile-${option}`}
+                            checked={selected.includes(option)}
+                            onChange={() => toggle(option)}
+                        />
+                        <Label inline htmlFor={`profile-${option}`} mr="xl">{option}</Label>
+                    </React.Fragment>
+                ))}
+            </Box>
+            {legacy.length > 0 && (
+                <Box mt="default">
+                    <Text color="grey60">
+                        Старые значения профиля сохранятся, пока вы их не снимете:
+                    </Text>
+                    <Box mt="sm">
+                        {legacy.map((value) => (
+                            <React.Fragment key={value}>
+                                <CheckBox
+                                    id={`profile-legacy-${value}`}
+                                    checked
+                                    onChange={() => removeLegacy(value)}
+                                />
+                                <Label inline htmlFor={`profile-legacy-${value}`} mr="xl">{value}</Label>
+                            </React.Fragment>
+                        ))}
+                    </Box>
+                </Box>
+            )}
+        </FormGroup>
     )
 }
 
@@ -219,7 +285,7 @@ const DealerEdit = ({record: initialRecord, resource}) => {
                 <Field propertyPath="address" {...fields}/>
                 <Box flex>
                     <Box flex="1" mr="default">
-                        <Field propertyPath="profile" {...fields}/>
+                        <ProfileField record={record} onChange={handleChange}/>
                     </Box>
                 </Box>
 
