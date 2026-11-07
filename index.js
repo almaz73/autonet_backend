@@ -109,6 +109,43 @@ app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use('/admin-assets', express.static(path.join(__dirname, 'src', 'admin', 'assets')));
 app.use(express.urlencoded({limit: '30mb',extended: true}));
 
+// CORS: заголовки отдаём только своим Origin, а не любому присланному.
+// Свой сайт по умолчанию; другие доверенные домены можно перечислить в CORS_ORIGINS через запятую
+const corsOrigins = new Set([
+    'https://xn--80aej9aped4f.xn--p1ai', // автосеть.рф
+    'https://www.xn--80aej9aped4f.xn--p1ai',
+    ...(isProduction ? [] : ['http://localhost:3000', 'http://127.0.0.1:3000']), // локальная разработка
+])
+for (const value of (process.env.CORS_ORIGINS || '').split(',')) {
+    if (!value.trim()) continue
+    try {
+        corsOrigins.add(new URL(value.trim()).origin) // приводит к punycode и отбрасывает путь
+    } catch {
+        console.warn('CORS_ORIGINS: пропущен некорректный Origin:', value.trim())
+    }
+}
+
+app.use('/api', (req, res, next) => {
+    res.vary('Origin') // ответ зависит от Origin, это важно для кэшей и прокси
+
+    const origin = req.get('origin')
+    if (!origin) return next() // same-origin запросы CORS не требуют
+
+    if (!corsOrigins.has(origin)) {
+        // без CORS-заголовков браузер не отдаст ответ чужому сайту
+        if (req.method === 'OPTIONS') return res.sendStatus(403)
+        return next()
+    }
+
+    res.set('Access-Control-Allow-Origin', origin) // при credentials нельзя '*'
+    res.set('Access-Control-Allow-Credentials', 'true')
+    res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+    res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    res.set('Access-Control-Max-Age', '600')
+    if (req.method === 'OPTIONS') return res.sendStatus(204)
+    next()
+})
+
 app.use('/api/auth', routerAuth)
 app.use('/api', router)
 app.use('/api', router_buyout); // интеграция с внутренним сайтом/ отправка на оценку
@@ -118,21 +155,10 @@ app.use('/api', router_bd)
 app.use('/api', router_history)
 
 app.use((req, res, next) => {
-    const origin = req.headers.origin;
-
     // console.log('req = ', req.url) // вот тут динамические страницы
     if (req.url.includes('/promo/') && !req.url.includes('/st/')) return generationPagesForPromo(res, req.url)      // отдаем промоакции
     if (!req.url.includes('/pub_auto/')) Controllers.redirectBrand(req.url, res)                                    // открываем страницу cars или бренды
 
-    // Allow requests from the allowed origin
-    if (origin) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Credentials', true);
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        // Handle preflight requests
-        if (req.method === 'OPTIONS') return res.sendStatus(200)
-    }
     return res.render('404', {confirm: ''})
 });
 
