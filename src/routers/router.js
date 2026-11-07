@@ -1,6 +1,7 @@
 import Router from 'express'
 import Controllers from "../xml_import/Controllers.js";
 import Post from '../post/Post.js'
+import {emailRateLimit, validateEmailRequest, validateEmailAttachment} from '../post/emailProtection.js'
 import multer from "multer";
 import {getActiveBanners, getMainBanners} from '../clientBaza/promo/generationPagesForPromo.js'
 import {getDealers} from '../clientBaza/dealers/dealersDAO.js'
@@ -54,8 +55,9 @@ router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
 router.get('/getYearGap', Controllers.getYearGap)
 
-router.post('/postEmail', Post.postEmailYa)
-router.post('/postEmailWithAttachement', upload.single('file'), Post.postEmailWithAttachementYa)
+// Почтовые формы: лимит по IP ставим до multer, чтобы спам не занимал память загрузкой файла
+router.post('/postEmail', emailRateLimit, validateEmailRequest, Post.postEmailYa)
+router.post('/postEmailWithAttachement', emailRateLimit, upload.single('file'), validateEmailAttachment, Post.postEmailWithAttachementYa)
 router.get('/getMainBanners', getMainBanners) // баннеры карусели на главном
 router.get('/getActiveBanners', getActiveBanners) // все активные промо-баннеры
 router.get('/getDealers', getDealers) // дилерские центры для карты на главной
