@@ -62,8 +62,8 @@ router.get('/getDealers', getDealers) // дилерские центры для 
 
 
 router.get('/test', Controllers.test)
-router.get('/import-xml', Controllers.importXML) // загрузка xml в папку, заполнение БД, добавление фоток по ссылкам, удаление лишних фоток
-router.get('/unnecessaryPhoto', Controllers.unnecessaryPhoto) // лишние фотки в папке, которых уже нет в базе
+// Служебные эндпоинты /import-xml и /unnecessaryPhoto удалены: обновление сайта
+// и чистка файлов выполняются только через new_build/neatCombine.js, а не по HTTP.
 // router.get('/saveXmlFilesToPublic', Controllers.saveXmlFilesToPublic) // сохраняем xml к себе
 // router.get('/checkDuplicateVINs', Controllers.checkDuplicateVINs) // нет ли повторяющихся VIN
 // router.get('/getImageLinksCount', Controllers.getImageLinksCount) // общее количество ссылок на изображения в базе данных.
