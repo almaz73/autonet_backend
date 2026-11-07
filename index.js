@@ -19,6 +19,9 @@ const app = express()
 app.use(adminJs.options.rootPath, routerAdminJs); //Подключение админки
 
 const PORT = process.env.PORT || 3000; // Passenger передаёт порт через PORT
+// по умолчанию слушаем только localhost: снаружи сайт должен быть доступен через nginx/Apache с HTTPS.
+// HOST=0.0.0.0 — только если нужен прямой доступ к Node извне, без reverse proxy
+const HOST = process.env.HOST || '127.0.0.1'
 const DB_PATH = './database.sqlite'; // Local SQLite file
 
 const __filename = fileURLToPath(import.meta.url);
@@ -94,7 +97,7 @@ async function startApp() {
         // Make db available globally or pass to controllers
         global.db = db;
 
-        app.listen(PORT, () => console.log('SERVER STARTED ON PORT ' + PORT))
+        app.listen(PORT, HOST, () => console.log(`SERVER STARTED ON http://${HOST}:${PORT}`))
     } catch (e) {
         console.log(e)
     }

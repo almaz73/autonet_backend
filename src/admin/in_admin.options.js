@@ -30,7 +30,8 @@ const Components = {
     ChangeHistoryCell: componentLoader.add('ChangeHistoryCell', path.join(__dirname, 'change-history-cell.jsx')),
 }
 
-const isDev = process.env.USERNAME === 'almaz' // на моем компе без пароля для разработки
+// авторизация включена всегда; отключить её можно только явным флагом и только вне production
+const adminAuthDisabled = process.env.NODE_ENV !== 'production' && process.env.ADMIN_AUTH_DISABLED === '1'
 
 
 // Проверка: имеет ли текущий админ роль суперпользователя
@@ -62,9 +63,9 @@ const hideForManager = {
 };
 
 // Раздел «Администраторы» (и пароли) — только суперадмину;
-// локально авторизация отключена, поэтому доступ не ограничиваем
+// при отключённой авторизации currentAdmin отсутствует, поэтому раздел недоступен
 const superAdminOnly = {
-    isAccessible: (context) => isDev || isSuperAdmin(context),
+    isAccessible: (context) => isSuperAdmin(context),
 };
 
 // пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
@@ -496,8 +497,8 @@ const authenticate = async (email, password) => {
     return null;
 };
 
-// чтобы временно отключить авторизацию
-export const routerAdminJs = isDev ?
+// авторизация по умолчанию включена; ADMIN_AUTH_DISABLED=1 работает только вне production
+export const routerAdminJs = adminAuthDisabled ?
     AdminJSExpress.buildRouter(adminJs) :
     AdminJSExpress.buildAuthenticatedRouter(adminJs, {
         authenticate,
