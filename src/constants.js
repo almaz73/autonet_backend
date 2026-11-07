@@ -39,7 +39,6 @@ export const receivedDataTypes = {
 export let xmlUrls = [
     'https://export.cartat.ru/avtoset_upload/Avtoset_new/AVTO_NIGNEKAMSK.xml',
     'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_AMK.xml',
-    'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Astrahan.xml',
     'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
     'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa5_gktm.xml',
     'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
@@ -47,7 +46,6 @@ export let xmlUrls = [
 export let xmlNames = [
     'AVTO_NIGNEKAMSK.xml',
     'AlfaAvto5_AMK.xml',
-    'AlfaAvto5_Astrahan.xml',
     'AlfaAvto5_Tver.xml',
     'alfa5_gktm.xml',
     'alfa-trade.xml'

@@ -5,6 +5,7 @@ import path from 'path'
 import {fileURLToPath} from 'url'
 import {sequelize, Admins, history_period, clientEmails, promo, dealers, changeHistory} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
+import {clearPromoCache} from '../clientBaza/promo/generationPagesForPromo.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
 import {applyPromoPhotoText} from './promo-text-action.js'
 import {uploadDealerPhoto} from './dealer-photo-action.js'
@@ -82,6 +83,13 @@ const logChange = (entity, action) => async (response, request, context) => {
     })))
 
     return response
+};
+
+// AdminJS пишет в promo напрямую через Sequelize, минуя promoService,
+// поэтому кэш баннеров (/getMainBanners, /getActiveBanners) сбрасываем сами
+const afterPromoChange = (action) => async (response, request, context) => {
+    clearPromoCache()
+    return logChange('promo', action)(response, request, context)
 };
 
 
@@ -177,7 +185,7 @@ export const adminJs = new AdminJS({
                     edit: {
                         isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
-                        after: logChange('promo', 'update'),
+                        after: afterPromoChange('update'),
                     },
                     // режим просмотра не нужен: клик по строке открывает редактирование
                     show: {
@@ -186,7 +194,7 @@ export const adminJs = new AdminJS({
                     new: {
                         isAccessible: hideForManager.isAccessible,
                         component: Components.PromoEdit,
-                        after: logChange('promo', 'create'),
+                        after: afterPromoChange('create'),
                         before: async (request) => {
                             // код новой акции = максимальный существующий + 1
                             if (!request.payload?.code) {
@@ -200,11 +208,11 @@ export const adminJs = new AdminJS({
                     },
                     delete: {
                         ...hideForManager,
-                        after: logChange('promo', 'delete'),
+                        after: afterPromoChange('delete'),
                     },
                     bulkDelete: {
                         ...hideForManager,
-                        after: logChange('promo', 'delete'),
+                        after: afterPromoChange('delete'),
                     },
                     // вызывается кнопкой загрузки фото из PromoEdit, в интерфейсе не показывается
                     uploadPhotos: {
