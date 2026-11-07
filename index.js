@@ -1,3 +1,4 @@
+import './src/loadEnv.js' // первым: .env должен быть загружен до моделей и настроек админки
 import express from 'express'
 import sqlite3 from 'sqlite3';
 import {open} from 'sqlite';

@@ -158,15 +158,21 @@ sequelize.sync() // This will create tables if they don't exist
             console.log('Таблица changeHistory дополнена полями контактов');
         }
 
-        // Дефолтный суперадмин при первом запуске (если таблица Admins пуста)
+        // Дефолтный суперадмин при первом запуске (если таблица Admins пуста).
+        // Пароль берём из .env, чтобы он не хранился в исходниках
         if (await Admins.count() === 0) {
-            await Admins.create({
-                name: 'Superadmin',
-                email: 'admin@autonet.ru',
-                password: 'Autonet_2026_this_parole_will_be_never_used',
-                role: 'superadmin',
-            });
-            console.log('Создан администратор по умолчанию: admin@autonet.ru / Autonet_2026');
+            const superAdminPassword = process.env.SUPERADMIN_PASSWORD
+            if (!superAdminPassword) {
+                console.warn('Таблица Admins пуста, но SUPERADMIN_PASSWORD не задан в .env — суперадмин не создан')
+            } else {
+                await Admins.create({
+                    name: 'Superadmin',
+                    email: 'admin@autonet.ru',
+                    password: superAdminPassword,
+                    role: 'superadmin',
+                });
+                console.log('Создан администратор по умолчанию: admin@autonet.ru (пароль из .env)');
+            }
         }
     })
     .catch((error) => console.error('Error creating tables or default admin:', error));
