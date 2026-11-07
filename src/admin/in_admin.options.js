@@ -3,6 +3,9 @@ import AdminJSExpress from '@adminjs/express'
 import {Database, Resource} from '@adminjs/sequelize'
 import path from 'path'
 import {fileURLToPath} from 'url'
+import session from 'express-session'
+import connectSqlite3 from 'connect-sqlite3'
+import {randomBytes} from 'node:crypto'
 import {sequelize, Admins, history_period, clientEmails, promo, dealers, changeHistory} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {clearPromoCache} from '../clientBaza/promo/generationPagesForPromo.js'
@@ -488,13 +491,84 @@ export const adminJs = new AdminJS({
 
 adminJs.watch()
 
+// --- Настройка сессии админки -------------------------------------------------
+
+// в production cookie должна уходить только по HTTPS (за nginx/Apache нужен trust proxy в index.js)
+const isProduction = process.env.NODE_ENV === 'production'
+
+// секрет подписи cookie сессии держим в .env, а не в исходниках
+let adminSessionSecret = process.env.ADMIN_SESSION_SECRET
+if (!adminSessionSecret) {
+    if (isProduction) {
+        throw new Error('ADMIN_SESSION_SECRET не задан: добавьте секрет в .env')
+    }
+    adminSessionSecret = randomBytes(48).toString('base64url')
+    console.warn('ADMIN_SESSION_SECRET не задан — сгенерирован временный секрет, сессии сбросятся при рестарте')
+}
+
+// сессии храним в SQLite: они не теряются при рестарте и не копятся в памяти процесса
+const SQLiteStore = connectSqlite3(session)
+const adminSessionStore = new SQLiteStore({
+    db: 'admin-sessions.sqlite',
+    dir: process.cwd(),
+    table: 'sessions',
+})
+
+// AdminJS не передаёт запрос в authenticate, а express-formidable внутри него сбрасывает
+// AsyncLocalStorage, поэтому перегенерировать сессию из колбэка входа нельзя.
+// Это и не требуется: при saveUninitialized: false до входа сессии не существует,
+// поэтому подставить (зафиксировать) session ID некому — логин создаёт новый.
+
+// Лимит попыток входа: 10 за 15 минут с одного IP, при превышении — блокировка на 15 минут.
+// Дополняет встроенный maxRetries AdminJS (5 попыток за 60 секунд, хранится только в памяти)
+const LOGIN_ATTEMPTS_LIMIT = 10
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
+const loginAttempts = new Map()
+
+const pruneLoginAttempts = (now) => {
+    for (const [ip, entry] of loginAttempts) {
+        if (entry.resetAt <= now && (!entry.blockedUntil || entry.blockedUntil <= now)) {
+            loginAttempts.delete(ip)
+        }
+    }
+}
+
+export const adminLoginRateLimit = (req, res, next) => {
+    if (req.method !== 'POST' || !req.path.endsWith('/login')) return next()
+
+    const now = Date.now()
+    if (loginAttempts.size > 1000) pruneLoginAttempts(now)
+
+    let entry = loginAttempts.get(req.ip)
+    if (!entry || entry.resetAt <= now) {
+        entry = {count: 0, resetAt: now + LOGIN_WINDOW_MS}
+        loginAttempts.set(req.ip, entry)
+    }
+
+    if (entry.blockedUntil && entry.blockedUntil > now) {
+        res.set('Retry-After', String(Math.ceil((entry.blockedUntil - now) / 1000)))
+        return res.status(429).send('Слишком много попыток входа. Попробуйте позже.')
+    }
+
+    if (entry.count >= LOGIN_ATTEMPTS_LIMIT) {
+        entry.blockedUntil = now + LOGIN_WINDOW_MS
+        res.set('Retry-After', String(Math.ceil(LOGIN_WINDOW_MS / 1000)))
+        return res.status(429).send('Слишком много попыток входа. Попробуйте позже.')
+    }
+
+    entry.count += 1
+    // успешный вход (AdminJS отвечает редиректом 302) сбрасывает счётчик
+    res.on('finish', () => {
+        if (res.statusCode === 302) loginAttempts.delete(req.ip)
+    })
+    next()
+}
+
 // Проверка логина и пароля при входе в /administrator
 const authenticate = async (email, password) => {
     const admin = await Admins.findOne({where: {email}});
-    if (admin && admin.password === password) {
-        return admin; // запись попадёт в currentAdmin внутри админки
-    }
-    return null;
+    if (!admin || admin.password !== password) return null;
+    return admin; // запись попадёт в currentAdmin внутри админки
 };
 
 // авторизация по умолчанию включена; ADMIN_AUTH_DISABLED=1 работает только вне production
@@ -503,9 +577,17 @@ export const routerAdminJs = adminAuthDisabled ?
     AdminJSExpress.buildAuthenticatedRouter(adminJs, {
         authenticate,
         cookieName: 'adminjs',
-        cookiePassword: 'Adm1nJs_autonet_s3ssion_2026', // секрет для подписи сессии
+        cookiePassword: adminSessionSecret,
         maxRetries: 5, // не более 5 попыток входа подряд с одного IP
     }, null, {
+        store: adminSessionStore,
         resave: false,
-        saveUninitialized: true,
+        saveUninitialized: false, // сессия создаётся при входе, а не на каждый запрос
+        rolling: true, // продлевать cookie при активности
+        cookie: {
+            httpOnly: true,
+            sameSite: 'strict', // основная защита от CSRF для админки
+            secure: isProduction, // за reverse proxy с HTTPS
+            maxAge: 8 * 60 * 60 * 1000, // 8 часов
+        },
     });

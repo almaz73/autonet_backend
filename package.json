@@ -13,6 +13,7 @@
     "adminjs": "^7.8.17",
     "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
+    "connect-sqlite3": "^0.9.18",
     "ejs": "^5.0.2",
     "express": "^4.22.1",
     "express-session": "^1.19.0",

@@ -14,10 +14,22 @@ import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
-import {routerAdminJs,adminJs} from './src/admin/in_admin.options.js'
+import {routerAdminJs, adminJs, adminLoginRateLimit} from './src/admin/in_admin.options.js'
 
 const app = express()
-app.use(adminJs.options.rootPath, routerAdminJs); //Подключение админки
+
+// за nginx/Apache/Passenger: нужно для secure-cookie админки и корректного IP в лимитере входа.
+// TRUST_PROXY можно задать явно (число хопов или значение для express), по умолчанию 1 в production
+const trustProxy = process.env.TRUST_PROXY
+if (trustProxy) {
+    app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy)
+} else if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1)
+}
+
+const adminRootPath = adminJs.options.rootPath
+app.use(adminRootPath, adminLoginRateLimit) // ограничение попыток входа
+app.use(adminRootPath, routerAdminJs); //Подключение админки
 
 const PORT = process.env.PORT || 3000; // Passenger передаёт порт через PORT
 // по умолчанию слушаем только localhost: снаружи сайт должен быть доступен через nginx/Apache с HTTPS.
