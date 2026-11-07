@@ -22,72 +22,72 @@ class Controllers {
         }
     }
 
-    async workerImportXML(req, res) {
-        try {
-            // Store the response data to build a report
-            let responseData = null;
-            let hasCompleted = false;
-
-            const worker = new Worker('./src/worker/ImportXMLWorker.js');
-
-            worker.on('message', (message) => {
-                // console.log('!!!! Worker message:', message);
-                responseData = message;
-
-                // Only send response if worker has completed successfully
-                if (message.status === 'COMPLETE' && !hasCompleted) {
-                    hasCompleted = true;
-                    try {
-                        res.json({
-                            success: true,
-                            message: 'Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился',
-                            data: message.message
-                        });
-                    } catch (e) {
-                        return message.message
-                    }
-                }
-            });
-
-            worker.on('error', (error) => {
-                console.error('Worker error:', error);
-                if (!hasCompleted) {
-                    hasCompleted = true;
-                    res.status(500).json({
-                        success: false,
-                        error: error.message,
-                        message: 'Worker error occurred'
-                    });
-                }
-            });
-
-            worker.on('exit', (code) => {
-                if (code !== 0 && !hasCompleted) {
-                    hasCompleted = true;
-                    res.status(500).json({
-                        success: false,
-                        error: `Worker stopped with exit code ${code}`,
-                        message: `Worker stopped with exit code ${code}`
-                    });
-                } else if (code === 0 && !hasCompleted && responseData) {
-                    // In case COMPLETE message wasn't received but worker exited normally
-                    hasCompleted = true;
-                    res.json({
-                        success: true,
-                        message: 'Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился',
-                        data: responseData.message
-                    });
-                }
-            });
-
-        } catch (error) {
-            console.error('Ошибка запуска воркера:', error);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
-        }
-    }
+    //  async workerImportXML(req, res) {
+    //     try {
+    //         // Store the response data to build a report
+    //         let responseData = null;
+    //         let hasCompleted = false;
+    //
+    //         const worker = new Worker('./src/worker_old/ImportXMLWorker.js');
+    //
+    //         worker.on('message', (message) => {
+    //             // console.log('!!!! Worker message:', message);
+    //             responseData = message;
+    //
+    //             // Only send response if worker has completed successfully
+    //             if (message.status === 'COMPLETE' && !hasCompleted) {
+    //                 hasCompleted = true;
+    //                 try {
+    //                     res.json({
+    //                         success: true,
+    //                         message: 'Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился',
+    //                         data: message.message
+    //                     });
+    //                 } catch (e) {
+    //                     return message.message
+    //                 }
+    //             }
+    //         });
+    //
+    //         worker.on('error', (error) => {
+    //             console.error('Worker error:', error);
+    //             if (!hasCompleted) {
+    //                 hasCompleted = true;
+    //                 res.status(500).json({
+    //                     success: false,
+    //                     error: error.message,
+    //                     message: 'Worker error occurred'
+    //                 });
+    //             }
+    //         });
+    //
+    //         worker.on('exit', (code) => {
+    //             if (code !== 0 && !hasCompleted) {
+    //                 hasCompleted = true;
+    //                 res.status(500).json({
+    //                     success: false,
+    //                     error: `Worker stopped with exit code ${code}`,
+    //                     message: `Worker stopped with exit code ${code}`
+    //                 });
+    //             } else if (code === 0 && !hasCompleted && responseData) {
+    //                 // In case COMPLETE message wasn't received but worker exited normally
+    //                 hasCompleted = true;
+    //                 res.json({
+    //                     success: true,
+    //                     message: 'Параллельный поток ОБНОВЛЕНИЯ БАЗ ИЗ ХМЛ завершился',
+    //                     data: responseData.message
+    //                 });
+    //             }
+    //         });
+    //
+    //     } catch (error) {
+    //         console.error('Ошибка запуска воркера:', error);
+    //         res.status(500).json({
+    //             success: false,
+    //             error: error.message
+    //         });
+    //     }
+    // }
 
     async importXML(req, res) {
         console.log('  import XML ⚡ start ⚡ start ⚡ start ⚡ start ⚡ start ⚡')
