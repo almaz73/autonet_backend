@@ -1,5 +1,6 @@
 import './src/loadEnv.js' // первым: .env должен быть загружен до моделей и настроек админки
 import express from 'express'
+import helmet from 'helmet'
 import sqlite3 from 'sqlite3';
 import {open} from 'sqlite';
 import router from "./src/routers/router.js"; // Updated path to reflect router.js being inside src
@@ -17,13 +18,72 @@ import Controllers from "./src/xml_import/Controllers.js";
 import {routerAdminJs, adminJs, adminLoginRateLimit} from './src/admin/in_admin.options.js'
 
 const app = express()
+const isProduction = process.env.NODE_ENV === 'production'
+
+// Роутеры проекта созданы через new Router() (это отдельные Express-приложения),
+// поэтому X-Powered-By отключаем у каждого из них, а не только у основного app
+for (const subApp of [router, routerAuth, routerPromo, routerArticles, router_bd, router_ssr, router_buyout, router_history, routerAdminJs]) {
+    subApp?.disable?.('x-powered-by')
+}
+
+// не раскрываем Express в заголовках и включаем security-заголовки для всех ответов
+app.disable('x-powered-by')
+app.use(helmet({
+    contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+            'default-src': ["'self'"],
+            'base-uri': ["'self'"],
+            'object-src': ["'none'"],
+            'frame-ancestors': ["'self'"],
+            'form-action': ["'self'"],
+            // инлайн-скрипты/стили используются в EJS-шаблонах и в интерфейсе AdminJS
+            'script-src': [
+                "'self'",
+                "'unsafe-inline'",
+                'https://mc.yandex.ru', // Яндекс.Метрика
+                'https://zcdn.ru', // чат поддержки
+                'https://static.site-chat.me',
+                'https://widget.me-talk.ru',
+                'https://static.me-talk.ru',
+            ],
+            'script-src-attr': ["'unsafe-inline'"], // onclick и т.п. в старых шаблонах
+            'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], // шрифты интерфейса AdminJS
+            'img-src': ["'self'", 'data:', 'blob:', 'https:', 'http:'], // фото авто и дилеров лежат на внешних CDN
+            'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
+            'connect-src': [
+                "'self'",
+                'https://*.yandex.ru',
+                'https://mc.yandex.ru',
+                'https://zcdn.ru',
+                'https://static.site-chat.me',
+                'https://widget.me-talk.ru',
+                'https://static.me-talk.ru',
+                'https://dev.apibcknd.com',
+                'wss://widget.me-talk.ru',
+                'wss://dev.apibcknd.com',
+            ],
+            'frame-src': ["'self'", 'https://makemap.2gis.ru', 'https://*.2gis.ru', 'https://mc.yandex.ru', 'https://widget.me-talk.ru', 'https://static.me-talk.ru'], // карта дилеров, Вебвизор Метрики и окно чата
+            'media-src': ["'self'", 'https:', 'blob:'],
+            'worker-src': ["'self'", 'blob:'],
+            'manifest-src': ["'self'"],
+            // на локальном http этот запрет сломал бы загрузку ресурсов
+            ...(isProduction ? {'upgrade-insecure-requests': []} : {}),
+        },
+    },
+    // внешние картинки и карта 2ГИС не отдают CORP, при require-corp они бы перестали грузиться
+    crossOriginEmbedderPolicy: false,
+    referrerPolicy: {policy: 'strict-origin-when-cross-origin'},
+    // HSTS включаем только на сервере с HTTPS
+    hsts: isProduction ? {maxAge: 15552000, includeSubDomains: false, preload: false} : false,
+}))
 
 // за nginx/Apache/Passenger: нужно для secure-cookie админки и корректного IP в лимитере входа.
 // TRUST_PROXY можно задать явно (число хопов или значение для express), по умолчанию 1 в production
 const trustProxy = process.env.TRUST_PROXY
 if (trustProxy) {
     app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy)
-} else if (process.env.NODE_ENV === 'production') {
+} else if (isProduction) {
     app.set('trust proxy', 1)
 }
 
