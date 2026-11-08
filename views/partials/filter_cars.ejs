@@ -1,0 +1,116 @@
+<div class="filter-white"<% if (typeof filterActive !== 'undefined' && filterActive) { %> style="margin-bottom: 0"<% } %>>
+    <div class="filter-white-back filter-fields">
+        <div class="frame-filter__item">
+            <%- include('comb', {name: 'Марка'}) %>
+        </div>
+        <div class="frame-filter__item">
+            <%- include('comb', {name: 'Модель'}) %>
+        </div>
+        <div class="frame-filter__item">
+            <%- include('comb', {name: 'Город'}) %>
+        </div>
+
+        <div style="flex-grow: 1">
+            <div class="big-combo control-flex" onmousedown="onCard(this)">
+                <span style="width: 60px">Год от:</span>
+                <input class="big-comb__input" style="width: 80px"
+                       oninput="input_on('yearReleasedFrom', this.value)"
+                       onchange="input_chamged('yearReleasedFrom', this.value)">
+            </div>
+        </div>
+
+        <div class="no_advanced">
+            <div class="big-combo control-flex" onmousedown="onCard(this)">
+                <span style="width: 60px">Год до:</span>
+                <input class="big-comb__input" style="width: 80px"
+                       oninput="input_on('yearReleasedTo', this.value)"
+                       onchange="input_chamged('yearReleasedTo', this.value)" onclick="this.select()">
+            </div>
+        </div>
+
+        <div class="frame-filter__item no_advanced">
+            <%- include('comb', {name: 'Цвет'}) %>
+        </div>
+
+        <div class="no_advanced">
+            <div class="big-combo control-flex">
+                <span style="width: 80px">Цена от: </span>
+                <input class="big-comb__input" style="width: 80px"
+                       oninput="input_on('priceFrom', this.value)"
+                       onchange="input_chamged('priceFrom', this.value)" onclick="this.select()">
+            </div>
+        </div>
+
+        <div class="big-combo control-flex">
+            <span style="width: 80px">Цена до: </span>
+            <input class="big-comb__input" style="width: 80px"
+                   oninput="input_on('priceTo', this.value)"
+                   onchange="input_chamged('priceTo', this.value)" onclick="this.select()">
+        </div>
+
+        <div class="no_advanced">
+            <div class="big-combo control-flex">
+                <span>Пробег от:</span>
+                <input class="big-comb__input" style="width: 78px"
+                       oninput="input_on('milleageFrom', this.value)"
+                       onchange="input_chamged('milleageFrom', this.value)" onclick="this.select()">
+            </div>
+        </div>
+
+        <div class="no_advanced">
+            <div class="big-combo control-flex">
+                <span style="width: 90px">Пробег до:&nbsp;</span>
+                <input class="big-comb__input" style="width: 70px"
+                       oninput="input_on('milleageTo', this.value)"
+                       onchange="input_chamged('milleageTo', this.value)" onclick="this.select()">
+            </div>
+        </div>
+
+        <div class="frame-filter__item no_advanced">
+            <%- include('comb', {name: 'Тип кузова'}) %>
+        </div>
+
+        <div class="frame-filter__item no_advanced">
+            <%- include('comb', {name: 'Тип КПП'}) %>
+        </div>
+
+        <div class="frame-filter__item no_advanced">
+            <%- include('comb', {name: 'Тип двигателя'}) %>
+        </div>
+
+        <div class="no_advanced">
+            <div class="big-combo control-flex">
+                <span style="width: 165px">Объем двигателя до:&nbsp;</span>
+                <input class="big-comb__input" style="width: 70px"
+                       oninput="input_on('engineCapacity', this.value)"
+                       onchange="input_chamged('engineCapacity', this.value)" onclick="this.select()">
+            </div>
+        </div>
+
+        <div class="frame-filter__item no_advanced">
+            <%- include('comb', {name: 'Тип привода'}) %>
+        </div>
+
+        <div class="frame-filter__item no_advanced">
+            <%- include('comb', {name: 'Руль'}) %>
+        </div>
+    </div>
+
+    <div class="frame-filter__controls">
+        <button class="frame-filter__controls-advanced">
+            <span class="frame-filter__controls-advanced-icon"></span>
+            <span class="frame-filter__controls-advanced-text">Расширенный фильтр</span>
+        </button>
+
+        <a href="javascript:void(0)" onclick="clearFilter()" class="frame-filter__controls-reset">Сбросить</a>
+
+        <button class="frame-filter__submit" id="set_filter" onclick="goToCars()">
+            Найдено&nbsp;<span class="filter_number"></span>
+        </button>
+    </div>
+</div>
+
+<div class="date-list" id="list1"></div>
+<div class="date-list" id="list2"></div>
+
+<div id="deleter" title="Очистить">x</div>
