@@ -1,3 +1,4 @@
+import './loadEnv.js' // .env должен быть загружен до чтения SMTP-настроек
 import {sendEmail} from "./post/sendEmail.js";
 
 const URL = 'https://xn--80aej9aped4f.xn--p1ai/'; // Адрес вашего сайта

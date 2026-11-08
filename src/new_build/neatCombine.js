@@ -2,6 +2,7 @@
 * Последовательный обход всех шагов обновления сайта
 * */
 
+import '../loadEnv.js' // первым: .env должен быть загружен до чтения SMTP-настроек для отчёта
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import path from "path";

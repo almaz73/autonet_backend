@@ -156,50 +156,53 @@ function deletePromo(id, callback) {
     });
 }
 
+// основной файл и его чистый исходник (_blank) для наложения текста;
+// при замене фото исходник обновляется вместе с основным, иначе редактор
+// «Добавить текст» показал бы прежнюю фотографию
+async function writePromoVariant(promoPhotoDir, baseName, buffer) {
+    await fs.promises.writeFile(path.join(promoPhotoDir, `${baseName}.webp`), buffer);
+    await fs.promises.writeFile(path.join(promoPhotoDir, `${baseName}_blank.webp`), buffer);
+}
+
 async function createPromoPhotos278х402(fileName, photo, promoPhotoDir) {
     const name = `${fileName + '_v_b'}.webp`
-    const filePath = path.join(promoPhotoDir, name);
     let processedBuffer = await sharp(photo)
         .webp({quality: 92})
         .resize(500, 723, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
-    await fs.promises.writeFile(filePath, processedBuffer);
+    await writePromoVariant(promoPhotoDir, `${fileName}_v_b`, processedBuffer);
 
-    const filePath2 = path.join(promoPhotoDir, `${fileName + '_v_l'}.webp`);
     processedBuffer = await sharp(photo)
         .webp({quality: 92})
         .resize(278, 402, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
-    await fs.promises.writeFile(filePath2, processedBuffer);
+    await writePromoVariant(promoPhotoDir, `${fileName}_v_l`, processedBuffer);
     return name
 }
 
 async function createPromoPhotos1200х501(fileName, photo, promoPhotoDir) {
     const name = `${fileName + '_h_m'}.webp`
-    const filePath = path.join(promoPhotoDir, name);
     const processedBuffer = await sharp(photo)
         .webp({quality: 92})
         .resize(1201, 501, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
-    await fs.promises.writeFile(filePath, processedBuffer);
+    await writePromoVariant(promoPhotoDir, `${fileName}_h_m`, processedBuffer);
     return name
 }
 
 async function createPromoPhotos585х200(fileName, photo, promoPhotoDir) {
     const name = `${fileName + '_h_b'}.webp`
-    const filePath = path.join(promoPhotoDir, name);
     let processedBuffer = await sharp(photo)
         .webp({quality: 92})
         .resize(1200, 410, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
-    await fs.promises.writeFile(filePath, processedBuffer);
+    await writePromoVariant(promoPhotoDir, `${fileName}_h_b`, processedBuffer);
 
-    const filePath2 = path.join(promoPhotoDir, `${fileName + '_h_l'}.webp`);
     processedBuffer = await sharp(photo)
         .webp({quality: 92})
         .resize(585, 200, {fit: 'cover', withoutEnlargement: true})
         .toBuffer();
-    await fs.promises.writeFile(filePath2, processedBuffer);
+    await writePromoVariant(promoPhotoDir, `${fileName}_h_l`, processedBuffer);
     return name
 }
 
@@ -346,11 +349,8 @@ async function savePromoPhotosById(id, buffers) {
     for (const [slot, buffer] of Object.entries(buffers)) {
         const generate = PHOTO_GENERATORS[slot];
         if (!generate) throw new Error(`Неизвестный размер фото: ${slot}`);
-        // новое фото затирает прежнее, прежний исходник _blank больше не подходит
-        for (const variant of SLOT_VARIANTS[slot]) {
-            const blankFile = path.join(promoPhotoDir, `${id}_${variant}_blank.webp`);
-            await fs.promises.unlink(blankFile).catch(() => {});
-        }
+        // генератор сразу пишет и исходник _blank, поэтому редактор текста
+        // всегда работает с только что загруженной фотографией
         names[slot] = await generate(String(id), buffer, promoPhotoDir);
     }
 
