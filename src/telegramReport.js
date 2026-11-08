@@ -1,9 +1,19 @@
-export function sendTelegram(message) {
-    // console.log('TELEGRAM  SEND message = ', message)
+// Токен бота и чат для служебных уведомлений храним в .env, а не в исходниках
+const botToken = process.env.TELEGRAM_BOT_TOKEN
+const chatId = process.env.TELEGRAM_CHAT_ID
 
-    let botId = 'bot8235288635:AAF_soJaYR8OPHAQrpfcF4FDUr2JjRRDlVw';
-    let chatId = '-5064627941';
-    let linkTelega = `https://api.telegram.org/${botId}/sendMessage?chat_id=${chatId}&parse_mode=HTML&text=${message}`;
+let warned = false
+
+export function sendTelegram(message) {
+    if (!botToken || !chatId) {
+        if (!warned) {
+            console.warn('TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID не заданы в .env — уведомления в Telegram отключены')
+            warned = true
+        }
+        return
+    }
+
+    let linkTelega = `https://api.telegram.org/${botToken}/sendMessage?chat_id=${chatId}&parse_mode=HTML&text=${message}`;
 
     try {
         fetch(linkTelega)

@@ -3,12 +3,16 @@ import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
 import {users} from "./env_secrets.js";
 
+// секрет подписи JWT берём из .env: без него сервер не запустится
+const jwtSecret = process.env.JWT_SECRET
+if (!jwtSecret) throw new Error('JWT_SECRET не задан: добавьте секрет в .env')
+
 // Promisify jwt.verify for easier use
 const verifyAsync = promisify(jwt.verify).bind(jwt);
 
 // Generatea token for a user
 function generateToken(user) {
-    return jwt.sign({ id: user.id, username: user.username, role: user.role }, 'secret_key', {
+    return jwt.sign({ id: user.id, username: user.username, role: user.role }, jwtSecret, {
         expiresIn: '24h'
     });
 }
@@ -29,8 +33,6 @@ export async function login(req,res) {
         // Generate token
         const token = generateToken(user);
 
-        console.log('token = ',token)
-
         // Return token
         res.json({ token });
     } catch (error){
@@ -50,7 +52,7 @@ export function authMiddleware(req, res, next) {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, 'secret_key');
+        const decoded = jwt.verify(token, jwtSecret);
         const user = users.find(u => u.id === decoded.id);
 
         if (!user)   return res.status(404).json({ error:'User not found' });
