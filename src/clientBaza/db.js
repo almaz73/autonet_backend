@@ -28,10 +28,19 @@ const Admins = sequelize.define('Admins', {
     email: {type: DataTypes.STRING, required: true, unique: true},
     password: {type: DataTypes.STRING, required: true},
     role: {
-        type: String,
-        enum: ['superadmin', 'manager', 'moderator', 'promo_manager'],
-        default: 'manager',
-        required: true
+        type: DataTypes.STRING,
+        // матрица ролей описана в src/admin/in_admin.options.js
+        enum: ['superadmin', 'admin', 'promo_manager', 'manager'],
+        defaultValue: 'manager',
+        allowNull: false,
+        // приводим к нижнему регистру: в старых записях встречается 'superAdmin'
+        get() {
+            const value = this.getDataValue('role')
+            return value ? value.toLowerCase() : value
+        },
+        set(value) {
+            this.setDataValue('role', value ? String(value).toLowerCase() : value)
+        }
     }
 }, {
     timestamps: false

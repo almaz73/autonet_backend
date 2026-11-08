@@ -37,39 +37,36 @@ const Components = {
 const adminAuthDisabled = process.env.NODE_ENV !== 'production' && process.env.ADMIN_AUTH_DISABLED === '1'
 
 
-// Проверка: имеет ли текущий админ роль суперпользователя
-const isSuperAdmin = ({ currentAdmin }) => {
-    return currentAdmin?.role?.toLowerCase() === 'superadmin';
-};
+// --- Роли и доступы ---------------------------------------------------------
+// Матрица ролей:
+//   superadmin    — полный доступ, включая администраторов и роли;
+//   admin         — всё, кроме раздела «Администраторы»;
+//   promo_manager — акции и контакты + просмотр истории изменений;
+//   manager       — просмотр всего, кроме «Администраторов», без изменений.
+// Доступ выдаётся только явно перечисленным ролям: неизвестная роль прав не получает.
+const roleOf = (context) => context.currentAdmin?.role?.toLowerCase()
 
-// Промо-менеджеру разрешён только раздел «Акции»
-const isPromoManager = ({ currentAdmin }) => {
-    return currentAdmin?.role?.toLowerCase() === 'promo_manager';
-};
+const allowRoles = (...roles) => ({
+    isAccessible: (context) => roles.includes(roleOf(context)),
+})
 
-// Менеджеру разрешён только просмотр
-const isManager = ({ currentAdmin }) => {
-    return currentAdmin?.role?.toLowerCase() === 'manager';
-};
+// раздел «Администраторы» и управление ролями/доступами
+const superAdminOnly = allowRoles('superadmin')
 
-const hideForPromoManager = {
-    isAccessible: (context) => !isPromoManager(context),
-};
+// данные клиентов и «Время продаж»: promo_manager их не видит
+const withoutPromoManager = allowRoles('superadmin', 'admin', 'manager')
 
-// Раздел/действие скрыто для promo_manager и manager
-const hideForPromoManagerAndManager = {
-    isAccessible: (context) => !isPromoManager(context) && !isManager(context),
-};
+// изменения данных клиентов и «Время продаж»
+const adminOnly = allowRoles('superadmin', 'admin')
 
-const hideForManager = {
-    isAccessible: (context) => !isManager(context),
-};
+// акции и контакты: редактируют superadmin, admin и promo_manager
+const promoEditors = allowRoles('superadmin', 'admin', 'promo_manager')
 
-// Раздел «Администраторы» (и пароли) — только суперадмину;
-// при отключённой авторизации currentAdmin отсутствует, поэтому раздел недоступен
-const superAdminOnly = {
-    isAccessible: (context) => isSuperAdmin(context),
-};
+// просмотр истории изменений доступен всем четырём ролям
+const allRoles = allowRoles('superadmin', 'admin', 'promo_manager', 'manager')
+
+// карточка только для просмотра: менеджер не может открыть форму редактирования
+const managerOnly = allowRoles('manager')
 
 // пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
 const logChange = (entity, action) => async (response, request, context) => {
@@ -108,6 +105,17 @@ export const adminJs = new AdminJS({
             options: {
                 // navigation: {name: 'Пользователи', icon: 'User'},
                 navigation: null,
+                // роли ограничены матрицей доступов выше; произвольный текст не даём вводить
+                properties: {
+                    role: {
+                        availableValues: [
+                            {value: 'superadmin', label: 'Суперадмин — полный доступ'},
+                            {value: 'admin', label: 'Администратор — всё, кроме администраторов'},
+                            {value: 'promo_manager', label: 'Промо-менеджер — акции, контакты, история'},
+                            {value: 'manager', label: 'Менеджер — просмотр всего, кроме администраторов'},
+                        ],
+                    },
+                },
                 actions: {
                     // доступ к администраторам и паролям только у superadmin
                     new: superAdminOnly,
@@ -127,13 +135,13 @@ export const adminJs = new AdminJS({
                 listProperties: ['fio', 'phone', 'email', 'address', 'link', 'type_form', 'credit', 'created_at'],
                 navigation: null,
                 actions: {
-                    list: hideForPromoManager,
-                    show: hideForPromoManager,
-                    new: hideForPromoManagerAndManager,
-                    edit: hideForPromoManagerAndManager,
-                    delete: hideForPromoManagerAndManager,
-                    bulkDelete: hideForPromoManagerAndManager,
-                    search: hideForPromoManager,
+                    list: withoutPromoManager,
+                    show: withoutPromoManager,
+                    new: adminOnly,
+                    edit: adminOnly,
+                    delete: adminOnly,
+                    bulkDelete: adminOnly,
+                    search: withoutPromoManager,
                 },
                 sort: {
                     sortBy: 'id',      // Поле для сортировки (можно заменить на 'createdAt' или 'startedDate')
@@ -156,13 +164,13 @@ export const adminJs = new AdminJS({
                 listProperties: ['endDate', 'car', 'days'],
                 navigation: null,
                 actions: {
-                    list: hideForPromoManager,
-                    show: hideForPromoManager,
-                    new: hideForPromoManagerAndManager,
-                    edit: hideForPromoManagerAndManager,
-                    delete: hideForPromoManagerAndManager,
-                    bulkDelete: hideForPromoManagerAndManager,
-                    search: hideForPromoManager,
+                    list: withoutPromoManager,
+                    show: withoutPromoManager,
+                    new: adminOnly,
+                    edit: adminOnly,
+                    delete: adminOnly,
+                    bulkDelete: adminOnly,
+                    search: withoutPromoManager,
                 },
 
             },
@@ -179,6 +187,7 @@ export const adminJs = new AdminJS({
                 },
                 actions: {
                     list: {
+                        ...allRoles,
                         before: (request) => {
                             if (!request.query?.perPage) {
                                 request.query = {...request.query, perPage: 50}
@@ -187,16 +196,14 @@ export const adminJs = new AdminJS({
                         },
                     },
                     edit: {
-                        isAccessible: hideForManager.isAccessible,
+                        isAccessible: promoEditors.isAccessible,
                         component: Components.PromoEdit,
                         after: afterPromoChange('update'),
                     },
-                    // режим просмотра не нужен: клик по строке открывает редактирование
-                    show: {
-                        isAccessible: () => false,
-                    },
+                    // просмотр карточки доступен менеджеру; остальным клик открывает редактирование
+                    show: managerOnly,
                     new: {
-                        isAccessible: hideForManager.isAccessible,
+                        isAccessible: promoEditors.isAccessible,
                         component: Components.PromoEdit,
                         after: afterPromoChange('create'),
                         before: async (request) => {
@@ -211,25 +218,25 @@ export const adminJs = new AdminJS({
                         },
                     },
                     delete: {
-                        ...hideForManager,
+                        ...promoEditors,
                         after: afterPromoChange('delete'),
                     },
                     bulkDelete: {
-                        ...hideForManager,
+                        ...promoEditors,
                         after: afterPromoChange('delete'),
                     },
                     // вызывается кнопкой загрузки фото из PromoEdit, в интерфейсе не показывается
                     uploadPhotos: {
                         isVisible: false,
                         method: 'post',
-                        isAccessible: hideForManager.isAccessible,
+                        isAccessible: promoEditors.isAccessible,
                         handler: uploadPromoPhotos,
                     },
                     // вызывается редактором текста из PromoEdit, в интерфейсе не показывается
                     applyPhotoText: {
                         isVisible: false,
                         method: 'post',
-                        isAccessible: hideForManager.isAccessible,
+                        isAccessible: promoEditors.isAccessible,
                         handler: applyPromoPhotoText,
                     },
                 },
@@ -266,6 +273,7 @@ export const adminJs = new AdminJS({
                 listProperties: ['city', 'address',  'profile', 'link'],
                 actions: {
                     list: {
+                        ...allRoles,
                         before: (request) => {
                             if (!request.query?.perPage) {
                                 request.query = {...request.query, perPage: 300}
@@ -274,31 +282,29 @@ export const adminJs = new AdminJS({
                         },
                     },
                     edit: {
-                        isAccessible: hideForManager.isAccessible,
+                        isAccessible: promoEditors.isAccessible,
                         component: Components.DealerEdit,
                         after: logChange('dealer', 'update'),
                     },
-                    // режим просмотра не нужен: клик по строке открывает редактирование
-                    show: {
-                        isAccessible: () => false,
-                    },
+                    // просмотр карточки доступен менеджеру; остальным клик открывает редактирование
+                    show: managerOnly,
                     new: {
-                        ...hideForManager,
+                        ...promoEditors,
                         after: logChange('dealer', 'create'),
                     },
                     delete: {
-                        ...hideForManager,
+                        ...promoEditors,
                         after: logChange('dealer', 'delete'),
                     },
                     bulkDelete: {
-                        ...hideForManager,
+                        ...promoEditors,
                         after: logChange('dealer', 'delete'),
                     },
                     // вызывается кнопкой загрузки фото из DealerEdit, в интерфейсе не показывается
                     uploadPhoto: {
                         isVisible: false,
                         method: 'post',
-                        isAccessible: hideForManager.isAccessible,
+                        isAccessible: promoEditors.isAccessible,
                         handler: uploadDealerPhoto,
                     },
                 },
@@ -336,9 +342,9 @@ export const adminJs = new AdminJS({
                     direction: 'desc',
                 },
                 actions: {
-                    // журнал изменений — только просмотр и только суперадмину
-                    list: superAdminOnly,
-                    search: superAdminOnly,
+                    // журнал изменений — только просмотр, доступен всем ролям (включая promo_manager)
+                    list: allRoles,
+                    search: allRoles,
                     show: {isAccessible: () => false},
                     new: {isAccessible: () => false},
                     edit: {isAccessible: () => false},
@@ -483,6 +489,7 @@ export const adminJs = new AdminJS({
                     updatedAt: 'Дата обновления',
                     email: 'Электронная почта',
                     password: 'Пароль',
+                    role: 'Роль',
                 }
             }
         }
