@@ -122,7 +122,7 @@ dealers.beforeValidate((dealer) => {
     dealer.link = buildDealerLink(dealer.city, dealer.address)
 });
 
-// история изменений акций и контактов: кто, когда и что менял (для обновления sitemap.xml)
+// история изменений акций, контактов и статей: кто, когда и что менял (для обновления sitemap.xml)
 const changeHistory = sequelize.define('changeHistory', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     admin_name: { type: DataTypes.TEXT },
@@ -131,6 +131,8 @@ const changeHistory = sequelize.define('changeHistory', {
     promo_name: { type: DataTypes.TEXT },
     dealer_id: { type: DataTypes.INTEGER },
     dealer_city: { type: DataTypes.TEXT },
+    news_id: { type: DataTypes.INTEGER },
+    news_name: { type: DataTypes.TEXT },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 }, {
     tableName: 'changeHistory',
@@ -205,6 +207,14 @@ sequelize.sync() // This will create tables if they don't exist
             `);
             await sequelize.query('DROP TABLE changeHistory_old');
             console.log('Таблица changeHistory дополнена полями контактов');
+        }
+        if (!historyColumns.some((column) => column.name === 'news_id')) {
+            const [currentHistoryColumns] = await sequelize.query('PRAGMA table_info(changeHistory)');
+            if (!currentHistoryColumns.some((column) => column.name === 'news_id')) {
+                await sequelize.query('ALTER TABLE changeHistory ADD COLUMN news_id INTEGER');
+                await sequelize.query('ALTER TABLE changeHistory ADD COLUMN news_name TEXT');
+                console.log('Таблица changeHistory дополнена полями статей');
+            }
         }
 
         // Дефолтный суперадмин при первом запуске (если таблица Admins пуста).

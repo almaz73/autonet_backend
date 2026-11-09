@@ -5,9 +5,12 @@ const DealerLink = ({ record }) => {
 
     if (!link) return null
 
+    // в списке показываем ЧПУ-адрес без префикса /contacts/
+    const slug = String(link).split('/').filter(Boolean).pop() ?? link
+
     return (
-        <a href={link} target="_blank" rel="noopener noreferrer">
-            link
+        <a href={link} target="_blank" rel="noopener noreferrer" title={link}>
+            {slug}
         </a>
     )
 }

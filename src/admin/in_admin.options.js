@@ -90,6 +90,12 @@ const cleanupNewsPhoto = async (response) => {
     return response
 }
 
+// изменение статьи: сначала фиксируем в истории, затем при удалении чистим фото
+const afterNewsChange = (action) => async (response, request, context) => {
+    const result = await logChange('news', action)(response, request, context)
+    return action === 'delete' ? cleanupNewsPhoto(result) : result
+}
+
 // пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
 const logChange = (entity, action) => async (response, request, context) => {
     if (request.method !== 'post' || response?.notice?.type !== 'success') return response
@@ -104,13 +110,16 @@ const logChange = (entity, action) => async (response, request, context) => {
         console.error('Не удалось очистить историю изменений:', error.message)
     }
 
-    await Promise.all(changed.map((record) => changeHistory.create({
-        admin_name: adminName,
-        action,
-        ...(entity === 'promo'
-            ? { promo_id: record.id ?? record.params?.id, promo_name: record.params?.name ?? null }
-            : { dealer_id: record.id ?? record.params?.id, dealer_city: record.params?.city ?? null }),
-    })))
+    await Promise.all(changed.map((record) => {
+        const recordId = record.id ?? record.params?.id
+        const target = entity === 'promo'
+            ? { promo_id: recordId, promo_name: record.params?.name ?? null }
+            : entity === 'news'
+                ? { news_id: recordId, news_name: record.params?.name ?? null }
+                : { dealer_id: recordId, dealer_city: record.params?.city ?? null }
+
+        return changeHistory.create({admin_name: adminName, action, ...target})
+    }))
 
     return response
 };
@@ -321,20 +330,22 @@ export const adminJs = new AdminJS({
                     edit: {
                         isAccessible: promoEditors.isAccessible,
                         component: Components.NewsEdit,
+                        after: afterNewsChange('update'),
                     },
                     // просмотр карточки доступен менеджеру; остальным клик открывает редактирование
                     show: managerOnly,
                     new: {
                         isAccessible: promoEditors.isAccessible,
                         component: Components.NewsEdit,
+                        after: afterNewsChange('create'),
                     },
                     delete: {
                         ...promoEditors,
-                        after: cleanupNewsPhoto,
+                        after: afterNewsChange('delete'),
                     },
                     bulkDelete: {
                         ...promoEditors,
-                        after: cleanupNewsPhoto,
+                        after: afterNewsChange('delete'),
                     },
                     search: allRoles,
                     // вызывается кнопкой загрузки фото из NewsEdit, в интерфейсе не показывается
@@ -585,8 +596,8 @@ export const adminJs = new AdminJS({
                     changeHistory: {
                         properties: {
                             admin_name: 'Кто менял',
-                            promo_id: 'Акция/Контакт',
-                            promo_name: 'Название / город',
+                            promo_id: 'Раздел',
+                            promo_name: 'Название/город/статья',
                             created_at: 'Время',
                             action: 'Действие',
                         },
