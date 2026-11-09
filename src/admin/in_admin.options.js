@@ -69,12 +69,27 @@ const allRoles = allowRoles('superadmin', 'admin', 'promo_manager', 'manager')
 // карточка только для просмотра: менеджер не может открыть форму редактирования
 const managerOnly = allowRoles('manager')
 
+// историю изменений храним три месяца: перед записью нового изменения
+// удаляем всё, что старше, чтобы таблица не разрасталась
+const HISTORY_RETENTION_MONTHS = 3
+const cleanupChangeHistory = () => sequelize.query(
+    `DELETE FROM changeHistory WHERE datetime(created_at) < datetime('now', ?)`,
+    {replacements: [`-${HISTORY_RETENTION_MONTHS} months`]},
+)
+
 // пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
 const logChange = (entity, action) => async (response, request, context) => {
     if (request.method !== 'post' || response?.notice?.type !== 'success') return response
 
     const changed = response.records ?? (response.record ? [response.record] : [])
     const adminName = context.currentAdmin?.name ?? context.currentAdmin?.email ?? null
+
+    // сбой очистки не должен ломать уже сохранённое изменение — только пишем в лог
+    try {
+        await cleanupChangeHistory()
+    } catch (error) {
+        console.error('Не удалось очистить историю изменений:', error.message)
+    }
 
     await Promise.all(changed.map((record) => changeHistory.create({
         admin_name: adminName,
