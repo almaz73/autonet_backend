@@ -29,6 +29,7 @@ const Components = {
     DealerLink: componentLoader.add('DealerLink', path.join(__dirname, 'dealer-link.jsx')),
     DealerEdit: componentLoader.add('DealerEdit', path.join(__dirname, 'dealer-edit.jsx')),
     ClientAddress: componentLoader.add('ClientAddress', path.join(__dirname, 'client-address.jsx')),
+    ClientCreatedAt: componentLoader.add('ClientCreatedAt', path.join(__dirname, 'client-created-at.jsx')),
     PromoBool: componentLoader.add('PromoBool', path.join(__dirname, 'promo-bool.jsx')),
     ChangeHistoryCell: componentLoader.add('ChangeHistoryCell', path.join(__dirname, 'change-history-cell.jsx')),
 }
@@ -132,7 +133,8 @@ export const adminJs = new AdminJS({
             resource: clientEmails,
             options: {
                 tableName: 'clientEmails',
-                listProperties: ['fio', 'phone', 'email', 'address', 'link', 'type_form', 'credit', 'created_at'],
+                // телефон, e-mail и кредит в списке скрыты; дата создания — без времени
+                listProperties: ['fio', 'address', 'link', 'type_form', 'created_at'],
                 navigation: null,
                 actions: {
                     list: withoutPromoManager,
@@ -153,6 +155,9 @@ export const adminJs = new AdminJS({
                     },
                     link: {
                         components: {list: Components.ClientLink},
+                    },
+                    created_at: {
+                        components: {list: Components.ClientCreatedAt},
                     },
                 },
             },
