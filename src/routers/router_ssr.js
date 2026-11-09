@@ -119,17 +119,22 @@ function contactAssets() {
 
 const NEWS_LIST_DESCRIPTION = 'Статьи Автосеть.РФ о покупке подержанных автомобилей: проверка истории, кредит, трейд-ин, обслуживание и выбор авто с пробегом.'
 
-// те же ассеты, что у статической страницы новостей, но без клиентского скрипта списка:
-// иначе он перезапишет серверную выдачу данными из старого JSON
+// общие стили и скрипты для серверных страниц статей
 function newsAssets() {
-    const entry = manifest_links['news/index.html'] || {}
-    const jsFiles = (entry.imports || [])
-        .map((key) => manifest_links[key]?.file)
-        .filter(Boolean)
-        .map((file) => file.replace(/^assets\//, ''))
-    const cssFiles = collectCss(manifest_links, 'news/index.html')
-        .map((file) => file.replace(/^assets\//, ''))
-    return {jsFiles, cssFiles}
+    const style = findChunk('_style-', '.js')
+    const main = findChunk('_main-', '.js')
+    const pagination = findChunk('_pagination-', '.js')
+    // до пересборки Vite стили статей могут лежать отдельным чанком,
+    // после неё news.css включён в общий style.css
+    const newsCss = findChunk('_news-', '.css')
+    return {
+        jsFiles: [style.file, main.file, pagination.file]
+            .filter(Boolean)
+            .map((file) => file.replace(/^assets\//, '')),
+        cssFiles: [style.css?.[0], newsCss.file]
+            .filter(Boolean)
+            .map((file) => file.replace(/^assets\//, '')),
+    }
 }
 
 const formatNewsDate = (value) => {

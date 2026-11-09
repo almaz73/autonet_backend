@@ -60,7 +60,7 @@ const clientEmails = sequelize.define('clientEmails', {
     timestamps: false
 });
 
-// статьи на /news/: карточка в списке; полный текст статьи пока лежит в статическом HTML
+// статьи на /news/: список и полный текст отдаются сервером из этой таблицы
 const news = sequelize.define('news', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: { type: DataTypes.TEXT, allowNull: false },
