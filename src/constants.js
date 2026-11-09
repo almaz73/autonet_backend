@@ -1,7 +1,7 @@
 import * as os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-export const Version = 'ver.3.522'
+export const Version = 'ver.3.526'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования

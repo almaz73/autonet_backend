@@ -261,6 +261,8 @@ async function carsList(req, res) {
         totalCount: carList.totalCount
     }).replaceAll('<', '\\u003c')
 
+    const carsSchemaJson = buildCarsSchema(carList.items, {brand, page: ssr_page, brandName: ssr_brandSearch})
+
     // сохранённый пользователем вид витрины, чтобы SSR сразу рисовал нужную сетку
     const viewMatch = /(?:^|;\s*)TYPE_VIEW=(dot8|dot4|dot1)/.exec(req.headers.cookie || '')
     const viewClass = viewMatch ? viewMatch[1] : 'dot8'
@@ -273,6 +275,7 @@ async function carsList(req, res) {
         carList,
         carsView,
         carsSSRJson,
+        carsSchemaJson,
         vitrinaName,
         filterActive,
         viewClass,
@@ -325,6 +328,108 @@ function buildCarsView(items) {
             images
         }
     })
+}
+
+// schema.org для витрины: список собирается из тех же машин, что отрисованы на странице,
+// поэтому разметка обновляется вместе с базой. Для подборки берём легковые автомобили
+// разных марок в диапазоне 400 000–800 000 ₽; если таких на странице нет — весь список.
+const SCHEMA_SITE = 'https://xn--80aej9aped4f.xn--p1ai'
+const SCHEMA_PRICE_FROM = 400000
+const SCHEMA_PRICE_TO = 800000
+const SCHEMA_MAX_ITEMS = 10
+const NON_PASSENGER_BODY_TYPES = new Set(['Автобус', 'Фургон', 'Грузовой'])
+
+function absoluteCarUrl(car) {
+    const friendly = transliterate(`${car.yearReleased}-${car.city}-${car.price}-${car.milleage}km`.replaceAll(' ', ''))
+    return `${SCHEMA_SITE}/cars/${getBrandLat(car.brand)}/${transliterate(car.model).replaceAll(' ', '')}/${friendly}`
+}
+
+function absoluteCarImage(car) {
+    const src = car.images?.[0]
+    if (!src) return `${SCHEMA_SITE}/st/auto.webp`
+    const big = src.replace('_small.webp', '_big.webp')
+    return /^https?:\/\//.test(big) ? big : `${SCHEMA_SITE}${big.startsWith('/') ? '' : '/'}${big}`
+}
+
+function pickSchemaCars(items) {
+    const picked = []
+    const brands = new Set()
+
+    for (const car of items) {
+        const price = Number(car.price)
+        if (!(price >= SCHEMA_PRICE_FROM && price <= SCHEMA_PRICE_TO)) continue
+        if (NON_PASSENGER_BODY_TYPES.has(car.bodyType)) continue
+
+        const brand = String(car.brand || '').toLowerCase()
+        if (brands.has(brand)) continue
+        brands.add(brand)
+        picked.push(car)
+        if (picked.length >= SCHEMA_MAX_ITEMS) break
+    }
+
+    return picked.length ? picked : items.slice(0, SCHEMA_MAX_ITEMS)
+}
+
+function buildCarsSchema(items, {brand, page, brandName}) {
+    const cars = pickSchemaCars(items)
+    const pageNumber = Number(page) || 0
+    const url = `${SCHEMA_SITE}/cars`
+        + (pageNumber > 0 ? `/${pageNumber}` : '')
+        + (brand ? `/${encodeURIComponent(brand)}` : '')
+
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: brand ? `Автомобили ${brandName || brand}` : 'Автомобили в наличии',
+        description: cars.some((car) => Number(car.price) >= SCHEMA_PRICE_FROM && Number(car.price) <= SCHEMA_PRICE_TO)
+            ? 'Легковые автомобили разных марок в наличии по цене от 400 000 до 800 000 рублей'
+            : 'Список автомобилей в наличии с ценами и характеристиками',
+        url,
+        numberOfItems: cars.length,
+        itemListElement: cars.map((car, index) => {
+            const carUrl = absoluteCarUrl(car)
+            const image = absoluteCarImage(car)
+            const name = `${car.brand} ${car.model}`
+            const mileage = Number(car.milleage)
+
+            return {
+                '@type': 'ListItem',
+                position: index + 1,
+                name: `${name} ${car.yearReleased}`,
+                url: carUrl,
+                image,
+                item: {
+                    '@type': 'Car',
+                    name,
+                    brand: {'@type': 'Brand', name: car.brand},
+                    model: car.model,
+                    vehicleModelDate: String(car.yearReleased),
+                    modelDate: String(car.yearReleased),
+                    ...(car.color ? {color: car.color} : {}),
+                    ...(car.bodyType ? {bodyType: car.bodyType} : {}),
+                    ...(Number.isFinite(mileage)
+                        ? {mileageFromOdometer: {'@type': 'QuantitativeValue', value: mileage, unitCode: 'KMT'}}
+                        : {}),
+                    image,
+                    url: carUrl,
+                    offers: {
+                        '@type': 'Offer',
+                        url: carUrl,
+                        price: String(car.price),
+                        priceCurrency: 'RUB',
+                        availability: 'https://schema.org/InStock',
+                        itemCondition: mileage > 0
+                            ? 'https://schema.org/UsedCondition'
+                            : 'https://schema.org/NewCondition',
+                        seller: {'@type': 'Organization', name: 'Автосеть.РФ'},
+                    },
+                },
+            }
+        }),
+    }
+
+    // '<' экранируем, чтобы данные не могли закрыть тег script
+    return JSON.stringify(schema).replaceAll('<', '\\u003c')
 }
 
 async function carAlone(req, res) {
