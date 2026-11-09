@@ -1,7 +1,7 @@
 import * as os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-export const Version = 'ver.3.526'
+export const Version = 'ver.3.527'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования
@@ -17,6 +17,7 @@ export const FolderLINKS = path.join(FRONT_DIR, 'LINKS') // тут ссылки 
 export const FolderPhotoForPromoActions = '../front/pub_promo'
 export const FolderPhotoForArticle = '../front/pub_article'
 export const FolderDealerPhotos = path.join(FRONT_DIR, 'st/photo/contacts')
+export const FolderNewsPhotos = path.join(FRONT_DIR, 'st/photo/news')
 
 export const receivedDataTypes = {
     '1': 'Обратный звонок',

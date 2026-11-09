@@ -21,7 +21,7 @@ const readLastEditedId = (resourceId) => {
 }
 
 // разделы, в которых запоминаем последнюю открытую запись
-const TRACKED_RESOURCES = ['promo', 'dealers']
+const TRACKED_RESOURCES = ['promo', 'dealers', 'news']
 
 const highlightCss = (resourceId, id) => `
     tr[data-css="${resourceId}-table-row"][data-id="${id}"] > td {

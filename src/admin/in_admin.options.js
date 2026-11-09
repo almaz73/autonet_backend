@@ -6,12 +6,14 @@ import {fileURLToPath} from 'url'
 import session from 'express-session'
 import connectSqlite3 from 'connect-sqlite3'
 import {randomBytes} from 'node:crypto'
-import {sequelize, Admins, history_period, clientEmails, promo, dealers, changeHistory} from '../clientBaza/db.js'
+import {sequelize, Admins, history_period, clientEmails, news, promo, dealers, changeHistory} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {clearPromoCache} from '../clientBaza/promo/generationPagesForPromo.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
 import {applyPromoPhotoText} from './promo-text-action.js'
 import {uploadDealerPhoto} from './dealer-photo-action.js'
+import {uploadNewsPhoto} from './news-photo-action.js'
+import {removeNewsPhoto} from '../clientBaza/news/newsPhoto.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -32,6 +34,10 @@ const Components = {
     ClientCreatedAt: componentLoader.add('ClientCreatedAt', path.join(__dirname, 'client-created-at.jsx')),
     PromoBool: componentLoader.add('PromoBool', path.join(__dirname, 'promo-bool.jsx')),
     ChangeHistoryCell: componentLoader.add('ChangeHistoryCell', path.join(__dirname, 'change-history-cell.jsx')),
+    NewsEdit: componentLoader.add('NewsEdit', path.join(__dirname, 'news-edit.jsx')),
+    NewsPhoto: componentLoader.add('NewsPhoto', path.join(__dirname, 'news-photo.jsx')),
+    NewsLink: componentLoader.add('NewsLink', path.join(__dirname, 'news-link.jsx')),
+    NewsDate: componentLoader.add('NewsDate', path.join(__dirname, 'news-date.jsx')),
 }
 
 // авторизация включена всегда; отключить её можно только явным флагом и только вне production
@@ -76,6 +82,13 @@ const cleanupChangeHistory = () => sequelize.query(
     `DELETE FROM changeHistory WHERE datetime(created_at) < datetime('now', ?)`,
     {replacements: [`-${HISTORY_RETENTION_MONTHS} months`]},
 )
+
+// после удаления статьи убираем только загруженное через админку фото
+const cleanupNewsPhoto = async (response) => {
+    const records = response?.records ?? (response?.record ? [response.record] : [])
+    await Promise.all(records.map((record) => removeNewsPhoto(record?.params?.image)))
+    return response
+}
 
 // пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
 const logChange = (entity, action) => async (response, request, context) => {
@@ -286,6 +299,75 @@ export const adminJs = new AdminJS({
             },
         },
         {
+            resource: news,
+            options: {
+                tableName: 'news',
+                listProperties: ['image', 'name', 'date', 'url', 'active'],
+                navigation: null,
+                sort: {
+                    sortBy: 'date',
+                    direction: 'desc',
+                },
+                actions: {
+                    list: {
+                        ...allRoles,
+                        before: (request) => {
+                            if (!request.query?.perPage) {
+                                request.query = {...request.query, perPage: 50}
+                            }
+                            return request
+                        },
+                    },
+                    edit: {
+                        isAccessible: promoEditors.isAccessible,
+                        component: Components.NewsEdit,
+                    },
+                    // просмотр карточки доступен менеджеру; остальным клик открывает редактирование
+                    show: managerOnly,
+                    new: {
+                        isAccessible: promoEditors.isAccessible,
+                        component: Components.NewsEdit,
+                    },
+                    delete: {
+                        ...promoEditors,
+                        after: cleanupNewsPhoto,
+                    },
+                    bulkDelete: {
+                        ...promoEditors,
+                        after: cleanupNewsPhoto,
+                    },
+                    search: allRoles,
+                    // вызывается кнопкой загрузки фото из NewsEdit, в интерфейсе не показывается
+                    uploadPhoto: {
+                        isVisible: false,
+                        method: 'post',
+                        isAccessible: promoEditors.isAccessible,
+                        handler: uploadNewsPhoto,
+                    },
+                },
+                properties: {
+                    image: {
+                        components: {list: Components.NewsPhoto},
+                    },
+                    date: {
+                        components: {list: Components.NewsDate},
+                    },
+                    url: {
+                        components: {list: Components.NewsLink},
+                    },
+                    active: {
+                        components: {list: Components.PromoBool},
+                    },
+                    announce: {
+                        type: 'textarea',
+                    },
+                    content: {
+                        type: 'richtext',
+                    },
+                },
+            },
+        },
+        {
             resource: dealers,
             options: {
                 tableName: 'dealers',
@@ -423,6 +505,7 @@ export const adminJs = new AdminJS({
                     // Перевод названий ваших таблиц/моделей
                     Admins: 'Администраторы',
                     clientEmails: 'Соглашения',
+                    news: 'Статьи',
                     history_period: 'Время продаж',
                     promo: 'Акции',
                     dealers: 'Контакты',
@@ -470,6 +553,19 @@ export const adminJs = new AdminJS({
                             credit:'Кредит',
                             created_at:'Создано'
 
+                        },
+                    },
+                    news: {
+                        properties: {
+                            name: 'Заголовок',
+                            title: 'SEO Title',
+                            description: 'Meta Description',
+                            announce: 'Краткое описание',
+                            content: 'Содержимое страницы',
+                            date: 'Дата',
+                            url: 'Ссылка',
+                            image: 'Фото',
+                            active: 'Активная',
                         },
                     },
                     dealers: {

@@ -60,6 +60,25 @@ const clientEmails = sequelize.define('clientEmails', {
     timestamps: false
 });
 
+// статьи на /news/: карточка в списке; полный текст статьи пока лежит в статическом HTML
+const news = sequelize.define('news', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    name: { type: DataTypes.TEXT, allowNull: false },
+    title: { type: DataTypes.TEXT },
+    description: { type: DataTypes.TEXT },
+    announce: { type: DataTypes.TEXT },
+    content: { type: DataTypes.TEXT },
+    date: { type: DataTypes.DATEONLY, allowNull: false },
+    url: { type: DataTypes.TEXT, allowNull: false },
+    image: { type: DataTypes.TEXT },
+    active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+}, {
+    tableName: 'news',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+});
+
 const promo = sequelize.define('promo', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: { type: DataTypes.TEXT, allowNull: false },
@@ -146,6 +165,27 @@ sequelize.sync() // This will create tables if they don't exist
         if (!promoColumns.some((column) => column.name === 'inscription')) {
             await sequelize.query('ALTER TABLE promo ADD COLUMN inscription TEXT');
             console.log('Добавлена колонка promo.inscription');
+        }
+
+        const [newsColumns] = await sequelize.query('PRAGMA table_info(news)');
+        // заголовок статьи переименован в name, а title теперь — SEO Title (как у promo)
+        if (newsColumns.some((column) => column.name === 'title')
+            && !newsColumns.some((column) => column.name === 'name')) {
+            await sequelize.query('ALTER TABLE news RENAME COLUMN title TO name');
+            console.log('Колонка news.title переименована в news.name');
+        }
+        const [newsColumnsAfterRename] = await sequelize.query('PRAGMA table_info(news)');
+        if (!newsColumnsAfterRename.some((column) => column.name === 'content')) {
+            await sequelize.query('ALTER TABLE news ADD COLUMN content TEXT');
+            console.log('Добавлена колонка news.content');
+        }
+        if (!newsColumnsAfterRename.some((column) => column.name === 'title')) {
+            await sequelize.query('ALTER TABLE news ADD COLUMN title TEXT');
+            console.log('Добавлена колонка news.title (SEO Title)');
+        }
+        if (!newsColumnsAfterRename.some((column) => column.name === 'description')) {
+            await sequelize.query('ALTER TABLE news ADD COLUMN description TEXT');
+            console.log('Добавлена колонка news.description (Meta Description)');
         }
 
         const [dealerColumns] = await sequelize.query('PRAGMA table_info(dealers)');
@@ -263,4 +303,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, Admins, history_period, clientEmails, promo, dealers, changeHistory };
+export { sequelize, Admins, history_period, clientEmails, news, promo, dealers, changeHistory };
