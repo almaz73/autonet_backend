@@ -21,7 +21,7 @@ const Field = ({propertyPath, resource, record, onChange}) => {
     )
 }
 
-const PROFILE_OPTIONS = ['Новые бренды', 'Авто с пробегом', 'Сервис']
+const PROFILE_OPTIONS = ['Новые авто', 'Авто с пробегом', 'Сервис']
 
 const splitProfiles = (value) => String(value ?? '')
     .split(',')

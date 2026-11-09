@@ -441,7 +441,7 @@ export const adminJs = new AdminJS({
                     // несколько профилей отмечаются потом в форме редактирования
                     profile: {
                         availableValues: [
-                            {value: 'Новые бренды', label: 'Новые бренды'},
+                            {value: 'Новые авто', label: 'Новые авто'},
                             {value: 'Авто с пробегом', label: 'Авто с пробегом'},
                             {value: 'Сервис', label: 'Сервис'},
                         ],
