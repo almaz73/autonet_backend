@@ -1,7 +1,8 @@
 import Router from 'express'
 import zlib from 'node:zlib'
+import {Op} from 'sequelize'
 import A_car from "../API/A_car.js";
-import {dealers} from '../clientBaza/db.js'
+import {dealers, news} from '../clientBaza/db.js'
 import {manifest_links, transliterate, RussianBrandsRus, RussianBrandsLat} from '../constants.js';
 import GetListService from "../API/GetListService.js";
 // import {seoRedirects} from "./htaccess_middleware.js"
@@ -11,6 +12,9 @@ const router = new Router()
 const MAP_WIDGET_URL = 'https://makemap.2gis.ru/widget'
 const DEALER_ZOOM = 16
 const DEALER_MARKER_COLOR = '#E22427'
+
+const SITE_ORIGIN = 'https://xn--80aej9aped4f.xn--p1ai'
+const NEWS_PAGE_SIZE = 15
 
 // Собираем CSS из самого entry и всех чанков, которые он импортирует:
 // часть стилей Vite кладёт в чанки (например contacts), и в manifest.css entry их нет
@@ -111,6 +115,138 @@ function contactAssets() {
 
 /** КОНЕЦ подготовка к работе с отдельными контактами **/
 
+/** Динамические страницы статей из таблицы news **/
+
+const NEWS_LIST_DESCRIPTION = 'Статьи Автосеть.РФ о покупке подержанных автомобилей: проверка истории, кредит, трейд-ин, обслуживание и выбор авто с пробегом.'
+
+// те же ассеты, что у статической страницы новостей, но без клиентского скрипта списка:
+// иначе он перезапишет серверную выдачу данными из старого JSON
+function newsAssets() {
+    const entry = manifest_links['news/index.html'] || {}
+    const jsFiles = (entry.imports || [])
+        .map((key) => manifest_links[key]?.file)
+        .filter(Boolean)
+        .map((file) => file.replace(/^assets\//, ''))
+    const cssFiles = collectCss(manifest_links, 'news/index.html')
+        .map((file) => file.replace(/^assets\//, ''))
+    return {jsFiles, cssFiles}
+}
+
+const formatNewsDate = (value) => {
+    const [year, month, day] = String(value ?? '').split('-')
+    return year && month && day ? `${day}.${month}.${year}` : String(value ?? '')
+}
+
+const newsImageSrc = (value) => {
+    const src = String(value ?? '').trim()
+    if (!src) return ''
+    if (/^https?:\/\//i.test(src) || src.startsWith('/')) return src
+    return `/st/photo/news/${src}`
+}
+
+const newsImageAbsolute = (value) => {
+    const src = newsImageSrc(value)
+    if (!src) return `${SITE_ORIGIN}/st/auto.webp`
+    return /^https?:\/\//i.test(src) ? src : `${SITE_ORIGIN}${src}`
+}
+
+async function newsList(req, res) {
+    try {
+        // канонический адрес списка — со слешем на конце
+        if (!req.path.endsWith('/')) {
+            const query = req.originalUrl.split('?')[1]
+            return res.redirect(301, query ? `/news/?${query}` : '/news/')
+        }
+
+        const requestedPage = Math.max(1, parseInt(req.query.PAGEN_2, 10) || 1)
+        const total = await news.count({where: {active: true}})
+        const totalPages = Math.max(1, Math.ceil(total / NEWS_PAGE_SIZE))
+
+        // страницы за пределами выдачи уводим на последнюю, чтобы не плодить дубли
+        if (requestedPage > totalPages) {
+            return res.redirect(301, totalPages === 1 ? '/news/' : `/news/?PAGEN_2=${totalPages}`)
+        }
+
+        const rows = await news.findAll({
+            where: {active: true},
+            attributes: ['id', 'name', 'announce', 'url', 'image', 'date'],
+            order: [['date', 'DESC'], ['id', 'DESC']],
+            offset: (requestedPage - 1) * NEWS_PAGE_SIZE,
+            limit: NEWS_PAGE_SIZE,
+            raw: true,
+        })
+
+        const pageHref = (page) => page === 1 ? '/news/' : `/news/?PAGEN_2=${page}`
+
+        res.render('news-list', {
+            ...newsAssets(),
+            items: rows.map((row) => ({
+                ...row,
+                image: newsImageSrc(row.image),
+                dateText: formatNewsDate(row.date),
+            })),
+            currentPage: requestedPage,
+            totalPages,
+            pagerLinks: Array.from({length: totalPages}, (_, index) => ({
+                page: index + 1,
+                href: pageHref(index + 1),
+                active: index + 1 === requestedPage,
+            })),
+            nextHref: requestedPage < totalPages ? pageHref(requestedPage + 1) : null,
+            canonical: `${SITE_ORIGIN}${pageHref(requestedPage)}`,
+            title: requestedPage === 1 ? 'Новости и статьи' : `Новости и статьи — страница ${requestedPage}`,
+            description: NEWS_LIST_DESCRIPTION,
+            ogImage: `${SITE_ORIGIN}/st/auto.webp`,
+        })
+    } catch (error) {
+        console.error('Error rendering news list:', error)
+        res.status(500).send('Internal Server Error')
+    }
+    return res
+}
+
+async function newsPage(req, res) {
+    try {
+        // в адресе статьи число — это её внешний id из url, а не первичный ключ таблицы
+        const articleId = `/news/${req.params.id}`
+        const row = await news.findOne({
+            where: {
+                active: true,
+                url: {[Op.in]: [articleId, `${articleId}/`]},
+            },
+            raw: true,
+        })
+
+        if (!row) return res.status(404).render('404', {confirm: ''})
+
+        // канонический адрес статьи — из базы, со слешем на конце
+        if (req.path !== row.url) return res.redirect(301, row.url)
+
+        // в части старых страниц заголовок h1 не входит в content — добавляем его из name
+        const hasH1 = /^\s*<h1[\s>]/i.test(String(row.content || ''))
+        const content = hasH1
+            ? row.content
+            : `<h1>${escapeHtml(row.name)}</h1>\n${row.content || ''}`
+
+        res.render('news', {
+            ...newsAssets(),
+            name: row.name,
+            title: row.title || row.name,
+            description: row.description || row.announce || '',
+            content,
+            image: newsImageSrc(row.image),
+            ogImage: newsImageAbsolute(row.image),
+            canonical: `${SITE_ORIGIN}${row.url}`,
+        })
+    } catch (error) {
+        console.error('Error rendering news page:', error)
+        res.status(500).send('Internal Server Error')
+    }
+    return res
+}
+
+/** КОНЕЦ динамические страницы статей **/
+
 // router.use(seoRedirects)
 
 router.get('/', indexPage);                                 // Главная страница
@@ -125,6 +261,9 @@ router.get('/cars/:brand(\\D+)/:model/:linkId', carAlone);  // Страница 
 router.get('/buyout', buyoutPage);
 
 router.get('/contacts/:slug', dealerPage);                  // Страница дилерского центра (контакты)
+
+router.get('/news', newsList);                              // Список статей из базы
+router.get('/news/:id(\\d+)', newsPage);                    // Статья из базы
 
 
 async function indexPage(req, res) {
@@ -333,7 +472,7 @@ function buildCarsView(items) {
 // schema.org для витрины: список собирается из тех же машин, что отрисованы на странице,
 // поэтому разметка обновляется вместе с базой. Для подборки берём легковые автомобили
 // разных марок в диапазоне 400 000–800 000 ₽; если таких на странице нет — весь список.
-const SCHEMA_SITE = 'https://xn--80aej9aped4f.xn--p1ai'
+const SCHEMA_SITE = SITE_ORIGIN
 const SCHEMA_PRICE_FROM = 400000
 const SCHEMA_PRICE_TO = 800000
 const SCHEMA_MAX_ITEMS = 10
