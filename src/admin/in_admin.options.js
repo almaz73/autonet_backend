@@ -191,6 +191,10 @@ export const adminJs = new AdminJS({
                     direction: 'desc', // 'desc' — по убыванию (последние будут наверху), 'asc' — по возрастанию [1]
                 },
                 properties: {
+                    // на узких экранах AdminJS оставляет только title-колонку
+                    fio: {
+                        isTitle: true,
+                    },
                     address: {
                         components: {list: Components.ClientAddress},
                     },
@@ -217,6 +221,12 @@ export const adminJs = new AdminJS({
                     delete: adminOnly,
                     bulkDelete: noBulkActions,
                     search: withoutPromoManager,
+                },
+                properties: {
+                    // на узких экранах AdminJS оставляет только title-колонку
+                    endDate: {
+                        isTitle: true,
+                    },
                 },
 
             },
@@ -417,6 +427,10 @@ export const adminJs = new AdminJS({
                     },
                 },
                 properties: {
+                    // на узких экранах AdminJS оставляет только title-колонку
+                    city: {
+                        isTitle: true,
+                    },
                     id: {
                         isVisible: {list: false, filter: false, show: false, edit: false},
                     },
@@ -460,6 +474,10 @@ export const adminJs = new AdminJS({
                     bulkDelete: {isAccessible: () => false},
                 },
                 properties: {
+                    // на узких экранах AdminJS оставляет только title-колонку
+                    admin_name: {
+                        isTitle: true,
+                    },
                     promo_id: {
                         components: {list: Components.ChangeHistoryCell},
                     },
