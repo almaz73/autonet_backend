@@ -75,6 +75,10 @@ const allRoles = allowRoles('superadmin', 'admin', 'promo_manager', 'manager')
 // карточка только для просмотра: менеджер не может открыть форму редактирования
 const managerOnly = allowRoles('manager')
 
+// массовое удаление не нужно: без доступных bulk-действий AdminJS не рисует
+// колонку галочек и панель «Удалить выбранные» ни в одном списке
+const noBulkActions = {isAccessible: () => false}
+
 // историю изменений храним три месяца: перед записью нового изменения
 // удаляем всё, что старше, чтобы таблица не разрасталась
 const HISTORY_RETENTION_MONTHS = 3
@@ -161,7 +165,7 @@ export const adminJs = new AdminJS({
                     show: superAdminOnly,
                     edit: superAdminOnly,
                     delete: superAdminOnly,
-                    bulkDelete: superAdminOnly,
+                    bulkDelete: noBulkActions,
                     search: superAdminOnly,
                 },
             },
@@ -179,7 +183,7 @@ export const adminJs = new AdminJS({
                     new: adminOnly,
                     edit: adminOnly,
                     delete: adminOnly,
-                    bulkDelete: adminOnly,
+                    bulkDelete: noBulkActions,
                     search: withoutPromoManager,
                 },
                 sort: {
@@ -211,7 +215,7 @@ export const adminJs = new AdminJS({
                     new: adminOnly,
                     edit: adminOnly,
                     delete: adminOnly,
-                    bulkDelete: adminOnly,
+                    bulkDelete: noBulkActions,
                     search: withoutPromoManager,
                 },
 
@@ -263,10 +267,7 @@ export const adminJs = new AdminJS({
                         ...promoEditors,
                         after: afterPromoChange('delete'),
                     },
-                    bulkDelete: {
-                        ...promoEditors,
-                        after: afterPromoChange('delete'),
-                    },
+                    bulkDelete: noBulkActions,
                     // вызывается кнопкой загрузки фото из PromoEdit, в интерфейсе не показывается
                     uploadPhotos: {
                         isVisible: false,
@@ -343,10 +344,7 @@ export const adminJs = new AdminJS({
                         ...promoEditors,
                         after: afterNewsChange('delete'),
                     },
-                    bulkDelete: {
-                        ...promoEditors,
-                        after: afterNewsChange('delete'),
-                    },
+                    bulkDelete: noBulkActions,
                     search: allRoles,
                     // вызывается кнопкой загрузки фото из NewsEdit, в интерфейсе не показывается
                     uploadPhoto: {
@@ -409,10 +407,7 @@ export const adminJs = new AdminJS({
                         ...promoEditors,
                         after: logChange('dealer', 'delete'),
                     },
-                    bulkDelete: {
-                        ...promoEditors,
-                        after: logChange('dealer', 'delete'),
-                    },
+                    bulkDelete: noBulkActions,
                     // вызывается кнопкой загрузки фото из DealerEdit, в интерфейсе не показывается
                     uploadPhoto: {
                         isVisible: false,
