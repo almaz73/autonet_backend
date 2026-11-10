@@ -49,7 +49,7 @@ const adminAuthDisabled = process.env.NODE_ENV !== 'production' && process.env.A
 //   superadmin    — полный доступ, включая администраторов и роли;
 //   admin         — всё, кроме раздела «Администраторы»;
 //   promo_manager — акции и контакты + просмотр истории изменений;
-//   manager       — просмотр всего, кроме «Администраторов», без изменений.
+//   manager       — просмотр всего, кроме «Администраторов» и «Времени продаж», без изменений.
 // Доступ выдаётся только явно перечисленным ролям: неизвестная роль прав не получает.
 const roleOf = (context) => context.currentAdmin?.role?.toLowerCase()
 
@@ -60,10 +60,10 @@ const allowRoles = (...roles) => ({
 // раздел «Администраторы» и управление ролями/доступами
 const superAdminOnly = allowRoles('superadmin')
 
-// данные клиентов и «Время продаж»: promo_manager их не видит
+// данные клиентов: promo_manager их не видит
 const withoutPromoManager = allowRoles('superadmin', 'admin', 'manager')
 
-// изменения данных клиентов и «Время продаж»
+// изменения данных клиентов
 const adminOnly = allowRoles('superadmin', 'admin')
 
 // акции и контакты: редактируют superadmin, admin и promo_manager
@@ -214,13 +214,14 @@ export const adminJs = new AdminJS({
                 listProperties: ['endDate', 'car', 'days'],
                 navigation: null,
                 actions: {
-                    list: withoutPromoManager,
-                    show: withoutPromoManager,
-                    new: adminOnly,
-                    edit: adminOnly,
-                    delete: adminOnly,
+                    // «Время продаж» доступно только суперадмину
+                    list: superAdminOnly,
+                    show: superAdminOnly,
+                    new: superAdminOnly,
+                    edit: superAdminOnly,
+                    delete: superAdminOnly,
                     bulkDelete: noBulkActions,
-                    search: withoutPromoManager,
+                    search: superAdminOnly,
                 },
                 properties: {
                     // на узких экранах AdminJS оставляет только title-колонку
