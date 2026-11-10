@@ -292,8 +292,6 @@ const isFilled = (value) => typeof value === 'string' ? value.trim() !== '' : Bo
 const isChecked = (value) => value === true || value === 'true'
 
 const PromoEdit = ({record: initialRecord, resource}) => {
-    console.log('22222 = ',22222)
-    
     const navigate = useNavigate()
     const {translateButton} = useTranslation()
     const {record, handleChange, submit, loading, setRecord} = useRecord(initialRecord, resource.id)
@@ -331,13 +329,12 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     }, [resource.id, initialRecord?.id])
 
     const fields = {resource, record, onChange: handleChange}
-    // акция публикуется только с полным набором: три фото, заголовок и описание
+    // акция публикуется только с полным набором: три фото и содержимое страницы.
+    // SEO Title и Meta Description необязательны: без них страница берёт название акции
     const params = record.params ?? {}
 
     const canPublish = PHOTO_SLOTS.every((slot) => isFilled(params[slot.property]))
-        && isFilled(params.title)
-        && isFilled(params.description)
-        && isFilled(params.content.replace(/(<([^>]+)>)/gi, ''))
+        && isFilled((params.content ?? '').replace(/(<([^>]+)>)/gi, ''))
 
     const onPhotosUploaded = (photos) => {
         Object.entries(photos ?? {}).forEach(([propertyPath, name]) => handleChange(propertyPath, name))
@@ -420,8 +417,8 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 </Box>
                 {!canPublish ? (
                     <Text color="grey60">
-                        Включить «Активный» и «На главной» можно после загрузки всех трёх фото и заполнения полей
-                        «SEO Title» и «Meta Description» и «Содержимое страницы».
+                        Включить «Активный» и «На главной» можно после загрузки всех трёх фото и заполнения поля
+                        «Содержимое страницы».
                     </Text>
                 ) : null}
             </Card>

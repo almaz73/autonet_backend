@@ -491,7 +491,7 @@ export const adminJs = new AdminJS({
     loginPath: '/administrator/login',
     logoutPath: '/administrator/logout',
     branding: {
-        logo: '/st/logo_20.svg',
+        logo: '/st/logo_21.svg',
         companyName: 'Автосеть.РФ',
         softwareBrothers: true
     },
