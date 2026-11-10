@@ -213,6 +213,10 @@ export const adminJs = new AdminJS({
                 tableName: 'history_period',
                 listProperties: ['endDate', 'car', 'days'],
                 navigation: null,
+                sort: {
+                    sortBy: 'endDate',
+                    direction: 'desc',
+                },
                 actions: {
                     // «Время продаж» доступно только суперадмину
                     list: superAdminOnly,
