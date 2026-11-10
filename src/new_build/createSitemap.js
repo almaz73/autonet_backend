@@ -1,3 +1,4 @@
+import '../loadEnv.js' // первым: SMTP-настройки нужны до создания транспорта в sendEmail
 import fs from 'fs';
 import * as fs_promises from 'node:fs/promises'
 import path from 'path';
