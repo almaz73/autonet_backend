@@ -260,6 +260,8 @@ router.get('/cars', carsList);                              // Страница 
 router.get('/cars/:number(\\d+)', carsList);                // Страница витрины /cars
 router.get('/cars/:number(\\d+)/:brand(\\D+)', carsList);   // Страница витрины /cars
 
+router.get('/cars/car.html', legacyCarPage);                // Старые ссылки /cars/car.html?id=... → 410
+
 router.get('/cars/:brand(\\D+)/:model/:linkId', carAlone);  // Страница автомобиля
 //http://localhost:3000/cars/Chevrolet/Camaro/2021-Tver-3250000-66525km
 
@@ -574,6 +576,34 @@ function buildCarsSchema(items, {brand, page, brandName}) {
 
     // '<' экранируем, чтобы данные не могли закрыть тег script
     return JSON.stringify(schema).replaceAll('<', '\\u003c')
+}
+
+// устаревшие адреса /cars/car.html?id=<uuid> остались в поисковой выдаче:
+// отдаём 410 Gone и страницу «Автомобиль снят с продажи», чтобы роботы убрали их из индекса
+function legacyCarPage(req, res) {
+    const manifest = manifest_links['cars/car.html']
+
+    if (!manifest) return res.status(404).send('Vite manifest not found')
+
+    const [js1, js2, js3, js4, js5] = (manifest.imports || []).slice(0, 5).map(file => file.slice(1))
+    const css2 = manifest.css && manifest.css[0]
+    const css3 = manifest.css && manifest.css[1]
+    let css1
+    for (const manifestKey in manifest_links) {
+        if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
+    }
+
+    res.status(410).render('car', {
+        gone: true,
+        title: 'Автомобиль снят с продажи - Автосеть.РФ',
+        description: 'Автомобиль снят с продажи и больше недоступен.',
+        keywords: '',
+        js1, js2, js3, js4, js5,
+        carjs: manifest.file,
+        css1, css2, css3,
+        carData: null,
+        brand: '', model: '', linkId: '',
+    })
 }
 
 async function carAlone(req, res) {
