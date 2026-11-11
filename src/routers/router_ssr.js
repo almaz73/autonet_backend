@@ -157,13 +157,16 @@ const newsImageAbsolute = (value) => {
 
 async function newsList(req, res) {
     try {
-        // канонический адрес списка — со слешем на конце
-        if (!req.path.endsWith('/')) {
-            const query = req.originalUrl.split('?')[1]
-            return res.redirect(301, query ? `/news/?${query}` : '/news/')
+        const requestedPage = Math.max(1, parseInt(req.query.PAGEN_2, 10) || 1)
+        const pageHref = (page) => page === 1 ? '/news/' : `/news/?PAGEN_2=${page}`
+        // трекинг-параметры (?bxajaxid=...) плодят дубли, оставляем только номер страницы
+        const hasTrackingParams = Object.keys(req.query).some((key) => key !== 'PAGEN_2')
+
+        // канонический адрес списка — со слешем на конце, без трекинговых параметров
+        if (!req.path.endsWith('/') || hasTrackingParams) {
+            return res.redirect(301, pageHref(requestedPage))
         }
 
-        const requestedPage = Math.max(1, parseInt(req.query.PAGEN_2, 10) || 1)
         const total = await news.count({where: {active: true}})
         const totalPages = Math.max(1, Math.ceil(total / NEWS_PAGE_SIZE))
 
@@ -180,8 +183,6 @@ async function newsList(req, res) {
             limit: NEWS_PAGE_SIZE,
             raw: true,
         })
-
-        const pageHref = (page) => page === 1 ? '/news/' : `/news/?PAGEN_2=${page}`
 
         res.render('news-list', {
             ...newsAssets(),
@@ -224,8 +225,9 @@ async function newsPage(req, res) {
 
         if (!row) return res.status(404).render('404', {confirm: ''})
 
-        // канонический адрес статьи — из базы, со слешем на конце
-        if (req.path !== row.url) return res.redirect(301, row.url)
+        // канонический адрес статьи — из базы, со слешем на конце;
+        // трекинг-параметры (?bxajaxid=...) отбрасываем, чтобы вес шёл на канонический адрес
+        if (req.path !== row.url || Object.keys(req.query).length) return res.redirect(301, row.url)
 
         // в части старых страниц заголовок h1 не входит в content — добавляем его из name
         const hasH1 = /^\s*<h1[\s>]/i.test(String(row.content || ''))
