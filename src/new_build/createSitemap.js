@@ -55,8 +55,14 @@ async function addRootPages() {
     for (let page of sitePages) {
         page = page.split(' 👉 ')
 
+        // разделы канонически живут со слешем на конце, карточки авто и файлы — без него
+        let loc = page[0]
+        const pathname = new URL(loc).pathname
+        if (!pathname.startsWith('/cars') && !pathname.includes('.') && !pathname.endsWith('/')) loc += '/'
+        if (links.some(el => el.loc === loc)) continue
+
         links.push({
-                loc: page[0],
+                loc,
                 lastmod: page[1] || new Date().toISOString().split('T')[0], // Формат YYYY-MM-DD
             })
     }
@@ -65,7 +71,8 @@ async function addRootPages() {
 async function addPromoPages() {
     try {
         const promoItems = await promoService.getAllPromo();
-        let promos = promoItems.map(el => 'https://xn--80aej9aped4f.xn--p1ai/promo/' + el.code + '/')
+        // канонический адрес акции — без слеша на конце (см. views/promo.ejs)
+        let promos = promoItems.map(el => 'https://xn--80aej9aped4f.xn--p1ai/promo/' + el.code)
 
         for (let page of promos) {
             let date = new Date().toISOString().split('T')[0] // Формат YYYY-MM-DD

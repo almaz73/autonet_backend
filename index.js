@@ -104,6 +104,16 @@ const frontendPath = path.join(__dirname, '..', 'front');
 
 app.set('view engine', 'ejs');// Установка EJS как движка шаблонов
 app.use(express.json({ limit: '30mb' }))
+
+// /services/index.html и подобные дубли: 301 на канонический адрес директории со слешем
+app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+    if (!req.path.endsWith('/index.html')) return next()
+    const dirPath = req.path.slice(0, -'index.html'.length)
+    const query = req.originalUrl.slice(req.path.length)
+    res.redirect(301, dirPath + query)
+})
+
 app.use('/', router_ssr)
 app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use('/admin-assets', express.static(path.join(__dirname, 'src', 'admin', 'assets')));
