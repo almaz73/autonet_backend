@@ -114,6 +114,22 @@ app.use((req, res, next) => {
     res.redirect(301, dirPath + query)
 })
 
+// старые рекламные ссылки на витрину с этими параметрами ведут на общий каталог;
+// остальные параметры (в т.ч. фильтр) не трогаем
+const CARS_LEGACY_QUERY_PARAMS = [
+    'pm_source', 'pm_block', 'pm_position', 'external-test-ids', 'yclid', 'a', 'update',
+]
+// постраничная навигация старого сайта: PAGEN_1, PAGEN_2 и т.д.
+const isLegacyCarsParam = (key) => CARS_LEGACY_QUERY_PARAMS.includes(key) || /^PAGEN_\d+$/i.test(key)
+app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+    // адреса старого сайта на PHP
+    if (req.path.toLowerCase().includes('.php')) return res.redirect(301, '/cars')
+    if (!req.path.startsWith('/cars')) return next()
+    if (!Object.keys(req.query).some(isLegacyCarsParam)) return next()
+    res.redirect(301, '/cars')
+})
+
 app.use('/', router_ssr)
 app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use('/admin-assets', express.static(path.join(__dirname, 'src', 'admin', 'assets')));
