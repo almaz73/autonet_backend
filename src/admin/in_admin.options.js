@@ -14,7 +14,7 @@ import {applyPromoPhotoText} from './promo-text-action.js'
 import {uploadDealerPhoto} from './dealer-photo-action.js'
 import {uploadNewsPhoto} from './news-photo-action.js'
 import {uploadDocumentFile} from './document-upload-action.js'
-import {syncDocuments} from '../clientBaza/documents/documentFiles.js'
+import {syncDocuments, removeDocumentFile} from '../clientBaza/documents/documentFiles.js'
 import {removeNewsPhoto} from '../clientBaza/news/newsPhoto.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -108,6 +108,16 @@ const cleanupNewsPhoto = async (response) => {
 const afterNewsChange = (action) => async (response, request, context) => {
     const result = await logChange('news', action)(response, request, context)
     return action === 'delete' ? cleanupNewsPhoto(result) : result
+}
+
+// при удалении документа убираем и сам файл из st/upload,
+// иначе автосинхронизация вернёт его в список
+const cleanupDocumentFile = async (response, request) => {
+    if (request?.method !== 'post' || response?.notice?.type !== 'success') return response
+
+    const records = response.records ?? (response.record ? [response.record] : [])
+    await Promise.all(records.map((record) => removeDocumentFile(record?.params?.file)))
+    return response
 }
 
 // пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
@@ -504,7 +514,10 @@ export const adminJs = new AdminJS({
                         isAccessible: promoEditors.isAccessible,
                         component: Components.DocumentEdit,
                     },
-                    delete: {...promoEditors},
+                    delete: {
+                        ...promoEditors,
+                        after: cleanupDocumentFile,
+                    },
                     bulkDelete: noBulkActions,
                     // вызывается кнопкой загрузки файла из DocumentEdit, в интерфейсе не показывается
                     uploadFile: {
