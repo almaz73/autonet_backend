@@ -6,13 +6,15 @@ import {fileURLToPath} from 'url'
 import session from 'express-session'
 import connectSqlite3 from 'connect-sqlite3'
 import {randomBytes} from 'node:crypto'
-import {sequelize, Admins, history_period, clientEmails, news, promo, dealers, changeHistory} from '../clientBaza/db.js'
+import {sequelize, Admins, history_period, clientEmails, news, promo, dealers, documents, changeHistory, dbReady} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {clearPromoCache} from '../clientBaza/promo/generationPagesForPromo.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
 import {applyPromoPhotoText} from './promo-text-action.js'
 import {uploadDealerPhoto} from './dealer-photo-action.js'
 import {uploadNewsPhoto} from './news-photo-action.js'
+import {uploadDocumentFile} from './document-upload-action.js'
+import {syncDocuments} from '../clientBaza/documents/documentFiles.js'
 import {removeNewsPhoto} from '../clientBaza/news/newsPhoto.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -38,7 +40,15 @@ const Components = {
     NewsPhoto: componentLoader.add('NewsPhoto', path.join(__dirname, 'news-photo.jsx')),
     NewsLink: componentLoader.add('NewsLink', path.join(__dirname, 'news-link.jsx')),
     NewsDate: componentLoader.add('NewsDate', path.join(__dirname, 'news-date.jsx')),
+    DocumentEdit: componentLoader.add('DocumentEdit', path.join(__dirname, 'document-edit.jsx')),
+    DocumentLink: componentLoader.add('DocumentLink', path.join(__dirname, 'document-link.jsx')),
+    DocumentSize: componentLoader.add('DocumentSize', path.join(__dirname, 'document-size.jsx')),
 }
+
+// при старте подтягиваем новые файлы из st/upload, чтобы они сразу были в админке
+dbReady
+    .then(() => syncDocuments())
+    .catch((error) => console.error('Не удалось синхронизировать документы:', error.message))
 
 // авторизация включена всегда; отключить её можно только явным флагом и только вне production
 const adminAuthDisabled = process.env.NODE_ENV !== 'production' && process.env.ADMIN_AUTH_DISABLED === '1'
@@ -459,6 +469,84 @@ export const adminJs = new AdminJS({
             },
         },
         {
+            resource: documents,
+            options: {
+                tableName: 'documents',
+                listProperties: ['name', 'kind', 'format', 'size', 'link', 'priority', 'published'],
+                navigation: null,
+                sort: {
+                    sortBy: 'priority',
+                    direction: 'asc',
+                },
+                actions: {
+                    list: {
+                        ...allRoles,
+                        // файлы из st/upload появляются в списке автоматически
+                        before: async (request) => {
+                            try {
+                                await syncDocuments()
+                            } catch (error) {
+                                console.error('Не удалось синхронизировать документы:', error.message)
+                            }
+                            if (!request.query?.perPage) {
+                                request.query = {...request.query, perPage: 100}
+                            }
+                            return request
+                        },
+                    },
+                    edit: {
+                        isAccessible: promoEditors.isAccessible,
+                        component: Components.DocumentEdit,
+                    },
+                    // просмотр карточки доступен менеджеру; остальным клик открывает редактирование
+                    show: managerOnly,
+                    new: {
+                        isAccessible: promoEditors.isAccessible,
+                        component: Components.DocumentEdit,
+                    },
+                    delete: {...promoEditors},
+                    bulkDelete: noBulkActions,
+                    // вызывается кнопкой загрузки файла из DocumentEdit, в интерфейсе не показывается
+                    uploadFile: {
+                        isVisible: false,
+                        method: 'post',
+                        isAccessible: promoEditors.isAccessible,
+                        handler: uploadDocumentFile,
+                    },
+                },
+                properties: {
+                    // на узких экранах AdminJS оставляет только title-колонку
+                    name: {
+                        isTitle: true,
+                    },
+                    file: {
+                        isVisible: {list: false, filter: false, show: true, edit: false},
+                    },
+                    // значения заполняются при загрузке файла или синхронизации папки
+                    format: {
+                        isDisabled: true,
+                    },
+                    size: {
+                        isDisabled: true,
+                        components: {list: Components.DocumentSize},
+                    },
+                    link: {
+                        isDisabled: true,
+                        components: {list: Components.DocumentLink},
+                    },
+                    kind: {
+                        availableValues: [
+                            {value: 'main', label: 'Основной'},
+                            {value: 'secondary', label: 'Второстепенный'},
+                        ],
+                    },
+                    published: {
+                        components: {list: Components.PromoBool},
+                    },
+                },
+            },
+        },
+        {
             resource: changeHistory,
             options: {
                 tableName: 'changeHistory',
@@ -538,6 +626,7 @@ export const adminJs = new AdminJS({
                     history_period: 'Время продаж',
                     promo: 'Акции',
                     dealers: 'Контакты',
+                    documents: 'Документы',
                     changeHistory: 'История изменений',
                     confirm: 'Подтверждение',
                 },
@@ -609,6 +698,18 @@ export const adminJs = new AdminJS({
                             profile: 'Профиль',
                             brands: 'Марки',
                             link: 'Ссылка',
+                        },
+                    },
+                    documents: {
+                        properties: {
+                            name: 'Название документа',
+                            file: 'Файл',
+                            format: 'Формат',
+                            size: 'Размер',
+                            link: 'Ссылка',
+                            kind: 'Вид',
+                            priority: 'Порядок',
+                            published: 'Показывать на сайте',
                         },
                     },
                     changeHistory: {

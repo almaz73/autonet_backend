@@ -1,8 +1,12 @@
 import Router from 'express'
+import fs from 'node:fs'
+import path from 'node:path'
 import zlib from 'node:zlib'
 import {Op} from 'sequelize'
 import A_car from "../API/A_car.js";
-import {dealers, news} from '../clientBaza/db.js'
+import {dealers, news, documents} from '../clientBaza/db.js'
+import {FRONT_UPLOAD_DIR, DOCUMENT_LINK_PREFIX, formatFromName} from '../clientBaza/documents/documentFiles.js'
+import {formatFileSize} from '../shared/fileSize.js'
 import {manifest_links, transliterate, RussianBrandsRus, RussianBrandsLat} from '../constants.js';
 import GetListService from "../API/GetListService.js";
 // import {seoRedirects} from "./htaccess_middleware.js"
@@ -254,6 +258,69 @@ async function newsPage(req, res) {
 
 /** КОНЕЦ динамические страницы статей **/
 
+/** Страница документов из таблицы documents **/
+
+const DOCUMENTS_TITLE = 'Документы - Автосеть.РФ'
+const DOCUMENTS_DESCRIPTION = 'Официальные документы автосалона Автосеть.РФ: правила выдачи сертификатов, договоры, политика обработки персональных данных.'
+
+function documentsAssets() {
+    const style = findChunk('_style-', '.js')
+    const main = findChunk('_main-', '.js')
+    return {
+        styleJs: style.file || '',
+        styleCss: (style.css && style.css[0]) || '',
+        mainJs: main.file || '',
+    }
+}
+
+async function documentsPage(req, res) {
+    try {
+        // канонический адрес — со слешем на конце, как у остальных серверных страниц
+        if (!req.path.endsWith('/')) return res.redirect(301, '/documents/')
+
+        const rows = await documents.findAll({where: {published: true}, raw: true})
+
+        const visible = rows
+            .filter((row) => {
+                const link = String(row.link ?? '')
+                if (!link) return false
+                // локальный файл мог быть удалён из папки — не показываем битую ссылку
+                if (link.startsWith(`${DOCUMENT_LINK_PREFIX}/`) && row.file) {
+                    return fs.existsSync(path.join(FRONT_UPLOAD_DIR, row.file))
+                }
+                return true
+            })
+            .sort((a, b) => {
+                // основные документы всегда выше второстепенных
+                const kindOrder = (row) => row.kind === 'main' ? 0 : 1
+                return kindOrder(a) - kindOrder(b)
+                    || (Number(a.priority) || 0) - (Number(b.priority) || 0)
+                    || a.id - b.id
+            })
+            .map((row) => ({
+                ...row,
+                formatText: row.format || formatFromName(row.file) || '',
+                sizeText: formatFileSize(row.size),
+            }))
+
+        res.render('documents', {
+            ...documentsAssets(),
+            mainDocs: visible.filter((row) => row.kind === 'main'),
+            secondaryDocs: visible.filter((row) => row.kind !== 'main'),
+            title: DOCUMENTS_TITLE,
+            description: DOCUMENTS_DESCRIPTION,
+            canonical: `${SITE_ORIGIN}/documents/`,
+            ogImage: `${SITE_ORIGIN}/st/auto.webp`,
+        })
+    } catch (error) {
+        console.error('Error rendering documents page:', error)
+        res.status(500).send('Internal Server Error')
+    }
+    return res
+}
+
+/** КОНЕЦ страница документов **/
+
 // router.use(seoRedirects)
 
 router.get('/', indexPage);                                 // Главная страница
@@ -273,6 +340,8 @@ router.get('/contacts/:slug', dealerPage);                  // Страница 
 
 router.get('/news', newsList);                              // Список статей из базы
 router.get('/news/:id(\\d+)', newsPage);                    // Статья из базы
+
+router.get('/documents', documentsPage);                    // Документы из базы (и /documents/ тоже)
 
 
 async function indexPage(req, res) {

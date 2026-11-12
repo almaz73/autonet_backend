@@ -122,6 +122,23 @@ dealers.beforeValidate((dealer) => {
     dealer.link = buildDealerLink(dealer.city, dealer.address)
 });
 
+// документы для страницы /documents/: файл лежит в st/upload, здесь — его описание
+const documents = sequelize.define('documents', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    name: { type: DataTypes.TEXT, allowNull: false },
+    file: { type: DataTypes.TEXT, unique: true },
+    format: { type: DataTypes.TEXT },
+    size: { type: DataTypes.INTEGER },
+    link: { type: DataTypes.TEXT, allowNull: false, unique: true },
+    // main — основные документы, secondary — второстепенные
+    kind: { type: DataTypes.TEXT, allowNull: false, defaultValue: 'secondary' },
+    priority: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    published: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+}, {
+    tableName: 'documents',
+    timestamps: false,
+});
+
 // история изменений акций, контактов и статей: кто, когда и что менял (для обновления sitemap.xml)
 const changeHistory = sequelize.define('changeHistory', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -152,7 +169,7 @@ const history_period = sequelize.define('Сколько дней висело', 
 });
 
 // Passenger загружает ESM через require(), поэтому top-level await здесь нельзя
-sequelize.sync() // This will create tables if they don't exist
+const dbReady = sequelize.sync() // This will create tables if they don't exist
     .then(async () => {
         // sync() не добавляет новые колонки в уже существующую таблицу
         const [promoColumns] = await sequelize.query('PRAGMA table_info(promo)');
@@ -215,6 +232,21 @@ sequelize.sync() // This will create tables if they don't exist
                 await sequelize.query('ALTER TABLE changeHistory ADD COLUMN news_name TEXT');
                 console.log('Таблица changeHistory дополнена полями статей');
             }
+        }
+
+        // документ, который раньше был единственным на статической странице /documents/
+        if (await documents.count() === 0) {
+            await documents.create({
+                name: 'Правила выдачи и использования именных сертификатов на скидку при покупке автомобиля в дилерских центрах ООО «Форум»',
+                file: 'rule_sertificates.pdf',
+                format: 'PDF',
+                size: 203700,
+                link: '/st/upload/rule_sertificates.pdf',
+                kind: 'main',
+                priority: 0,
+                published: true,
+            });
+            console.log('Добавлен документ rule_sertificates.pdf');
         }
 
         // Дефолтный суперадмин при первом запуске (если таблица Admins пуста).
@@ -313,4 +345,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, Admins, history_period, clientEmails, news, promo, dealers, changeHistory };
+export { sequelize, Admins, history_period, clientEmails, news, promo, dealers, documents, changeHistory, dbReady };
