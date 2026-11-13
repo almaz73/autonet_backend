@@ -2,14 +2,20 @@ import '../loadEnv.js' // первым: SMTP-настройки нужны до 
 import fs from 'fs';
 import * as fs_promises from 'node:fs/promises'
 import path from 'path';
+import {fileURLToPath} from 'url';
 import {FolderForSitemap, isLocal, transliterate} from "../constants.js";
 import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import {sitePages} from '../../sitePages.js'
-import * as promoService from "../clientBaza/promo/promoService.js";
 import xml2js from "xml2js";
 import {sendEmail} from "../post/sendEmail.js"
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+// абсолютные пути: при запуске из cron текущая папка другая, и sqlite создавал пустую базу рядом
+const DB_PATH = path.resolve(__dirname, '../../database.sqlite')
+const CLIENT_DB_PATH = path.resolve(__dirname, '../../client.sqlite')
+
+const SITE_ORIGIN = 'https://xn--80aej9aped4f.xn--p1ai'
 const SITEMAP_PATH = FolderForSitemap + '/sitemap.xml';
 const SITEMAP_PATH2 = FolderForSitemap + '/sitemap2.xml';
 const parser = new xml2js.Parser({explicitArray: false});
@@ -19,20 +25,42 @@ const builder = new xml2js.Builder({
 
 let links = []
 let newLinks = [] // новые авто
+const linksByLoc = new Set()
+
+// даты изменений акций/контактов/статей берём из истории, но только за период после прошлого запуска sitemap:
+// всё, что менялось раньше, уже имеет свою дату в старом sitemap
+let historySince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+try {
+    historySince = fs.statSync(SITEMAP_PATH).mtime
+} catch (error) {
+    console.log('Не удалось определить дату прошлого sitemap, смотрим историю за 7 дней')
+}
 
 // 1. Чтение исходного XML-файла
 const xmlData = fs.readFileSync(SITEMAP_PATH, 'utf-8');
 // 2. Конвертация XML в JSON объект
 let result = await parser.parseStringPromise(xmlData);
 
+const oldSitemapNodes = Array.isArray(result.urlset.url) ? result.urlset.url : [result.urlset.url]
+// слеш на конце для поиска даты не важен: акции раньше лежали в sitemap со слешем, статьи — без
+const normalizeLoc = (loc) => String(loc || '').replace(/\/+$/, '')
+const oldLastmod = new Map()
+for (const node of oldSitemapNodes) {
+    const key = normalizeLoc(node.loc)
+    // в старом sitemap могли быть дубли адреса с разными датами — берём самую свежую
+    if (!oldLastmod.has(key) || String(node.lastmod) > oldLastmod.get(key)) {
+        oldLastmod.set(key, node.lastmod)
+    }
+}
+const today = new Date().toISOString().split('T')[0]
 
 // создавать sitemap будем каждый раз заново, а старый сохраним в копию
 // создание копии
 await makeDoubleOldSitemap()
 // создание костяка из файла sitePages
 await addRootPages()
-// получаю список всех акций и добавляю
-await addPromoPages()
+// акции, контакты и статьи — из client.sqlite, даты обновления — из истории изменений
+await addClientDbPages()
 // получаю список всех авто и добавляю, дату обновления беру со старого sitemap
 await addAllAuto()
 
@@ -41,6 +69,17 @@ await saveNewLinks(newLinks)
 
 
 
+
+function addLink(loc, lastmod) {
+    const key = normalizeLoc(loc)
+    if (linksByLoc.has(key)) return
+    linksByLoc.add(key)
+    links.push({
+        loc,
+        // если с прошлого запуска изменений не было, оставляем дату из старого sitemap
+        lastmod: lastmod || oldLastmod.get(key) || today, // Формат YYYY-MM-DD
+    })
+}
 
 async function makeDoubleOldSitemap() {
     try {
@@ -59,37 +98,69 @@ async function addRootPages() {
         let loc = page[0]
         const pathname = new URL(loc).pathname
         if (!pathname.startsWith('/cars') && !pathname.includes('.') && !pathname.endsWith('/')) loc += '/'
-        if (links.some(el => el.loc === loc)) continue
 
-        links.push({
-                loc,
-                lastmod: page[1] || new Date().toISOString().split('T')[0], // Формат YYYY-MM-DD
-            })
+        addLink(loc, page[1])
     }
 }
 
-async function addPromoPages() {
+async function addClientDbPages() {
+    const db = await open({
+        filename: CLIENT_DB_PATH,
+        driver: sqlite3.Database,
+        mode: sqlite3.OPEN_READONLY,
+    })
+
     try {
-        const promoItems = await promoService.getAllPromo();
+        const promos = await db.all(`
+            SELECT id, code
+            FROM promo
+            WHERE active = 1
+              AND code IS NOT NULL
+              AND code <> ''
+        `)
+        const newsItems = await db.all(`
+            SELECT id, url
+            FROM news
+            WHERE active = 1
+              AND url IS NOT NULL
+              AND url <> ''
+        `)
+        const dealers = await db.all(`
+            SELECT id, link
+            FROM dealers
+            WHERE link IS NOT NULL
+              AND link <> ''
+        `)
+
+        const promoDates = await getHistoryDates(db, 'promo_id')
+        const newsDates = await getHistoryDates(db, 'news_id')
+        const dealerDates = await getHistoryDates(db, 'dealer_id')
+
         // канонический адрес акции — без слеша на конце (см. views/promo.ejs)
-        let promos = promoItems.map(el => 'https://xn--80aej9aped4f.xn--p1ai/promo/' + el.code)
-
-        for (let page of promos) {
-            let date = new Date().toISOString().split('T')[0] // Формат YYYY-MM-DD
-            let exist = sitePages.find(el => page.split('/')[4])
-
-            if (exist) date = exist.split(' 👉 ')[1]
-
-            links.push({loc: page, lastmod: date})
-        }
-    } catch (error) {
-        console.error('Error getting promo items:', error);
+        for (const promo of promos) addLink(`${SITE_ORIGIN}/promo/${promo.code}`, promoDates.get(promo.id))
+        // адрес статьи в базе уже канонический, со слешем на конце
+        for (const item of newsItems) addLink(`${SITE_ORIGIN}/${item.url.replace(/^\/+/, '')}`, newsDates.get(item.id))
+        for (const dealer of dealers) addLink(`${SITE_ORIGIN}/${dealer.link.replace(/^\/+/, '')}`, dealerDates.get(dealer.id))
+    } finally {
+        await db.close()
     }
+}
+
+// дата последнего изменения каждой записи за период; более старые даты уже есть в старом sitemap
+async function getHistoryDates(db, column) {
+    const rows = await db.all(`
+        SELECT ${column} AS id, date(MAX(datetime(created_at))) AS lastmod
+        FROM changeHistory
+        WHERE ${column} IS NOT NULL
+          AND datetime(created_at) >= datetime(?)
+        GROUP BY ${column}
+    `, [historySince.toISOString()])
+    return new Map(rows.map((row) => [row.id, row.lastmod]))
 }
 
 async function addAllAuto() {
     const db = await open({
-        filename: './database.sqlite',
+        filename: DB_PATH,
         driver: sqlite3.Database
     });
 
