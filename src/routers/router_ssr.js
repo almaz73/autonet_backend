@@ -262,6 +262,8 @@ async function newsPage(req, res) {
 
 const DOCUMENTS_TITLE = 'Документы - Автосеть.РФ'
 const DOCUMENTS_DESCRIPTION = 'Официальные документы автосалона Автосеть.РФ: правила выдачи сертификатов, договоры, политика обработки персональных данных.'
+// форматы, которые браузер умеет показать сам
+const PREVIEW_FORMATS = new Set(['PDF', 'TXT', 'JPG', 'JPEG', 'PNG'])
 
 function documentsAssets() {
     const style = findChunk('_style-', '.js')
@@ -297,11 +299,17 @@ async function documentsPage(req, res) {
                     || (Number(a.priority) || 0) - (Number(b.priority) || 0)
                     || a.id - b.id
             })
-            .map((row) => ({
-                ...row,
-                formatText: row.format || formatFromName(row.file) || '',
-                sizeText: formatFileSize(row.size),
-            }))
+            .map((row) => {
+                const formatText = row.format || formatFromName(row.file) || ''
+                return {
+                    ...row,
+                    formatText,
+                    sizeText: formatFileSize(row.size),
+                    // такие файлы браузер показывает сам — открываем во вкладке;
+                    // остальные форматы отдаём на скачивание
+                    previewable: PREVIEW_FORMATS.has(formatText),
+                }
+            })
 
         res.render('documents', {
             ...documentsAssets(),
