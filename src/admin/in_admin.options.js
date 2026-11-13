@@ -120,6 +120,12 @@ const cleanupDocumentFile = async (response, request) => {
     return response
 }
 
+// изменение документа: сначала фиксируем в истории, затем при удалении чистим файл
+const afterDocumentChange = (action) => async (response, request, context) => {
+    const result = await logChange('document', action)(response, request, context)
+    return action === 'delete' ? cleanupDocumentFile(result, request) : result
+}
+
 // пишем в changeHistory только успешные изменения: кто, когда, какую запись и что с ней сделал
 const logChange = (entity, action) => async (response, request, context) => {
     if (request.method !== 'post' || response?.notice?.type !== 'success') return response
@@ -140,7 +146,9 @@ const logChange = (entity, action) => async (response, request, context) => {
             ? { promo_id: recordId, promo_name: record.params?.name ?? null }
             : entity === 'news'
                 ? { news_id: recordId, news_name: record.params?.name ?? null }
-                : { dealer_id: recordId, dealer_city: record.params?.city ?? null }
+                : entity === 'document'
+                    ? { document_id: recordId, document_name: record.params?.name ?? null }
+                    : { dealer_id: recordId, dealer_city: record.params?.city ?? null }
 
         return changeHistory.create({admin_name: adminName, action, ...target})
     }))
@@ -507,16 +515,18 @@ export const adminJs = new AdminJS({
                     edit: {
                         isAccessible: promoEditors.isAccessible,
                         component: Components.DocumentEdit,
+                        after: afterDocumentChange('update'),
                     },
                     // просмотр карточки доступен менеджеру; остальным клик открывает редактирование
                     show: managerOnly,
                     new: {
                         isAccessible: promoEditors.isAccessible,
                         component: Components.DocumentEdit,
+                        after: afterDocumentChange('create'),
                     },
                     delete: {
                         ...promoEditors,
-                        after: cleanupDocumentFile,
+                        after: afterDocumentChange('delete'),
                     },
                     bulkDelete: noBulkActions,
                     // вызывается кнопкой загрузки файла из DocumentEdit, в интерфейсе не показывается
@@ -729,7 +739,7 @@ export const adminJs = new AdminJS({
                         properties: {
                             admin_name: 'Кто менял',
                             promo_id: 'Раздел',
-                            promo_name: 'Название/город/статья',
+                            promo_name: 'Акция/статья/контакт/документ',
                             created_at: 'Время',
                             action: 'Действие',
                         },

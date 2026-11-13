@@ -11,6 +11,7 @@ const truncate = (value) => {
 const sectionOf = (params) => {
     if (params.news_id != null) return 'Статья'
     if (params.promo_id != null) return 'Акция'
+    if (params.document_id != null) return 'Документ'
     return 'Контакт'
 }
 
@@ -27,7 +28,9 @@ const ChangeHistoryCell = ({record, property}) => {
         ? params.news_name
         : params.promo_id != null
             ? params.promo_name
-            : params.dealer_city
+            : params.document_id != null
+                ? params.document_name
+                : params.dealer_city
 
     return <span title={name ?? ''}>{truncate(name)}</span>
 }

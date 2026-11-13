@@ -139,7 +139,7 @@ const documents = sequelize.define('documents', {
     timestamps: false,
 });
 
-// история изменений акций, контактов и статей: кто, когда и что менял (для обновления sitemap.xml)
+// история изменений акций, контактов, статей и документов: кто, когда и что менял (для обновления sitemap.xml)
 const changeHistory = sequelize.define('changeHistory', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     admin_name: { type: DataTypes.TEXT },
@@ -150,6 +150,8 @@ const changeHistory = sequelize.define('changeHistory', {
     dealer_city: { type: DataTypes.TEXT },
     news_id: { type: DataTypes.INTEGER },
     news_name: { type: DataTypes.TEXT },
+    document_id: { type: DataTypes.INTEGER },
+    document_name: { type: DataTypes.TEXT },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 }, {
     tableName: 'changeHistory',
@@ -232,6 +234,13 @@ const dbReady = sequelize.sync() // This will create tables if they don't exist
                 await sequelize.query('ALTER TABLE changeHistory ADD COLUMN news_name TEXT');
                 console.log('Таблица changeHistory дополнена полями статей');
             }
+        }
+
+        const [historyColumnsWithNews] = await sequelize.query('PRAGMA table_info(changeHistory)');
+        if (!historyColumnsWithNews.some((column) => column.name === 'document_id')) {
+            await sequelize.query('ALTER TABLE changeHistory ADD COLUMN document_id INTEGER');
+            await sequelize.query('ALTER TABLE changeHistory ADD COLUMN document_name TEXT');
+            console.log('Таблица changeHistory дополнена полями документов');
         }
 
         // документ, который раньше был единственным на статической странице /documents/
