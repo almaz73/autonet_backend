@@ -295,7 +295,7 @@ const CONFIRM_PUBLISH_MESSAGE = 'Вы еще не заполнили содер�
 
 // включение флага при незаполненных содержимом и SEO требуем подтвердить;
 // выключение всегда проходит без вопросов
-const FlagField = ({propertyPath, record, needsConfirm, onConfirmRequired, ...props}) => {
+const FlagField = ({propertyPath, record, needsConfirm, onConfirmRequired, hint, ...props}) => {
     const onClickCapture = (event) => {
         const checkbox = event.target.closest?.('.adminjs_Checkbox')
         if (!checkbox || checkbox.querySelector('input')?.disabled) return
@@ -307,7 +307,7 @@ const FlagField = ({propertyPath, record, needsConfirm, onConfirmRequired, ...pr
     }
 
     return (
-        <div onClickCapture={onClickCapture}>
+        <div title={hint} onClickCapture={onClickCapture}>
             <Field propertyPath={propertyPath} record={record} {...props}/>
         </div>
     )
@@ -438,6 +438,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                             disabled={!hasPhotos && !isChecked(params.active)}
                             needsConfirm={needsPublishConfirm}
                             onConfirmRequired={setPendingFlag}
+                            hint="Акция попадает на страницу акций"
                         />
                     </Box>
                     <Box flex="1" ml="default">
@@ -448,6 +449,7 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                             disabled={!hasPhotos && !isChecked(params.onMain)}
                             needsConfirm={needsPublishConfirm}
                             onConfirmRequired={setPendingFlag}
+                            hint="Акция добавится в карусель банеров на главной странице"
                         />
                     </Box>
                 </Box>
