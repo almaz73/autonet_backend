@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react'
 import {createPortal} from 'react-dom'
 import {useNavigate} from 'react-router'
 import {ApiClient, BasePropertyComponent, useNotice, useRecord, useTranslation} from 'adminjs'
-import {Box, Button, FormGroup, H3, Icon, Label, Text} from '@adminjs/design-system'
+import {Box, Button, FormGroup, H3, Icon, Label, Modal, Text} from '@adminjs/design-system'
 import PhotoTextEditor from './promo-photo-text.jsx'
 import {writeLastEditedId} from './promo-list-table.jsx'
 
@@ -291,6 +291,28 @@ const Card = ({children}) => (
 const isFilled = (value) => typeof value === 'string' ? value.trim() !== '' : Boolean(value)
 const isChecked = (value) => value === true || value === 'true'
 
+const CONFIRM_PUBLISH_MESSAGE = 'Вы еще не заполнили содержимое страницы и SEO подготовку. Продолжать?'
+
+// включение флага при незаполненных содержимом и SEO требуем подтвердить;
+// выключение всегда проходит без вопросов
+const FlagField = ({propertyPath, record, needsConfirm, onConfirmRequired, ...props}) => {
+    const onClickCapture = (event) => {
+        const checkbox = event.target.closest?.('.adminjs_Checkbox')
+        if (!checkbox || checkbox.querySelector('input')?.disabled) return
+        if (isChecked(record.params?.[propertyPath]) || !needsConfirm) return
+
+        event.preventDefault()
+        event.stopPropagation()
+        onConfirmRequired(propertyPath)
+    }
+
+    return (
+        <div onClickCapture={onClickCapture}>
+            <Field propertyPath={propertyPath} record={record} {...props}/>
+        </div>
+    )
+}
+
 const PromoEdit = ({record: initialRecord, resource}) => {
     const navigate = useNavigate()
     const {translateButton} = useTranslation()
@@ -299,6 +321,8 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     const [previewVersion, setPreviewVersion] = useState(() => Date.now())
     // propertyPath фото, на котором открыт редактор текста
     const [textEditing, setTextEditing] = useState(null)
+    // флаг, включение которого ждёт подтверждения
+    const [pendingFlag, setPendingFlag] = useState(null)
     // слот в штатной шапке AdminJS рядом с «Удалить» для верхних кнопок
     const [headerSlot, setHeaderSlot] = useState(null)
     const formRef = useRef(null)
@@ -329,16 +353,24 @@ const PromoEdit = ({record: initialRecord, resource}) => {
     }, [resource.id, initialRecord?.id])
 
     const fields = {resource, record, onChange: handleChange}
-    // акция публикуется только с полным набором: три фото и содержимое страницы.
-    // SEO Title и Meta Description необязательны: без них страница берёт название акции
+    // публикация блокируется только без фотографий; при наличии фото флаги доступны
     const params = record.params ?? {}
 
-    const canPublish = PHOTO_SLOTS.every((slot) => isFilled(params[slot.property]))
-        && isFilled((params.content ?? '').replace(/(<([^>]+)>)/gi, ''))
+    const hasPhotos = PHOTO_SLOTS.every((slot) => isFilled(params[slot.property]))
+    // содержимое и SEO не блокируют флаги, но при включении спрашиваем подтверждение
+    const contentReady = isFilled((params.content ?? '').replace(/(<([^>]+)>)/gi, ''))
+    const seoReady = isFilled(params.title) && isFilled(params.description)
+    const needsPublishConfirm = !contentReady || !seoReady
 
     const onPhotosUploaded = (photos) => {
         Object.entries(photos ?? {}).forEach(([propertyPath, name]) => handleChange(propertyPath, name))
         setPreviewVersion(Date.now())
+    }
+
+    const confirmPendingFlag = () => {
+        if (!pendingFlag) return
+        handleChange(pendingFlag, true)
+        setPendingFlag(null)
     }
 
     const onSubmit = (event) => {
@@ -397,28 +429,31 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                 </Box>
                 <Box flex>
                     <Box flex="1" mr="default">
-                        {/* снять уже включённый флаг можно всегда, включить — только при заполненных полях.
+                        {/* снять уже включённый флаг можно всегда, включить — только при загруженных фото.
                             key пересоздаёт чекбокс: его memo не замечает смену isDisabled */}
-                        <Field
-                            key={`active-${canPublish}`}
+                        <FlagField
+                            key={`active-${hasPhotos}`}
                             propertyPath="active"
                             {...fields}
-                            disabled={!canPublish && !isChecked(params.active)}
+                            disabled={!hasPhotos && !isChecked(params.active)}
+                            needsConfirm={needsPublishConfirm}
+                            onConfirmRequired={setPendingFlag}
                         />
                     </Box>
                     <Box flex="1" ml="default">
-                        <Field
-                            key={`onMain-${canPublish}`}
+                        <FlagField
+                            key={`onMain-${hasPhotos}`}
                             propertyPath="onMain"
                             {...fields}
-                            disabled={!canPublish && !isChecked(params.onMain)}
+                            disabled={!hasPhotos && !isChecked(params.onMain)}
+                            needsConfirm={needsPublishConfirm}
+                            onConfirmRequired={setPendingFlag}
                         />
                     </Box>
                 </Box>
-                {!canPublish ? (
+                {!hasPhotos ? (
                     <Text color="grey60">
-                        Включить «Активный» и «На главной» можно после загрузки всех трёх фото и заполнения поля
-                        «Содержимое страницы».
+                        Включить «Активный» и «На главной» можно после загрузки всех трёх фотографий.
                     </Text>
                 ) : null}
             </Card>
@@ -512,6 +547,30 @@ const PromoEdit = ({record: initialRecord, resource}) => {
                     {translateButton('save', resource.id)}
                 </Button>
             </Box>
+
+            {pendingFlag ? (
+                <Modal
+                    title="Публикация акции"
+                    onClose={() => setPendingFlag(null)}
+                    onOverlayClick={() => setPendingFlag(null)}
+                    buttons={[
+                        {
+                            type: 'button',
+                            label: 'Нет',
+                            variant: 'light',
+                            onClick: () => setPendingFlag(null),
+                        },
+                        {
+                            type: 'button',
+                            label: 'Да',
+                            variant: 'contained',
+                            onClick: confirmPendingFlag,
+                        },
+                    ]}
+                >
+                    <Text>{CONFIRM_PUBLISH_MESSAGE}</Text>
+                </Modal>
+            ) : null}
         </Box>
     )
 }
