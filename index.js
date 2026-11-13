@@ -114,6 +114,14 @@ app.use((req, res, next) => {
     res.redirect(301, dirPath + query)
 })
 
+// страница новых автомобилей переехала: старый адрес /newCars/ ведёт на /new-cars/
+// app.use((req, res, next) => {
+//     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+//     if (!/^\/newcars\/?$/i.test(req.path)) return next()
+//     const query = req.originalUrl.slice(req.path.length)
+//     res.redirect(301, `/new-cars/${query}`)
+// })
+
 // старые рекламные ссылки на витрину с этими параметрами ведут на общий каталог;
 // остальные параметры (в т.ч. фильтр) не трогаем
 const CARS_LEGACY_QUERY_PARAMS = [
