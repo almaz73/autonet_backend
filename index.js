@@ -198,8 +198,8 @@ app.use((req, res, next) => {
     if (req.url.includes('/promo/') && !req.url.includes('/st/')) return generationPagesForPromo(res, req.url)      // отдаем промоакции
     if (!req.url.includes('/pub_auto/')) Controllers.redirectBrand(req.url, res)                                    // открываем страницу cars или бренды
 
-    // неизвестные адреса: страница 404 с кодом 410, чтобы поисковик быстрее выкинул URL из индекса
-    return res.status(410).render('404', {confirm: ''})
+    // неизвестные адреса: страница 404 с кодом 404
+    return res.status(404).render('404', {confirm: ''})
 });
 
 async function startApp() {
