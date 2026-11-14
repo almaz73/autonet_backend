@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# служебные разделы и API
+Disallow: /administrator
+Disallow: /admin/
+Disallow: /admin-assets/
+Disallow: /api/
+
+# бронирование автомобиля — служебная страница
+Disallow: /reserve
+
+# персональные страницы: содержимое зависит от браузера пользователя
+Disallow: /personal/
+
+# копия sitemap для сравнения дат и список новых ссылок — не для индексации
+Disallow: /sitemap2.xml
+Disallow: /newLinks.txt
+
+# рекламные и трекинг-параметры не создают новых страниц (учитывает Яндекс)
+Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content&yclid&gclid&fbclid&from&pm_source&pm_block&pm_position&external-test-ids
+
+Sitemap: https://xn--80aej9aped4f.xn--p1ai/sitemap.xml

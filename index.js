@@ -138,6 +138,11 @@ app.use((req, res, next) => {
     res.redirect(301, '/cars')
 })
 
+// robots.txt отдаём из бэкенда, чтобы файл не зависел от сборки фронтенда
+app.get('/robots.txt', (req, res) => {
+    res.sendFile(path.join(__dirname, 'robots.txt'))
+})
+
 app.use('/', router_ssr)
 app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use('/admin-assets', express.static(path.join(__dirname, 'src', 'admin', 'assets')));
@@ -193,7 +198,8 @@ app.use((req, res, next) => {
     if (req.url.includes('/promo/') && !req.url.includes('/st/')) return generationPagesForPromo(res, req.url)      // отдаем промоакции
     if (!req.url.includes('/pub_auto/')) Controllers.redirectBrand(req.url, res)                                    // открываем страницу cars или бренды
 
-    return res.render('404', {confirm: ''})
+    // неизвестные адреса: страница 404 с кодом 410, чтобы поисковик быстрее выкинул URL из индекса
+    return res.status(410).render('404', {confirm: ''})
 });
 
 async function startApp() {
