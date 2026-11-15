@@ -305,11 +305,6 @@ const DealerEdit = ({record: initialRecord, resource}) => {
             </Card>
 
             <Card>
-                <H3 mb="default">Ссылка</H3>
-                <LinkField params={params}/>
-            </Card>
-
-            <Card>
                 <H3 mb="default">Фото</H3>
                 <PhotoField
                     record={record}
@@ -318,6 +313,25 @@ const DealerEdit = ({record: initialRecord, resource}) => {
                     onUploaded={onPhotoUploaded}
                 />
             </Card>
+
+            <Card>
+                <H3 mb="default">Ссылка</H3>
+                <LinkField params={params}/>
+            </Card>
+
+            <Card>
+                <H3 mb="default">Страницы отзывов</H3>
+                <Field propertyPath="reviews_yandex" {...fields}/>
+                <Field propertyPath="reviews_google" {...fields}/>
+                <Field propertyPath="reviews_2gis" {...fields}/>
+                <Field propertyPath="reviews_avito" {...fields}/>
+                <Text color="grey60">
+                    Ссылки на страницы отзывов точки на внешних площадках — по ним переходят
+                    с блока отзывов на странице контактов.
+                </Text>
+            </Card>
+
+
 
             <Box flex justifyContent="flex-end" alignItems="center">
                 <Button

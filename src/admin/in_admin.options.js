@@ -483,6 +483,19 @@ export const adminJs = new AdminJS({
                         isDisabled: true,
                         components: {list: Components.DealerLink},
                     },
+                    // ссылки на страницы отзывов точки на внешних площадках
+                    reviews_yandex: {
+                        isVisible: {list: false, filter: false, show: true, edit: true},
+                    },
+                    reviews_google: {
+                        isVisible: {list: false, filter: false, show: true, edit: true},
+                    },
+                    reviews_2gis: {
+                        isVisible: {list: false, filter: false, show: true, edit: true},
+                    },
+                    reviews_avito: {
+                        isVisible: {list: false, filter: false, show: true, edit: true},
+                    },
                 },
             },
         },
@@ -823,6 +836,10 @@ export const adminJs = new AdminJS({
                             profile: 'Профиль',
                             brands: 'Марки',
                             link: 'Ссылка',
+                            reviews_yandex: 'Яндекс Карты',
+                            reviews_google: 'Google Карты',
+                            reviews_2gis: '2ГИС',
+                            reviews_avito: 'Авито',
                         },
                     },
                     documents: {
