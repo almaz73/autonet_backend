@@ -5,6 +5,7 @@ import {emailRateLimit, validateEmailRequest, validateEmailAttachment} from '../
 import multer from "multer";
 import {getActiveBanners, getMainBanners} from '../clientBaza/promo/generationPagesForPromo.js'
 import {getDealers} from '../clientBaza/dealers/dealersDAO.js'
+import {saveSiteReview, siteReviewRateLimit} from '../reviews/siteReviews.js'
 
 const router = new Router()
 
@@ -58,6 +59,16 @@ router.get('/getYearGap', Controllers.getYearGap)
 // Почтовые формы: лимит по IP ставим до multer, чтобы спам не занимал память загрузкой файла
 router.post('/postEmail', emailRateLimit, validateEmailRequest, Post.postEmailYa)
 router.post('/postEmailWithAttachement', emailRateLimit, upload.single('file'), validateEmailAttachment, Post.postEmailWithAttachementYa)
+router.post('/postReview', siteReviewRateLimit, async (req, res) => {
+    try {
+        const result = await saveSiteReview(req.body)
+        if (result.error) return res.status(400).json({error: result.error})
+        res.status(200).json({message: 'Спасибо! Ваш отзыв принят, будет опубликован после модерации'})
+    } catch (error) {
+        console.error('Error postReview:', error)
+        res.status(500).json({error: 'Не удалось сохранить отзыв'})
+    }
+})
 router.get('/getMainBanners', getMainBanners) // баннеры карусели на главном
 router.get('/getActiveBanners', getActiveBanners) // все активные промо-баннеры
 router.get('/getDealers', getDealers) // дилерские центры для карты на главной

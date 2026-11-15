@@ -374,8 +374,9 @@ function toReviewView(row) {
         // переносы строк в отзывах сохраняет CSS (white-space: pre-line)
         text: String(row.review ?? '').trim(),
         rating: Math.max(0, Math.min(5, Number(row.rating) || 0)),
-        platformLabel: source?.name || 'Отзыв',
-        platformHref: source?.reviewsHref || '',
+        // отзыв, оставленный на сайте, показываем без ссылки на площадку
+        platformLabel: row.platform === 'site' ? 'Отзыв с сайта' : (source?.name || 'Отзыв'),
+        platformHref: row.platform === 'site' ? '' : (source?.reviewsHref || ''),
         respondent: String(row.respondent ?? '').trim(),
         answer: String(row.answer ?? '').trim(),
         answerDateText: formatNewsDate(row.dateAnswer),
@@ -388,6 +389,7 @@ async function getRandomFiveStarReviews(limit) {
         where: {
             [Op.and]: [
                 {rating: 5},
+                {published: true},
                 {review: {[Op.ne]: null}},
                 {review: {[Op.ne]: ''}},
             ],
@@ -414,6 +416,7 @@ async function reviewsPage(req, res) {
         const {count: total, rows} = await review.findAndCountAll({
             where: {
                 [Op.and]: [
+                    {published: true},
                     {review: {[Op.ne]: null}},
                     {review: {[Op.ne]: ''}},
                 ],

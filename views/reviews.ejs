@@ -47,14 +47,45 @@
 
     <section class="review-sources-block">
         <h2>Оставить отзыв</h2>
-        <p>Будем благодарны за отзыв о работе автосалона на любой удобной площадке:</p>
-        <ul class="review-sources">
-            <% sources.forEach(source => { %>
-            <li>
-                <a href="<%= source.href %>" target="_blank" rel="noopener noreferrer nofollow"><%= source.name %></a>
-            </li>
-            <% }); %>
-        </ul>
+
+        <form class="review-form" id="review-form" novalidate>
+            <div class="review-form__row">
+                <label class="review-form__label" for="review-fio">Ваше имя *</label>
+                <input type="text" id="review-fio" name="fio" required maxlength="120" autocomplete="name"
+                       placeholder="Как к вам обращаться">
+            </div>
+
+            <div class="review-form__row">
+                <span class="review-form__label">Оценка</span>
+                <div class="review-form__stars" role="radiogroup" aria-label="Оценка от 1 до 5">
+                    <% [5, 4, 3, 2, 1].forEach(value => { %>
+                    <input type="radio" name="rating" id="review-rating-<%= value %>" value="<%= value %>"
+                           aria-label="<%= value %> из 5"<% if (value === 5) { %> checked<% } %>>
+                    <% }); %>
+                </div>
+            </div>
+
+            <div class="review-form__row">
+                <label class="review-form__label" for="review-text">Отзыв *</label>
+                <textarea id="review-text" name="review" rows="6" required maxlength="5000"
+                          placeholder="Расскажите о вашем опыте"></textarea>
+            </div>
+
+            <div class="review-form__row">
+                <div class="capctha-div"></div>
+            </div>
+
+
+            <button type="submit" class="page__btn page__btn--main">Сохранить</button>
+        </form>
+
+        <div class="review-form__success" id="review-form-success" hidden>
+            Спасибо! Ваш отзыв принят, будет опубликован после модерации
+        </div>
+
+        <p class="review-sources-note">Будем благодарны за отзыв о работе автосалона на любой удобной площадке:</p>
+        <p class="review-sources-note">Отзывы о каждом дилерском центре собраны в разделе
+            <a href="/contacts/">«Контакты»</a> — со ссылками на Яндекс Карты, Google, 2ГИС и Авито.</p>
     </section>
 
     <div class="review-list" id="review-list">

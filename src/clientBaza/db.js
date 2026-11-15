@@ -166,6 +166,9 @@ const review = sequelize.define('review', {
     // голоса посетителей сайта; сборщик отзывов их не перезаписывает
     support: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     unsupport: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    // отзывы с сайта сохраняются скрытыми и появляются после модерации в админке;
+    // собранные с площадок отзывы публикуются сразу
+    published: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 }, {
     tableName: 'review',
@@ -256,6 +259,13 @@ const dbReady = sequelize.sync() // This will create tables if they don't exist
             if (dealerColumnNames.has(column)) continue;
             await sequelize.query(`ALTER TABLE dealers ADD COLUMN ${column} TEXT`);
             console.log(`Добавлена колонка dealers.${column}`);
+        }
+
+        // отзывы с сайта ждут модерации; уже собранные остаются опубликованными
+        const [reviewColumns] = await sequelize.query('PRAGMA table_info(review)');
+        if (!reviewColumns.some((column) => column.name === 'published')) {
+            await sequelize.query('ALTER TABLE review ADD COLUMN published BOOLEAN NOT NULL DEFAULT 1');
+            console.log('Добавлена колонка review.published');
         }
 
         // Этот код нужен только для добавления недостающих колонок в бд, не всегда нужен

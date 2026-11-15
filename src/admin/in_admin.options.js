@@ -6,7 +6,7 @@ import {fileURLToPath} from 'url'
 import session from 'express-session'
 import connectSqlite3 from 'connect-sqlite3'
 import {randomBytes} from 'node:crypto'
-import {sequelize, Admins, history_period, clientEmails, news, promo, dealers, documents, changeHistory, dbReady} from '../clientBaza/db.js'
+import {sequelize, Admins, history_period, clientEmails, news, promo, dealers, documents, review, changeHistory, dbReady} from '../clientBaza/db.js'
 import * as promoService from '../clientBaza/promo/promoService.js'
 import {clearPromoCache} from '../clientBaza/promo/generationPagesForPromo.js'
 import {uploadPromoPhotos} from './promo-upload-action.js'
@@ -570,6 +570,82 @@ export const adminJs = new AdminJS({
             },
         },
         {
+            resource: review,
+            options: {
+                tableName: 'review',
+                // сверху — новые отзывы, включая ожидающие модерации
+                listProperties: ['fio', 'rating', 'date', 'platform', 'published', 'created_at'],
+                navigation: null,
+                sort: {
+                    sortBy: 'id',
+                    direction: 'desc',
+                },
+                actions: {
+                    list: {
+                        ...allRoles,
+                        before: (request) => {
+                            if (!request.query?.perPage) {
+                                request.query = {...request.query, perPage: 100}
+                            }
+                            return request
+                        },
+                    },
+                    show: allRoles,
+                    search: allRoles,
+                    // отзывы создаются только с сайта и сборщиком, вручную не добавляем
+                    new: {isAccessible: () => false},
+                    // оператор меняет только переключатель «Опубликован»
+                    edit: {isAccessible: promoEditors.isAccessible},
+                    delete: {...promoEditors},
+                    bulkDelete: noBulkActions,
+                },
+                properties: {
+                    // на узких экранах AdminJS оставляет только title-колонку
+                    fio: {
+                        isTitle: true,
+                        isVisible: {list: true, filter: true, show: true, edit: false},
+                    },
+                    platform: {
+                        isVisible: {list: true, filter: true, show: true, edit: false},
+                        availableValues: [
+                            {value: 'site', label: 'Сайт'},
+                            {value: 'yandex', label: 'Яндекс Карты'},
+                            {value: 'google', label: 'Google Карты'},
+                            {value: '2gis', label: '2ГИС'},
+                            {value: 'avito', label: 'Авито'},
+                        ],
+                    },
+                    date: {
+                        isVisible: {list: true, filter: false, show: true, edit: false},
+                    },
+                    review: {
+                        type: 'textarea',
+                        // в списке длинный текст не нужен
+                        isVisible: {list: false, filter: false, show: true, edit: false},
+                    },
+                    rating: {
+                        isVisible: {list: true, filter: true, show: true, edit: false},
+                    },
+                    published: {
+                        isVisible: {list: true, filter: true, show: true, edit: true},
+                    },
+                    created_at: {
+                        isVisible: {list: true, filter: false, show: true, edit: false},
+                    },
+                    external_id: {isVisible: false},
+                    link: {isVisible: false},
+                    respondent: {isVisible: false},
+                    dateAnswer: {isVisible: false},
+                    answer: {isVisible: false},
+                    support: {isVisible: false},
+                    unsupport: {isVisible: false},
+                    id: {
+                        isVisible: {list: true, filter: true, show: true, edit: false},
+                    },
+                },
+            },
+        },
+        {
             resource: changeHistory,
             options: {
                 tableName: 'changeHistory',
@@ -650,6 +726,7 @@ export const adminJs = new AdminJS({
                     promo: 'Акции',
                     dealers: 'Контакты',
                     documents: 'Документы',
+                    review: 'Отзывы',
                     changeHistory: 'История изменений',
                     confirm: 'Подтверждение',
                 },
@@ -733,6 +810,24 @@ export const adminJs = new AdminJS({
                             kind: 'Вид',
                             priority: 'Порядок',
                             published: 'Показывать на сайте',
+                        },
+                    },
+                    review: {
+                        properties: {
+                            fio: 'ФИО',
+                            review: 'Текст отзыва',
+                            rating: 'Оценка',
+                            date: 'Дата',
+                            platform: 'Площадка',
+                            published: 'Опубликован',
+                            created_at: 'Создан',
+                            external_id: 'ID на площадке',
+                            link: 'Ссылка',
+                            respondent: 'Кто ответил',
+                            dateAnswer: 'Дата ответа',
+                            answer: 'Ответ',
+                            support: 'За',
+                            unsupport: 'Против',
                         },
                     },
                     changeHistory: {
