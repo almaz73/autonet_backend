@@ -462,6 +462,20 @@ async function reviewsPage(req, res) {
 
 // router.use(seoRedirects)
 
+// старые адреса страницы отзывов (кириллицей и транслитом) → 301 на /reviews/
+const REVIEWS_ALIASES = new Set(['отзыв', 'отзывы', 'otzyv', 'otzyvy'])
+router.use((req, res, next) => {
+    let pathname
+    try {
+        pathname = decodeURIComponent(req.path)
+    } catch {
+        return next()
+    }
+    const slug = pathname.replace(/^\/+|\/+$/g, '').toLowerCase()
+    if (REVIEWS_ALIASES.has(slug)) return res.redirect(301, '/reviews/')
+    return next()
+})
+
 router.get('/', indexPage);                                 // Главная страница
 
 router.get('/cars', carsList);                              // Страница витрины /cars

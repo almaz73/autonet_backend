@@ -118,7 +118,10 @@
                 <div class="review-card__answer-head">
                     Ответ <%= item.respondent || 'Автосеть.РФ' %><% if (item.answerDateText) { %>, <%= item.answerDateText %><% } %>
                 </div>
-                <p class="review-card__answer-text"><%= item.answer %></p>
+                <div class="review-card__answer-collapse">
+                    <p class="review-card__answer-text"><%= item.answer %></p>
+                    <button type="button" class="review-card__answer-toggle" hidden>Читать далее</button>
+                </div>
             </div>
             <% } %>
         </article>
