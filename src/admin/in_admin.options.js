@@ -594,8 +594,22 @@ export const adminJs = new AdminJS({
                     search: allRoles,
                     // отзывы создаются только с сайта и сборщиком, вручную не добавляем
                     new: {isAccessible: () => false},
-                    // оператор меняет только переключатель «Опубликован»
-                    edit: {isAccessible: promoEditors.isAccessible},
+                    // оператор меняет переключатель «Опубликован» и может ответить от компании
+                    edit: {
+                        ...promoEditors,
+                        before: async (request) => {
+                            const answer = String(request.payload?.answer ?? '').trim()
+                            const dateAnswer = String(request.payload?.dateAnswer ?? '').trim()
+                            if (answer && !dateAnswer) {
+                                const record = await review.findByPk(request.params.recordId)
+                                // дата ставится при первом ответе, при правке текста ответа не меняется
+                                if (!record?.answer) {
+                                    request.payload.dateAnswer = new Date().toISOString().slice(0, 10)
+                                }
+                            }
+                            return request
+                        },
+                    },
                     delete: {...promoEditors},
                     bulkDelete: noBulkActions,
                 },
@@ -620,11 +634,25 @@ export const adminJs = new AdminJS({
                     },
                     review: {
                         type: 'textarea',
-                        // в списке длинный текст не нужен
-                        isVisible: {list: false, filter: false, show: true, edit: false},
+                        props: {rows: 6},
+                        // в списке длинный текст не нужен, в форме редактирования нужен для ответа
+                        isVisible: {list: false, filter: false, show: true, edit: true},
                     },
                     rating: {
                         isVisible: {list: true, filter: true, show: true, edit: false},
+                    },
+                    answer: {
+                        type: 'textarea',
+                        props: {rows: 4},
+                        isVisible: {list: false, filter: false, show: true, edit: true},
+                    },
+                    respondent: {
+                        props: {placeholder: 'Автосеть.РФ'},
+                        isVisible: {list: false, filter: false, show: true, edit: true},
+                    },
+                    dateAnswer: {
+                        props: {placeholder: 'ГГГГ-ММ-ДД'},
+                        isVisible: {list: false, filter: false, show: true, edit: true},
                     },
                     published: {
                         isVisible: {list: true, filter: true, show: true, edit: true},
@@ -634,9 +662,6 @@ export const adminJs = new AdminJS({
                     },
                     external_id: {isVisible: false},
                     link: {isVisible: false},
-                    respondent: {isVisible: false},
-                    dateAnswer: {isVisible: false},
-                    answer: {isVisible: false},
                     support: {isVisible: false},
                     unsupport: {isVisible: false},
                     id: {
