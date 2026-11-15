@@ -3,7 +3,8 @@ import {dealers} from '../db.js'
 export async function getDealers(req, res) {
     try {
         const rows = await dealers.findAll({
-            attributes: ['id', 'city', 'url', 'coords', 'address', 'tel', 'days', 'profile', 'brands', 'email', 'link'],
+            attributes: ['id', 'city', 'url', 'coords', 'address', 'tel', 'days', 'profile', 'brands', 'email', 'link',
+                'reviews_yandex', 'reviews_google', 'reviews_2gis', 'reviews_avito'],
             order: [['id', 'ASC']],
             raw: true,
         })

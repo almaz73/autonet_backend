@@ -111,6 +111,11 @@ const dealers = sequelize.define('dealers', {
     profile: { type: DataTypes.TEXT, allowNull: false, defaultValue: 'Дилерский центр' },
     brands: { type: DataTypes.TEXT, allowNull: true, defaultValue: '' },
     email: { type: DataTypes.TEXT, allowNull: true },
+    // ссылки на страницы отзывов точки на внешних площадках
+    reviews_yandex: { type: DataTypes.TEXT, allowNull: true },
+    reviews_google: { type: DataTypes.TEXT, allowNull: true },
+    reviews_2gis: { type: DataTypes.TEXT, allowNull: true },
+    reviews_avito: { type: DataTypes.TEXT, allowNull: true },
     link: { type: DataTypes.TEXT, allowNull: false, unique: true },
 }, {
     tableName: 'dealers',
@@ -241,9 +246,16 @@ const dbReady = sequelize.sync() // This will create tables if they don't exist
         }
 
         const [dealerColumns] = await sequelize.query('PRAGMA table_info(dealers)');
-        if (!dealerColumns.some((column) => column.name === 'email')) {
+        const dealerColumnNames = new Set(dealerColumns.map((column) => column.name));
+        if (!dealerColumnNames.has('email')) {
             await sequelize.query('ALTER TABLE dealers ADD COLUMN email TEXT');
             console.log('Добавлена колонка dealers.email');
+        }
+        // адреса страниц отзывов точки на площадках
+        for (const column of ['reviews_yandex', 'reviews_google', 'reviews_2gis', 'reviews_avito']) {
+            if (dealerColumnNames.has(column)) continue;
+            await sequelize.query(`ALTER TABLE dealers ADD COLUMN ${column} TEXT`);
+            console.log(`Добавлена колонка dealers.${column}`);
         }
 
         // Этот код нужен только для добавления недостающих колонок в бд, не всегда нужен
