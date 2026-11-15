@@ -14,6 +14,7 @@ export const sitePages = [
     'https://xn--80aej9aped4f.xn--p1ai/services 👉 2026-08-25',
     'https://xn--80aej9aped4f.xn--p1ai/tyres 👉 2026-08-25',
     'https://xn--80aej9aped4f.xn--p1ai/news 👉 2026-08-25',
+    'https://xn--80aej9aped4f.xn--p1ai/reviews 👉 2026-11-14',
     'https://xn--80aej9aped4f.xn--p1ai/work-in-autosite 👉 2026-08-25',
     'https://xn--80aej9aped4f.xn--p1ai/services/autopodbor 👉 2026-08-21',
     'https://xn--80aej9aped4f.xn--p1ai/services/crediting 👉 2026-08-25',

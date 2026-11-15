@@ -520,6 +520,39 @@
             сайте! Мы быстро свяжемся с вами и пригласим в автосалон в удобное время.
         </p>
     </div>
+
+    <% if (mainReviews && mainReviews.length) { %>
+    <section class="reviews-block container">
+        <div class="reviews-block__head">
+            <h2>Отзывы</h2>
+            <a href="/reviews/" class="page__link">
+                <img src="/st/red_arrow.svg" loading="lazy" alt="">
+                <span>Оставить отзыв</span>
+            </a>
+        </div>
+        <div class="reviews-block__grid">
+            <% mainReviews.forEach(review => { %>
+            <article class="review-card review-card--short">
+                <div class="review-card__head">
+                    <span class="review-card__author"><%= review.author %></span>
+                    <span class="review-card__date"><%= review.dateText %></span>
+                </div>
+                <div class="review-card__meta">
+                    <span class="review-stars" aria-label="Оценка <%= review.rating %> из 5"
+                    ><%- '★'.repeat(review.rating) %><span class="review-stars__empty"><%- '★'.repeat(5 - review.rating) %></span></span>
+                </div>
+                <p class="review-card__text"><%= review.text %></p>
+                <% if (review.platformHref) { %>
+                <a class="review-card__source" href="<%= review.platformHref %>" target="_blank"
+                   rel="noopener noreferrer nofollow"><%= review.platformLabel %></a>
+                <% } else { %>
+                <span class="review-card__source"><%= review.platformLabel %></span>
+                <% } %>
+            </article>
+            <% }); %>
+        </div>
+    </section>
+    <% } %>
 </main>
 
 <%- include('partials/footer') %>

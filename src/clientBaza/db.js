@@ -139,6 +139,37 @@ const documents = sequelize.define('documents', {
     timestamps: false,
 });
 
+// отзывы о дилерских центрах с внешних площадок; собираются скриптом из src/reviews
+const review = sequelize.define('review', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    // площадка-источник: yandex, 2gis, avito, google
+    platform: { type: DataTypes.TEXT, allowNull: false },
+    // id отзыва на площадке — по нему повторный сбор обновляет запись, а не создаёт дубль
+    external_id: { type: DataTypes.TEXT },
+    fio: { type: DataTypes.TEXT },
+    // дата отзыва, YYYY-MM-DD
+    date: { type: DataTypes.TEXT },
+    review: { type: DataTypes.TEXT },
+    // страница, с которой собран отзыв
+    link: { type: DataTypes.TEXT },
+    respondent: { type: DataTypes.TEXT },
+    // дата ответа, YYYY-MM-DD
+    dateAnswer: { type: DataTypes.TEXT },
+    answer: { type: DataTypes.TEXT },
+    // оценка отзыва в звёздах, 1–5
+    rating: { type: DataTypes.INTEGER },
+    // голоса посетителей сайта; сборщик отзывов их не перезаписывает
+    support: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    unsupport: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+}, {
+    tableName: 'review',
+    timestamps: false,
+    indexes: [
+        { unique: true, fields: ['platform', 'external_id'] },
+    ],
+});
+
 // история изменений акций, контактов, статей и документов: кто, когда и что менял (для обновления sitemap.xml)
 const changeHistory = sequelize.define('changeHistory', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -214,6 +245,21 @@ const dbReady = sequelize.sync() // This will create tables if they don't exist
             await sequelize.query('ALTER TABLE dealers ADD COLUMN email TEXT');
             console.log('Добавлена колонка dealers.email');
         }
+
+        // Этот код нужен только для добавления недостающих колонок в бд, не всегда нужен
+        // const [reviewColumns] = await sequelize.query('PRAGMA table_info(review)');
+        // if (!reviewColumns.some((column) => column.name === 'rating')) {
+        //     await sequelize.query('ALTER TABLE review ADD COLUMN rating INTEGER');
+        //     console.log('Добавлена колонка review.rating');
+        // }
+        // if (!reviewColumns.some((column) => column.name === 'support')) {
+        //     await sequelize.query('ALTER TABLE review ADD COLUMN support INTEGER NOT NULL DEFAULT 0');
+        //     console.log('Добавлена колонка review.support');
+        // }
+        // if (!reviewColumns.some((column) => column.name === 'unsupport')) {
+        //     await sequelize.query('ALTER TABLE review ADD COLUMN unsupport INTEGER NOT NULL DEFAULT 0');
+        //     console.log('Добавлена колонка review.unsupport');
+        // }
 
         // changeHistory сначала была только для акций: пересоздаём таблицу с полями контактов
         const [historyColumns] = await sequelize.query('PRAGMA table_info(changeHistory)');
@@ -344,4 +390,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, Admins, history_period, clientEmails, news, promo, dealers, documents, changeHistory, dbReady };
+export { sequelize, Admins, history_period, clientEmails, news, promo, dealers, documents, review, changeHistory, dbReady };

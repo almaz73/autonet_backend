@@ -4,7 +4,7 @@ import path from 'node:path'
 import zlib from 'node:zlib'
 import {Op} from 'sequelize'
 import A_car from "../API/A_car.js";
-import {dealers, news, documents} from '../clientBaza/db.js'
+import {dealers, news, documents, review, sequelize} from '../clientBaza/db.js'
 import {FRONT_UPLOAD_DIR, DOCUMENT_LINK_PREFIX, formatFromName} from '../clientBaza/documents/documentFiles.js'
 import {formatFileSize} from '../shared/fileSize.js'
 import {manifest_links, transliterate, RussianBrandsRus, RussianBrandsLat} from '../constants.js';
@@ -123,8 +123,8 @@ function contactAssets() {
 
 const NEWS_LIST_DESCRIPTION = 'Статьи Автосеть.РФ о покупке подержанных автомобилей: проверка истории, кредит, трейд-ин, обслуживание и выбор авто с пробегом.'
 
-// общие стили и скрипты для серверных страниц статей
-function newsAssets() {
+// общие стили и скрипты для серверных страниц (статьи, отзывы)
+function pageAssets() {
     const style = findChunk('_style-', '.js')
     const main = findChunk('_main-', '.js')
     const pagination = findChunk('_pagination-', '.js')
@@ -189,7 +189,7 @@ async function newsList(req, res) {
         })
 
         res.render('news-list', {
-            ...newsAssets(),
+            ...pageAssets(),
             items: rows.map((row) => ({
                 ...row,
                 image: newsImageSrc(row.image),
@@ -240,7 +240,7 @@ async function newsPage(req, res) {
             : `<h1>${escapeHtml(row.name)}</h1>\n${row.content || ''}`
 
         res.render('news', {
-            ...newsAssets(),
+            ...pageAssets(),
             name: row.name,
             title: row.title || row.name,
             description: row.description || row.announce || '',
@@ -329,6 +329,134 @@ async function documentsPage(req, res) {
 
 /** КОНЕЦ страница документов **/
 
+/** Отзывы с внешних площадок **/
+
+const REVIEWS_PAGE_SIZE = 15
+const REVIEWS_TITLE = 'Отзывы об Автосеть.РФ'
+const REVIEWS_DESCRIPTION = 'Отзывы клиентов об автосалоне Автосеть.РФ: покупка автомобилей с пробегом, продажа, сервис и обслуживание. Реальные отзывы с Яндекс Карт, Google Карт, Авито и 2ГИС.'
+
+// площадки, где клиенты могут оставить отзыв об автосеть.рф
+const REVIEW_SOURCES = [
+    {
+        platform: 'yandex',
+        name: 'Яндекс Карты',
+        href: 'https://yandex.ru/maps/org/avtoset_rf/219171359802/reviews/',
+        reviewsHref: 'https://yandex.ru/maps/org/avtoset_rf/219171359802/reviews/',
+    },
+    {
+        platform: 'google',
+        name: 'Google Карты',
+        href: 'https://search.google.com/local/writereview?placeid=ChIJ82z9OV9NWUEQZkR5miIHENU',
+        reviewsHref: 'https://www.google.com/maps/place/%D0%90%D0%92%D0%A2%D0%9E%D0%A1%D0%95%D0%A2%D0%AC.%D0%A0%D0%A4/@55.8235315,49.1570086,17z/data=!4m8!3m7!1s0x41594d5f397d6cf3:0xd51047229a794466!8m2!3d55.8235315!4d49.1595889!9m1!1b1!16s%2Fg%2F1q629527h',
+    },
+    {
+        platform: 'avito',
+        name: 'Авито',
+        href: 'https://www.avito.ru/brands/yamasheva',
+        reviewsHref: 'https://www.avito.ru/brands/yamasheva',
+    },
+    {
+        platform: '2gis',
+        name: '2ГИС',
+        href: 'https://2gis.ru/kazan/firm/70000001037442537/tab/reviews',
+        reviewsHref: 'https://2gis.ru/kazan/firm/70000001037442537/tab/reviews',
+    },
+]
+
+const REVIEW_SOURCE_BY_PLATFORM = new Map(REVIEW_SOURCES.map((source) => [source.platform, source]))
+
+function toReviewView(row) {
+    const source = REVIEW_SOURCE_BY_PLATFORM.get(row.platform)
+    return {
+        id: row.id,
+        author: String(row.fio ?? '').trim() || 'Клиент Автосеть.РФ',
+        dateText: formatNewsDate(row.date),
+        // переносы строк в отзывах сохраняет CSS (white-space: pre-line)
+        text: String(row.review ?? '').trim(),
+        rating: Math.max(0, Math.min(5, Number(row.rating) || 0)),
+        platformLabel: source?.name || 'Отзыв',
+        platformHref: source?.reviewsHref || '',
+        respondent: String(row.respondent ?? '').trim(),
+        answer: String(row.answer ?? '').trim(),
+        answerDateText: formatNewsDate(row.dateAnswer),
+    }
+}
+
+// на главной показываем только отзывы с максимальной оценкой
+async function getRandomFiveStarReviews(limit) {
+    const rows = await review.findAll({
+        where: {
+            [Op.and]: [
+                {rating: 5},
+                {review: {[Op.ne]: null}},
+                {review: {[Op.ne]: ''}},
+            ],
+        },
+        order: sequelize.random(),
+        limit,
+        raw: true,
+    })
+    return rows.map(toReviewView)
+}
+
+async function reviewsPage(req, res) {
+    try {
+        const requestedPage = Math.max(1, parseInt(req.query.PAGEN_2, 10) || 1)
+        const pageHref = (page) => page === 1 ? '/reviews/' : `/reviews/?PAGEN_2=${page}`
+        // трекинг-параметры (?bxajaxid=...) плодят дубли, оставляем только номер страницы
+        const hasTrackingParams = Object.keys(req.query).some((key) => key !== 'PAGEN_2')
+
+        // канонический адрес списка — со слешем на конце, без трекинговых параметров
+        if (!req.path.endsWith('/') || hasTrackingParams) {
+            return res.redirect(301, pageHref(requestedPage))
+        }
+
+        const {count: total, rows} = await review.findAndCountAll({
+            where: {
+                [Op.and]: [
+                    {review: {[Op.ne]: null}},
+                    {review: {[Op.ne]: ''}},
+                ],
+            },
+            order: [['date', 'DESC'], ['id', 'DESC']],
+            offset: (requestedPage - 1) * REVIEWS_PAGE_SIZE,
+            limit: REVIEWS_PAGE_SIZE,
+            raw: true,
+        })
+
+        const totalPages = Math.max(1, Math.ceil(total / REVIEWS_PAGE_SIZE))
+
+        // страницы за пределами выдачи уводим на последнюю, чтобы не плодить дубли
+        if (requestedPage > totalPages) {
+            return res.redirect(301, totalPages === 1 ? '/reviews/' : `/reviews/?PAGEN_2=${totalPages}`)
+        }
+
+        res.render('reviews', {
+            ...pageAssets(),
+            items: rows.map(toReviewView),
+            sources: REVIEW_SOURCES,
+            currentPage: requestedPage,
+            totalPages,
+            pagerLinks: Array.from({length: totalPages}, (_, index) => ({
+                page: index + 1,
+                href: pageHref(index + 1),
+                active: index + 1 === requestedPage,
+            })),
+            nextHref: requestedPage < totalPages ? pageHref(requestedPage + 1) : null,
+            canonical: `${SITE_ORIGIN}${pageHref(requestedPage)}`,
+            title: requestedPage === 1 ? REVIEWS_TITLE : `${REVIEWS_TITLE} — страница ${requestedPage}`,
+            description: REVIEWS_DESCRIPTION,
+            ogImage: `${SITE_ORIGIN}/st/auto.webp`,
+        })
+    } catch (error) {
+        console.error('Error rendering reviews page:', error)
+        res.status(500).send('Internal Server Error')
+    }
+    return res
+}
+
+/** КОНЕЦ отзывы с внешних площадок **/
+
 // router.use(seoRedirects)
 
 router.get('/', indexPage);                                 // Главная страница
@@ -350,6 +478,8 @@ router.get('/news', newsList);                              // Список ст
 router.get('/news/:id(\\d+)', newsPage);                    // Статья из базы
 
 router.get('/documents', documentsPage);                    // Документы из базы (и /documents/ тоже)
+
+router.get('/reviews', reviewsPage);                        // Отзывы с внешних площадок (и /reviews/ тоже)
 
 
 async function indexPage(req, res) {
@@ -402,11 +532,15 @@ async function indexPage(req, res) {
         })
     }
 
+    // три случайных отзыва с пятью звёздами для блока внизу главной
+    const mainReviews = await getRandomFiveStarReviews(3)
+
     res.render('index', {
         js1, js2, js3, js4, js5, js6, js7, js8, js9,
         cssFiles,
         carCount,
         carList,
+        mainReviews,
         page
     })
     return res

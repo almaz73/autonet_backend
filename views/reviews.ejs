@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title><%= title %></title>
+    <link rel="canonical" href="<%= canonical %>"/>
+    <meta property='og:type' content='website'>
+    <meta property='og:title' content='<%= title %>'>
+    <meta property='og:description' content='<%= description %>'>
+    <meta property='og:image' content='<%= ogImage %>'>
+    <meta property='og:url' content='<%= canonical %>'>
+    <meta property='og:locale' content='ru_RU'>
+    <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='index, follow'>
+    <meta name='description' content='<%= description %>'>
+    <% jsFiles.forEach(file => { %>
+    <script type="module" crossorigin src="/assets/<%= file %>"></script>
+    <% }) %>
+    <% cssFiles.forEach(file => { %>
+    <link rel="stylesheet" crossorigin href="/assets/<%= file %>">
+    <% }) %>
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+</head>
+<body>
+
+<%- include('partials/verbox') %>
+<%- include('partials/ya_metrica') %>
+<%- include('partials/header') %>
+
+<main class="reviews-page">
+
+    <div class='page_padding_20'>
+        <div class='bread_cranbs'>
+            <a href='/'>Главная</a> /
+            <a href='/reviews/'>Отзывы</a>
+        </div>
+    </div>
+
+    <h1>Отзывы об Автосеть.РФ</h1>
+
+    <p class="reviews-page__intro">
+        Здесь собраны отзывы наших клиентов о покупке автомобилей с пробегом, продаже авто и сервисном обслуживании.
+    </p>
+
+    <section class="review-sources-block">
+        <h2>Оставить отзыв</h2>
+        <p>Будем благодарны за отзыв о работе автосалона на любой удобной площадке:</p>
+        <ul class="review-sources">
+            <% sources.forEach(source => { %>
+            <li>
+                <a href="<%= source.href %>" target="_blank" rel="noopener noreferrer nofollow"><%= source.name %></a>
+            </li>
+            <% }); %>
+        </ul>
+    </section>
+
+    <div class="review-list" id="review-list">
+        <% if (!items.length) { %>
+        <p class="page_padding_20">Пока нет опубликованных отзывов.</p>
+        <% } %>
+        <% items.forEach(item => { %>
+        <article class="review-card">
+            <div class="review-card__head">
+                <span class="review-card__author"><%= item.author %></span>
+                <span class="review-card__date"><%= item.dateText %></span>
+            </div>
+            <div class="review-card__meta">
+                <span class="review-stars" aria-label="Оценка <%= item.rating %> из 5"
+                ><%- '★'.repeat(item.rating) %><span class="review-stars__empty"><%- '★'.repeat(5 - item.rating) %></span></span>
+                <% if (item.platformHref) { %>
+                <a class="review-card__source" href="<%= item.platformHref %>" target="_blank"
+                   rel="noopener noreferrer nofollow"><%= item.platformLabel %></a>
+                <% } else { %>
+                <span class="review-card__source"><%= item.platformLabel %></span>
+                <% } %>
+            </div>
+            <p class="review-card__text"><%= item.text %></p>
+            <% if (item.answer) { %>
+            <div class="review-card__answer">
+                <div class="review-card__answer-head">
+                    Ответ <%= item.respondent || 'Автосеть.РФ' %><% if (item.answerDateText) { %>, <%= item.answerDateText %><% } %>
+                </div>
+                <p class="review-card__answer-text"><%= item.answer %></p>
+            </div>
+            <% } %>
+        </article>
+        <% }); %>
+    </div>
+
+    <% if (totalPages > 1) { %>
+    <div class='bottom-nav pager'>
+        Страницы: <span id='pager'>
+            <% pagerLinks.forEach((link, index) => { %>
+            <a<% if (link.active) { %> class="active"<% } %> href="<%= link.href %>"><%= link.page %></a>
+            <% if (index < pagerLinks.length - 1) { %><span style="color: #bbb"> | </span><% } %>
+            <% }) %>
+            <% if (nextHref) { %> <a href="<%= nextHref %>">След.</a><% } %>
+        </span>
+    </div>
+    <% } %>
+
+    <br><br>
+</main>
+
+<%- include('partials/footer') %>
+
+</body>
+</html>
