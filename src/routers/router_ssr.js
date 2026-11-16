@@ -446,7 +446,8 @@ async function reviewsPage(req, res) {
                 active: index + 1 === requestedPage,
             })),
             nextHref: requestedPage < totalPages ? pageHref(requestedPage + 1) : null,
-            canonical: `${SITE_ORIGIN}${pageHref(requestedPage)}`,
+            // канонической считаем только первую страницу
+            canonical: `${SITE_ORIGIN}/reviews/`,
             title: requestedPage === 1 ? REVIEWS_TITLE : `${REVIEWS_TITLE} — страница ${requestedPage}`,
             description: REVIEWS_DESCRIPTION,
             ogImage: `${SITE_ORIGIN}/st/auto.webp`,

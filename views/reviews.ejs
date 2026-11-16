@@ -84,7 +84,7 @@
         <div class="review-sources-note">
             Ваша обратная связь помогает нам становиться лучше. Мы будем признательны,
             если вы оцените работу нашего дилерского центра на Яндекс Картах, Google, в 2ГИС или на Авито.
-            Перейти на нужную площадку можно по адресу со страницы <a href="/contacts/">„Контакты“</a>
+            Перейти на нужную площадку можно со страницы <a href="/contacts/">«Контакты»</a>
 
 <!--            <p>Будем благодарны за отзыв о работе автосалона на любой удобной площадке в интернете.</p>-->
 <!--            <p>Отзывы о каждом дилерском центре собраны на странице-->
@@ -104,7 +104,7 @@
             </div>
             <div class="review-card__meta">
                 <span class="review-stars" aria-label="Оценка <%= item.rating %> из 5"
-                ><%- '★'.repeat(item.rating) %><span class="review-stars__empty"><%- '★'.repeat(5 - item.rating) %></span></span>
+                ><%- '★'.repeat(item.rating) %></span>
                 <% if (item.platformHref) { %>
                 <a class="review-card__source" href="<%= item.platformHref %>" target="_blank"
                    rel="noopener noreferrer nofollow"><%= item.platformLabel %></a>
@@ -116,11 +116,11 @@
             <% if (item.answer) { %>
             <div class="review-card__answer">
                 <div class="review-card__answer-head">
-                    Ответ <%= item.respondent || 'Автосеть.РФ' %><% if (item.answerDateText) { %>, <%= item.answerDateText %><% } %>
+                    Ответ <%= item.respondent || 'Автосеть.РФ' %><% if (item.answerDateText) { %>, <%= item.answerDateText %><% } %> <button
+                        type="button" class="review-card__answer-toggle" hidden>Читать</button>
                 </div>
                 <div class="review-card__answer-collapse">
                     <p class="review-card__answer-text"><%= item.answer %></p>
-                    <button type="button" class="review-card__answer-toggle" hidden>Читать далее</button>
                 </div>
             </div>
             <% } %>
