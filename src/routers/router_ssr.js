@@ -105,13 +105,24 @@ function findChunk(prefix, ext) {
     return {}
 }
 
+// общий чанк стилей: новая сборка Vite отдаёт его отдельным CSS-энтри,
+// старая — JS-чанком со списком подключённых css
+function sharedStyle() {
+    const js = findChunk('_style-', '.js')
+    const css = findChunk('_style-', '.css')
+    return {
+        js: js.file || '',
+        css: (js.css && js.css[0]) || css.file || '',
+    }
+}
+
 function contactAssets() {
-    const style = findChunk('_style-', '.js')
+    const style = sharedStyle()
     const main = findChunk('_main-', '.js')
     const contacts = findChunk('_contacts-', '.js')
     return {
-        styleJs: style.file || '',
-        styleCss: (style.css && style.css[0]) || '',
+        styleJs: style.js,
+        styleCss: style.css,
         mainJs: main.file || '',
         contactsCss: (contacts.css && contacts.css[0]) || '',
     }
@@ -125,17 +136,17 @@ const NEWS_LIST_DESCRIPTION = 'Статьи Автосеть.РФ о покуп�
 
 // общие стили и скрипты для серверных страниц (статьи, отзывы)
 function pageAssets() {
-    const style = findChunk('_style-', '.js')
+    const style = sharedStyle()
     const main = findChunk('_main-', '.js')
     const pagination = findChunk('_pagination-', '.js')
     // до пересборки Vite стили статей могут лежать отдельным чанком,
     // после неё news.css включён в общий style.css
     const newsCss = findChunk('_news-', '.css')
     return {
-        jsFiles: [style.file, main.file, pagination.file]
+        jsFiles: [style.js, main.file, pagination.file]
             .filter(Boolean)
             .map((file) => file.replace(/^assets\//, '')),
-        cssFiles: [style.css?.[0], newsCss.file]
+        cssFiles: [style.css, newsCss.file]
             .filter(Boolean)
             .map((file) => file.replace(/^assets\//, '')),
     }
@@ -266,11 +277,11 @@ const DOCUMENTS_DESCRIPTION = 'Официальные документы авт�
 const PREVIEW_FORMATS = new Set(['PDF', 'TXT', 'JPG', 'JPEG', 'PNG'])
 
 function documentsAssets() {
-    const style = findChunk('_style-', '.js')
+    const style = sharedStyle()
     const main = findChunk('_main-', '.js')
     return {
-        styleJs: style.file || '',
-        styleCss: (style.css && style.css[0]) || '',
+        styleJs: style.js,
+        styleCss: style.css,
         mainJs: main.file || '',
     }
 }

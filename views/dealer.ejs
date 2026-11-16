@@ -21,7 +21,7 @@
     <link rel='stylesheet' crossorigin href='/<%= contactsCss %>'>
     <link rel='sitemap' type='application/xml' title='Sitemap' href='/sitemap.xml'>
 
-    <script type='module' crossorigin src='/<%= styleJs %>'></script>
+    <% if (styleJs) { %><script type='module' crossorigin src='/<%= styleJs %>'></script><% } %>
     <script type='module' crossorigin src='/<%= mainJs %>'></script>
 </head>
 <body>
