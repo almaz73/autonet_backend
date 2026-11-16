@@ -21,9 +21,9 @@
     <meta name='keywords' content='<%= keywords %>'>
     <meta name='description' content='<%= description %>'>
 
-    <link rel="stylesheet" crossorigin href="/assets/<%- css1 %>">
-    <link rel="stylesheet" crossorigin href="/<%- css2 %>">
-    <link rel="stylesheet" crossorigin href="/<%- css3 %>">
+    <% cssFiles.forEach(function (file) { %>
+    <link rel="stylesheet" crossorigin href="/<%- file %>">
+    <% }); %>
 
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 

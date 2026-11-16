@@ -25,9 +25,9 @@
           content='Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Уфе, Набережных челнах, Нижнекамске, Самаре и других городах России.
           ✅ Купить автомобили с пробегом из каталога - иномарки, Lada в наличии. ☎ Звоните по телефону 8-800-500-11-56.'>
 
-    <link rel="stylesheet" crossorigin href="/assets/<%- css1 %>">
-    <link rel="stylesheet" crossorigin href="/<%- css2 %>">
-    <link rel="stylesheet" crossorigin href="/<%- css3 %>">
+    <% cssFiles.forEach(function (file) { %>
+    <link rel="stylesheet" crossorigin href="/<%- file %>">
+    <% }); %>
 
     <script type="module" crossorigin src="/assets/<%- js1 %>"></script>
     <script type="module" crossorigin src="/assets/<%- js2 %>"></script>

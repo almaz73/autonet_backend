@@ -591,13 +591,7 @@ async function carsList(req, res) {
     const js7 = manifest.imports && manifest.imports[6].slice(1)
     const carsjs = manifest.file
 
-
-    let css1
-    const css2 = manifest.css && manifest.css[0]
-    const css3 = manifest.css && manifest.css[1]
-    for (const manifestKey in manifest_links) {
-        if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
-    }
+    const cssFiles = collectCss(manifest_links, 'cars/index.html')
 
     const carCount = await A_car.getCarCount()
     carCount.length = 20
@@ -658,7 +652,7 @@ async function carsList(req, res) {
     res.render('cars', {
         js1, js2, js3, js4, js5, js6, js7,
         carsjs,
-        css1, css2, css3,
+        cssFiles,
         carCount,
         carList,
         carsView,
@@ -828,12 +822,7 @@ function legacyCarPage(req, res) {
     if (!manifest) return res.status(404).send('Vite manifest not found')
 
     const [js1, js2, js3, js4, js5] = (manifest.imports || []).slice(0, 5).map(file => file.slice(1))
-    const css2 = manifest.css && manifest.css[0]
-    const css3 = manifest.css && manifest.css[1]
-    let css1
-    for (const manifestKey in manifest_links) {
-        if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
-    }
+    const cssFiles = collectCss(manifest_links, 'cars/car.html')
 
     res.status(410).render('car', {
         gone: true,
@@ -842,7 +831,7 @@ function legacyCarPage(req, res) {
         keywords: '',
         js1, js2, js3, js4, js5,
         carjs: manifest.file,
-        css1, css2, css3,
+        cssFiles,
         carData: null,
         brand: '', model: '', linkId: '',
     })
@@ -870,12 +859,7 @@ async function carAlone(req, res) {
         let js5 = manifest.imports && manifest.imports[4].slice(1)
         let carjs = manifest.file
 
-        let css1
-        let css2 = manifest.css && manifest.css[0]
-        let css3 = manifest.css && manifest.css[1]
-        for (let manifestKey in manifest_links) {
-            if (manifestKey.includes('_style-') && manifestKey.includes('.css')) css1 = manifestKey.slice(1)
-        }
+        const cssFiles = collectCss(manifest_links, 'cars/car.html')
 
         let carData = await A_car.getAutoByParams(brand, model, linkId)
 
@@ -900,7 +884,7 @@ async function carAlone(req, res) {
             keywords,
             js1, js2, js3, js4, js5,
             carjs,
-            css1, css2, css3,
+            cssFiles,
             carData,
             brand, model, linkId
         });
