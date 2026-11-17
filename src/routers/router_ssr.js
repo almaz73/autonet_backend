@@ -58,10 +58,12 @@ function redirectCars(res, req, path) {
     return res.redirect(301, path + (query ? `?${query}` : ''))
 }
 
-// /cars/ и /cars/0/kia/ — дубли без слеша на конце
+// карточки авто со слешем на конце: /cars/<brand>/<model>/<id>/
+// адреса витрины разбирает carsList, чтобы отдать один 301 сразу на канон
 function stripCarsTrailingSlash(req, res, next) {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.path.startsWith('/cars/') || !req.path.endsWith('/')) return next()
+    if (req.path.replace(/\/+$/, '').split('/').slice(2).length <= 2) return next()
     const query = req.originalUrl.slice(req.path.length)
     return res.redirect(301, req.path.replace(/\/+$/, '') + query)
 }
@@ -605,8 +607,8 @@ async function indexPage(req, res) {
 }
 
 async function carsList(req, res) {
-    let {brand, number: ssr_page} = req.params
-    const pageNumber = Number(ssr_page) || 0
+    const {brand} = req.params
+    const pageNumber = Number(req.params.number) || 0
 
     const manifest = manifest_links['cars/index.html']
     if (!manifest) return res.status(404).send('Vite manifest not found');
@@ -650,11 +652,9 @@ async function carsList(req, res) {
         }
     }
 
-    // первая страница канонически живёт без номера: /cars/0 → /cars, /cars/0/kia → /cars/kia
-    if (ssr_page !== undefined && (pageNumber === 0 || String(pageNumber) !== String(ssr_page))) {
-        const canonicalPath = `/cars${pageNumber > 0 ? '/' + pageNumber : ''}${brandCanonical ? '/' + brandCanonical : ''}`
-        return redirectCars(res, req, canonicalPath)
-    }
+    // один 301 на канон: /cars/0 → /cars, /cars/0/kia → /cars/kia, /cars/kia/ → /cars/kia
+    const canonicalPath = `/cars${pageNumber > 0 ? '/' + pageNumber : ''}${brandCanonical ? '/' + brandCanonical : ''}`
+    if (req.path !== canonicalPath) return redirectCars(res, req, canonicalPath)
 
     const carCount = allBrands.slice(0, 20)
     carCount.forEach(el => {
