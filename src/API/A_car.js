@@ -63,6 +63,24 @@ class CityListService {
         }
     }
 
+    // карточка авто по VIN: старые ссылки /reserve?vin=... ведём на актуальную страницу
+    async getAutoByVin(vin) {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.get(`
+                SELECT prop_brand     as brand,
+                       prop_model     as model,
+                       prop_guarantee as linkId
+                FROM a_car
+                WHERE UPPER(prop_VIN) = UPPER(?)
+                LIMIT 1`, [vin]) || null
+        } catch (error) {
+            console.error('Error retrieving car by VIN:', error.message);
+            throw error;
+        }
+    }
+
 
     /**
      * Список последних поступлений,

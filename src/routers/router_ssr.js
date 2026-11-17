@@ -525,6 +525,7 @@ router.get('/cars', carsList);                              // Страница 
 router.get('/cars/:number(\\d+)', carsList);                // Страница витрины /cars
 router.get('/cars/:number(\\d+)/:brand([^/]+)', carsList);  // Страница витрины /cars
 
+router.get('/reserve', legacyReserve);                      // Старое бронирование /reserve?vin=... → карточка или 410
 router.get('/cars/car.html', legacyCarPage);                // Старые ссылки /cars/car.html?id=... → 410
 router.get('/cars/:brand([^/]+)', carsList);                // Первая страница выдачи по бренду: /cars/kia
 
@@ -971,6 +972,44 @@ async function carAlone(req, res) {
     }
     return res
 
+}
+
+// старый сайт открывал бронирование по VIN: /reserve?vin=... — так индексировалась бОльшая часть сайта.
+// авто ещё в продаже → 301 на карточку (вес ссылки сохраняется), иначе 410 Gone, чтобы адрес ушёл из индекса
+async function legacyReserve(req, res, next) {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+
+    const vin = typeof req.query.vin === 'string' ? req.query.vin.trim() : ''
+    const auto = typeof req.query.auto === 'string' ? req.query.auto.trim() : ''
+    // действующее бронирование передаёт auto=brand/model/linkId — эту форму не трогаем
+    if (!vin || auto) return next()
+
+    let car = null
+    try {
+        car = await A_car.getAutoByVin(vin)
+    } catch (error) {
+        return next()
+    }
+
+    if (car && car.brand && car.linkId) {
+        const href = `/cars/${getBrandLat(car.brand)}/${transliterate(car.model || '').replaceAll(' ', '')}/${car.linkId}`
+        return res.redirect(301, href)
+    }
+
+    return res.status(410).type('html').send(`<!DOCTYPE html>
+<html lang='ru'>
+<head>
+<meta charset='utf-8'>
+<meta name='robots' content='noindex'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Предложение больше не действует - Автосеть.РФ</title>
+</head>
+<body>
+<h1>Предложение больше не действует</h1>
+<p>Этот автомобиль больше не продаётся. Посмотрите похожие предложения в каталоге.</p>
+<p><a href='/cars'>Перейти в каталог автомобилей</a></p>
+</body>
+</html>`)
 }
 
 async function buyoutPage(req, res) {
