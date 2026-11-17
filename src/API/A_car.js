@@ -1,6 +1,4 @@
 import {
-    RussianBrandsLat,
-    RussianBrandsRus,
     FolderLINKS,
     NEW_AUTO_IDS_TTL_MS,
     getNewAutoIds,
@@ -8,14 +6,24 @@ import {
 } from "../constants.js";
 import fs from 'fs';
 import path from "path";
+import {catalogSlug} from '../shared/catalogUrls.js';
 
 class CityListService {
     async getAutoByParams(brand, model, linkId, isSmallPhoto) {
+        const result = await this.getAutoByLinkId(linkId, isSmallPhoto)
+        if (!result) return null
 
-        let ssr_brandSearch = brand
-        let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
-        if (placeRusBrand !== -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
+        // адрес карточки может прийти слагами: «vaz-lada» вместо «ВАЗ (LADA)»
+        if (brand && catalogSlug(brand) !== catalogSlug(result.brand)) {
+            console.log('Car brand mismatch:', brand, linkId);
+            return null
+        }
+        return result
+    }
 
+    // поиск по linkId без учёта регистра: строчные и старые варианты адреса
+    // должны редиректить на канон, а не отдавать 410
+    async getAutoByLinkId(linkId, isSmallPhoto) {
         const db = global.db
         try {
             // Query the a_car table and join with a_section to get the brandId
@@ -23,6 +31,7 @@ class CityListService {
             const result = await db.get(`
                 SELECT ac.id,
                        ac.price,
+                       ac.prop_guarantee         as linkId,
                        ac.prop_brand             as brand,
                        ac.prop_model             as model,
                        sec.id                    as brandId,
@@ -43,11 +52,11 @@ class CityListService {
 
                 FROM a_car ac
                          LEFT JOIN a_section sec ON UPPER(ac.prop_brand) = UPPER(sec.brand)
-                WHERE ac.prop_brand = ?
-                  AND ac.prop_guarantee = ?`, [ssr_brandSearch, linkId]);
+                WHERE UPPER(ac.prop_guarantee) = UPPER(?)
+                LIMIT 1`, [linkId]);
 
             if (!result) {
-                console.log('No car found with brand, link:', brand, linkId);
+                console.log('No car found with link:', linkId);
                 return null; // Return null if no car is found with the given guid
             }
 

@@ -3,11 +3,11 @@ import fs from 'fs';
 import * as fs_promises from 'node:fs/promises'
 import path from 'path';
 import {fileURLToPath} from 'url';
-import {FolderForSitemap, isLocal, transliterate} from "../constants.js";
+import {FolderForSitemap, isLocal} from "../constants.js";
 import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import {sitePages} from '../../sitePages.js'
-import {MODEL_MIN_CARS, CITY_MODEL_MIN_CARS, catalogSlug, buildModelClusters, clusterCityCounts} from '../shared/catalogUrls.js'
+import {MODEL_MIN_CARS, CITY_MODEL_MIN_CARS, catalogSlug, carFriendly, carPath, buildModelClusters, clusterCityCounts} from '../shared/catalogUrls.js'
 import xml2js from "xml2js";
 import {sendEmail} from "../post/sendEmail.js"
 
@@ -242,7 +242,6 @@ async function addAllAuto() {
                  LEFT JOIN a_section ast ON ac.section = ast.id
     `);
     await db.close();
-    let site = 'https://xn--80aej9aped4f.xn--p1ai/cars/'
 
     // получаем старые записи sitemap
     const xmlData = fs.readFileSync(SITEMAP_PATH2, 'utf-8');
@@ -256,19 +255,22 @@ async function addAllAuto() {
 
 
     for (let car of allAuto) {
-        let link = transliterate(car.brand + '/' + car.model + '/' + car.year + '-' + car.city + '-' + car.price + '-' + car.milleage + 'km').replaceAll(' ', '')
-        let sitemapNode = sitemapNodes.find(el => el.loc === link) // Если в старом, дату берем оттуда
+        // тот же канон, что отдаёт SSR: бренд и модель слагами
+        let link = carPath(car.brand, car.model, carFriendly(car.year, car.city, car.price, car.milleage))
+        let relative = link.replace(/^\/cars\//, '')
+        // в старом sitemap адрес мог быть в другом регистре — дату всё равно сохраняем
+        let sitemapNode = sitemapNodes.find(el => String(el.loc).toLowerCase() === relative.toLowerCase())
         if (sitemapNode) {
             links.push({
-                loc: site + link,
+                loc: SITE_ORIGIN + link,
                 lastmod: sitemapNode.lastmod, // Формат YYYY-MM-DD
             })
         } else {
             links.push({
-                loc: site + link,
+                loc: SITE_ORIGIN + link,
                 lastmod: new Date().toISOString().split('T')[0],
             })
-            newLinks.push(site + link)
+            newLinks.push(SITE_ORIGIN + link)
         }
     }
 }

@@ -7,11 +7,13 @@ import A_car from "../API/A_car.js";
 import {dealers, news, documents, review, sequelize} from '../clientBaza/db.js'
 import {FRONT_UPLOAD_DIR, DOCUMENT_LINK_PREFIX, formatFromName} from '../clientBaza/documents/documentFiles.js'
 import {formatFileSize} from '../shared/fileSize.js'
-import {manifest_links, transliterate, RussianBrandsRus, RussianBrandsLat} from '../constants.js';
+import {manifest_links} from '../constants.js';
 import {
     MODEL_MIN_CARS,
     CITY_MODEL_MIN_CARS,
     catalogSlug,
+    carFriendly,
+    carPath,
     buildModelClusters,
     buildCityMap,
     clusterCityCounts
@@ -100,8 +102,16 @@ function redirectCars(res, req, path, dropKeys = ['brand']) {
     return res.redirect(301, path + (query ? `?${query}` : ''))
 }
 
-// карточки авто со слешем на конце: /cars/<brand>/<model>/<id>/
-// адреса витрины (бренд, модель, город) разбирает carsList, чтобы отдать один 301 сразу на канон
+function decodePath(path) {
+    try {
+        return decodeURIComponent(path)
+    } catch {
+        return path
+    }
+}
+
+// слеш на конце витрин и карточек убирают их обработчики: там известен канон,
+// поэтому получается один 301 сразу на канонический адрес
 function stripCarsTrailingSlash(req, res, next) {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.path.startsWith('/cars/') || !req.path.endsWith('/')) return next()
@@ -110,7 +120,8 @@ function stripCarsTrailingSlash(req, res, next) {
     const isListing = rest.length <= 2
         || (rest.length === 3 && (/^\d+$/.test(rest[0]) || /^[a-z][a-z0-9-]*$/.test(rest[2])))
         || rest.length === 4
-    if (isListing) return next()
+    const isCard = rest.length === 3 && !/^\d+$/.test(rest[0]) && !/^[a-z][a-z0-9-]*$/.test(rest[2])
+    if (isListing || isCard) return next()
 
     const query = req.originalUrl.slice(req.path.length)
     return res.redirect(301, req.path.replace(/\/+$/, '') + query)
@@ -641,8 +652,8 @@ async function indexPage(req, res) {
 
     if (carList) {
         carList.forEach(el => {
-            if (RussianBrandsRus.includes(el.brand)) el.latBrand = transliterate(el.brand).replaceAll(" ", "");
-            else el.latBrand = el.brand
+            el.latBrand = brandSlug(el.brand)
+            el.modelSlug = catalogSlug(el.model)
         })
     }
 
@@ -955,11 +966,6 @@ const CARS_FILTER_KEYS = [
 
 const formatPrice = (val) => parseInt(val).toLocaleString('ru-RU')
 
-const getBrandLat = (brandName) => {
-    const place = RussianBrandsRus.indexOf(brandName)
-    return place !== -1 ? RussianBrandsLat[place] : brandName
-}
-
 // повторяет prepareCars + createNode из src/js/filter, чтобы SSR и клиент давали одинаковую вёрстку
 function buildCarsView(items) {
     return items.map(el => {
@@ -974,11 +980,11 @@ function buildCarsView(items) {
             + ', ' + escapeHtml(el.driveType || '')
             + (el.engineType ? ', ' + escapeHtml(el.engineType) : '')
 
-        const frendly = transliterate(`${el.yearReleased}-${el.city}-${el.price}-${el.milleage}km`.replaceAll(' ', ''))
+        const frendly = carFriendly(el.yearReleased, el.city, el.price, el.milleage)
 
         return {
             id: el.id,
-            href: `/cars/${getBrandLat(el.brand || '')}/${transliterate(el.model || '').replaceAll(' ', '')}/${frendly}`,
+            href: carPath(el.brand || '', el.model || '', frendly),
             name: `${el.brand || ''} ${el.model || ''}`,
             yearReleased: el.yearReleased,
             price: formatPrice(el.price),
@@ -1000,8 +1006,8 @@ const SCHEMA_MAX_ITEMS = 10
 const NON_PASSENGER_BODY_TYPES = new Set(['Автобус', 'Фургон', 'Грузовой'])
 
 function absoluteCarUrl(car) {
-    const friendly = transliterate(`${car.yearReleased}-${car.city}-${car.price}-${car.milleage}km`.replaceAll(' ', ''))
-    return `${SCHEMA_SITE}/cars/${getBrandLat(car.brand || '')}/${transliterate(car.model || '').replaceAll(' ', '')}/${friendly}`
+    const friendly = carFriendly(car.yearReleased, car.city, car.price, car.milleage)
+    return SCHEMA_SITE + carPath(car.brand || '', car.model || '', friendly)
 }
 
 function absoluteCarImage(car) {
@@ -1142,10 +1148,22 @@ async function carAlone(req, res) {
 
         const cssFiles = collectCss(manifest_links, 'cars/car.html')
 
-        let carData = await A_car.getAutoByParams(brand, model, linkId)
+        let carData = await A_car.getAutoByLinkId(linkId)
 
         // авто удалено из системы: 410 Gone + noindex, чтобы поисковики убрали страницу из индекса
         const gone = !carData
+
+        // один канонический адрес карточки: бренд и модель в нижнем регистре, как у посадочных.
+        // строчные варианты и старые адреса вида /cars/VAZ(LADA)/... уходят сюда одним 301
+        let canonicalPath = ''
+        if (!gone) {
+            canonicalPath = carPath(carData.brand, carData.model, carData.linkId)
+            if (decodePath(req.path) !== canonicalPath) {
+                const queryIndex = req.originalUrl.indexOf('?')
+                const query = queryIndex === -1 ? '' : req.originalUrl.slice(queryIndex)
+                return res.redirect(301, canonicalPath + query)
+            }
+        }
 
         // Generate title and description based on car data
         const title = gone
@@ -1168,6 +1186,7 @@ async function carAlone(req, res) {
             cssFiles,
             carData,
             brand, model, linkId,
+            canonicalUrl: canonicalPath ? SCHEMA_SITE + canonicalPath : '',
             brandSlugValue: gone ? '' : brandSlug(carData.brand || ''),
             modelSlugValue: gone ? '' : catalogSlug(carData.model || '')
         });
@@ -1197,8 +1216,7 @@ async function legacyReserve(req, res, next) {
     }
 
     if (car && car.brand && car.linkId) {
-        const href = `/cars/${getBrandLat(car.brand)}/${transliterate(car.model || '').replaceAll(' ', '')}/${car.linkId}`
-        return res.redirect(301, href)
+        return res.redirect(301, carPath(car.brand, car.model, car.linkId))
     }
 
     return res.status(410).type('html').send(`<!DOCTYPE html>

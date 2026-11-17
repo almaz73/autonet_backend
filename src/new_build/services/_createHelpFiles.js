@@ -3,10 +3,10 @@ import {
     FolderLINKS,
     FolderPhoto,
     isToday,
-    transliterate,
     getNewAutoIds,
     isFreshNewAutoIds,
 } from "../../constants.js";
+import {carFriendly, carPath} from '../../shared/catalogUrls.js';
 import fs from "fs";
 import xml2js from "xml2js";
 import path from "path";
@@ -130,15 +130,15 @@ async function getAutoLinksFromSitemap() {
 
     let urls = Array.isArray(urlNodes) ? urlNodes : [urlNodes]; // Приводим к массиву для безопасности
 
-    // оставляем только страницы авто, без   страницы пагинации типа https://xn--80aej9aped4f.xn--p1ai/cars/0/VAZ(LADA)
-    return urls.filter(el => el.loc?.includes('/cars/') && isNaN(el.loc.split('/')[4]))
+    // оставляем только страницы авто: витрины и пагинация просто не совпадут с адресом карточки
+    return urls.filter(el => el.loc?.includes('/cars/'))
 }
 
 async function getNewCarLinks_NewBD_Sitemap(newDbRows, autoLinksFromSitemap) {
     if (!newDbRows) return
 
     for (let car of newDbRows) {
-        let dbLink = 'https://xn--80aej9aped4f.xn--p1ai/cars/' + transliterate(car.brand + '/' + car.model + '/' + car.year + '-' + car.sity + '-' + car.price + '-' + car.milleage + 'km').replaceAll(' ', '')
+        let dbLink = 'https://xn--80aej9aped4f.xn--p1ai' + carPath(car.brand, car.model, carFriendly(car.year, car.sity, car.price, car.milleage))
         let found = autoLinksFromSitemap.find(el => el.loc === dbLink)
         if (found) {
             found.mark = true

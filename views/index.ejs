@@ -259,7 +259,7 @@
                         <% if(el.images && el.images.length){ %><img class='photo' alt='' src="<%- el.images[0] %>">
                     </div>
                     <% } %>
-                    <a class="big_link" href="../cars/<%= el.latBrand %>/<%= el.model %>/<%= el.linkId %>">
+                    <a class="big_link" href="../cars/<%= el.latBrand %>/<%= el.modelSlug %>/<%= el.linkId %>">
                         <div class='name'>
                             <%= el.brand %> <%= el.model %> <%= el.yearReleased %>
                         </div>

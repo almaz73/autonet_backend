@@ -10,10 +10,9 @@
     <meta property='og:title' content='<%= title %>'>
     <meta property='og:image' content='https://xn--80aej9aped4f.xn--p1ai/st/auto.webp'>
     <% if (!gone) { %>
-    <link rel="canonical" href="https://автосеть.рф/cars/<%- brand %>/<%- model %>/<%- linkId %>" />
+    <link rel="canonical" href="<%- canonicalUrl %>" />
     <% } %>
-    <% const ogUrl = brand ? `https://автосеть.рф/cars/${brand}/${model}/${linkId}` : 'https://автосеть.рф/cars' %>
-    <meta property='og:url' content='<%- ogUrl %>'>
+    <meta property='og:url' content='<%- canonicalUrl || 'https://автосеть.рф/cars' %>'>
     <meta property='og:locale' content='ru_RU'>
     <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
     <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
