@@ -17,7 +17,7 @@ Disallow: /personal/
 Disallow: /sitemap2.xml
 Disallow: /newLinks.txt
 
-# рекламные и трекинг-параметры не создают новых страниц (учитывает Яндекс)
-Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content&yclid&gclid&fbclid&from&pm_source&pm_block&pm_position&external-test-ids
+# рекламные, трекинг- и фильтровые параметры не создают новых страниц (учитывает Яндекс)
+Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content&yclid&gclid&fbclid&from&pm_source&pm_block&pm_position&external-test-ids&brand&modelId&city&color&gearboxType&engineType&bodyType&wheelType&driveType&engineCapacity&yearReleasedFrom&yearReleasedTo&priceFrom&priceTo&milleageFrom&milleageTo&priceOrder
 
 Sitemap: https://xn--80aej9aped4f.xn--p1ai/sitemap.xml

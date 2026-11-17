@@ -6,7 +6,7 @@ import PhotoPrepareService from './PreparePhotoService.js';
 import PrepareXMLService from "./PrepareXMLService.js";
 import PreparePhotoService from "./PreparePhotoService.js";
 import {Worker} from 'worker_threads';
-import {Version} from "../constants.js";
+import {transliterate, Version} from "../constants.js";
 
 class Controllers {
     async test(req, res) {
@@ -173,6 +173,13 @@ class Controllers {
 
     listBrands = []
 
+    brandSlug(name) {
+        return transliterate(String(name ?? ''))
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+    }
+
     async redirectBrand(val, res) {
         if (!this.listBrands.length) {
             this.listBrands = await this.getListBrands()
@@ -180,9 +187,9 @@ class Controllers {
         }
 
         let brand = this.listBrands.find(el => val.toUpperCase().includes(el))
-        if (brand) return res.redirect(`/cars/0/${brand}`);
+        if (brand) return res.redirect(301, `/cars/${this.brandSlug(brand)}`);
 
-        if (val.toUpperCase().includes('CARS')) return res.redirect(`/cars`);
+        if (val.toUpperCase().includes('CARS')) return res.redirect(301, `/cars`);
     }
 
     async getModelList(req, res) {

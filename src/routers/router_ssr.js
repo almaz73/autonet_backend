@@ -39,6 +39,35 @@ function collectCss(manifest, entryKey) {
     return css
 }
 
+// канонический slug бренда для адреса каталога: «ВАЗ (LADA)» → vaz-lada, «Mercedes-Benz» → mercedes-benz
+function brandSlug(name) {
+    return transliterate(String(name ?? ''))
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+}
+
+// 301 на канонический адрес каталога; brand уходит из query в путь
+function redirectCars(res, req, path) {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(req.query)) {
+        if (key === 'brand' || value === undefined || value === '') continue
+        params.set(key, Array.isArray(value) ? value.join(',') : value)
+    }
+    const query = params.toString()
+    return res.redirect(301, path + (query ? `?${query}` : ''))
+}
+
+// /cars/ и /cars/0/kia/ — дубли без слеша на конце
+function stripCarsTrailingSlash(req, res, next) {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+    if (!req.path.startsWith('/cars/') || !req.path.endsWith('/')) return next()
+    const query = req.originalUrl.slice(req.path.length)
+    return res.redirect(301, req.path.replace(/\/+$/, '') + query)
+}
+
+router.use(stripCarsTrailingSlash)
+
 /** подготовка к работе с отдельными контактами **/
 const escapeHtml = (value) => String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -492,11 +521,12 @@ router.get('/', indexPage);                                 // Главная с
 
 router.get('/cars', carsList);                              // Страница витрины /cars
 router.get('/cars/:number(\\d+)', carsList);                // Страница витрины /cars
-router.get('/cars/:number(\\d+)/:brand(\\D+)', carsList);   // Страница витрины /cars
+router.get('/cars/:number(\\d+)/:brand([^/]+)', carsList);  // Страница витрины /cars
 
 router.get('/cars/car.html', legacyCarPage);                // Старые ссылки /cars/car.html?id=... → 410
+router.get('/cars/:brand([^/]+)', carsList);                // Первая страница выдачи по бренду: /cars/kia
 
-router.get('/cars/:brand(\\D+)/:model/:linkId', carAlone);  // Страница автомобиля
+router.get('/cars/:brand([^/]+)/:model/:linkId', carAlone); // Страница автомобиля
 //http://localhost:3000/cars/Chevrolet/Camaro/2021-Tver-3250000-66525km
 
 router.get('/buyout', buyoutPage);
@@ -531,8 +561,7 @@ async function indexPage(req, res) {
     const carCount = await A_car.getCarCount()
     carCount.length = 20
     carCount.forEach(el => {
-        if (RussianBrandsRus.includes(el.name)) el.latBrand = transliterate(el.name).replaceAll(" ", "");
-        else el.latBrand = el.name
+        el.latBrand = brandSlug(el.name)
     })
 
     let page = ''
@@ -577,7 +606,7 @@ async function indexPage(req, res) {
 
 async function carsList(req, res) {
     let {brand, number: ssr_page} = req.params
-    ssr_page = ssr_page || 0
+    const pageNumber = Number(ssr_page) || 0
 
     const manifest = manifest_links['cars/index.html']
     if (!manifest) return res.status(404).send('Vite manifest not found');
@@ -593,29 +622,57 @@ async function carsList(req, res) {
 
     const cssFiles = collectCss(manifest_links, 'cars/index.html')
 
-    const carCount = await A_car.getCarCount()
-    carCount.length = 20
+    const allBrands = await A_car.getCarCount()
+    const brandBySlug = new Map()
+    allBrands.forEach(el => {
+        if (el.name) brandBySlug.set(brandSlug(el.name), el.name)
+    })
 
-    let ssr_brandSearch = brand
-    let placeRusBrand = RussianBrandsLat.findIndex(el => el === brand)
-    if (placeRusBrand !== -1) ssr_brandSearch = RussianBrandsRus[placeRusBrand]
+    const rawBrand = typeof brand === 'string' && brand.length ? brand : ''
+    const queryBrand = typeof req.query.brand === 'string' && req.query.brand.length ? req.query.brand : ''
+
+    // бренд канонически живёт в пути: /cars?brand=kia → /cars/kia
+    if (!rawBrand && queryBrand) {
+        const slug = brandSlug(queryBrand)
+        if (slug) return redirectCars(res, req, `/cars${pageNumber > 0 ? '/' + pageNumber : ''}/${slug}`)
+    }
+
+    let brandCanonical = ''
+    let brandDbName = ''
+    if (rawBrand) {
+        brandCanonical = brandSlug(rawBrand)
+        brandDbName = brandBySlug.get(brandCanonical)
+        // бренда нет в каталоге — не плодим пустую страницу
+        if (!brandDbName) return redirectCars(res, req, '/cars')
+        // Kia, KIA, Киа, VAZ(LADA) → один канонический адрес
+        if (rawBrand !== brandCanonical) {
+            return redirectCars(res, req, `/cars${pageNumber > 0 ? '/' + pageNumber : ''}/${brandCanonical}`)
+        }
+    }
+
+    // первая страница канонически живёт без номера: /cars/0 → /cars, /cars/0/kia → /cars/kia
+    if (ssr_page !== undefined && (pageNumber === 0 || String(pageNumber) !== String(ssr_page))) {
+        const canonicalPath = `/cars${pageNumber > 0 ? '/' + pageNumber : ''}${brandCanonical ? '/' + brandCanonical : ''}`
+        return redirectCars(res, req, canonicalPath)
+    }
+
+    const carCount = allBrands.slice(0, 20)
+    carCount.forEach(el => {
+        el.latBrand = brandSlug(el.name)
+    })
 
     // те же параметры, что клиент отправляет в /api/getList
     const filters = {}
     for (const key of CARS_FILTER_KEYS) {
         if (req.query[key] !== undefined && req.query[key] !== '') filters[key] = req.query[key]
     }
-    const brandFilter = filters.brand || ssr_brandSearch
+    const brandFilter = brandDbName || filters.brand || ''
 
     const carList = await GetListService.getList({
         ...filters,
         brand: brandFilter,
-        offset: ssr_page * 20,
+        offset: pageNumber * 20,
         limit: 20
-    })
-    carCount.forEach(el => {
-        if (RussianBrandsRus.includes(el.name)) el.latBrand = transliterate(el.name).replaceAll(" ", "");
-        else el.latBrand = el.name
     })
 
     const carsView = buildCarsView(carList.items)
@@ -627,23 +684,43 @@ async function carsList(req, res) {
             + (filters.city ? `(город ${filters.city})` : '')
     }
 
+    const pagerBrand = brandCanonical ? `/${brandCanonical}` : ''
     let page = ''
     let ssr_page_total = Math.ceil(carList.totalCount / 20)
     if (carList.items.length) {
         for (let i = 1; i <= ssr_page_total; i++) {
-            page += `<a href="/cars/${i - 1}${brand ? '/' + brand : ''}">${i}</a><span> | </span>`;
+            const href = i === 1 ? `/cars${pagerBrand}` : `/cars/${i - 1}${pagerBrand}`
+            page += `<a href="${href}">${i}</a><span> | </span>`;
         }
     }
 
+    const pageSuffix = pageNumber > 0 ? ` — страница ${pageNumber + 1}` : ''
+    const descriptionSuffix = pageNumber > 0 ? ` Страница ${pageNumber + 1}.` : ''
     let title = 'Авто с пробегом (БУ). Купить авто в автосалонах Казани и всей России - Автосеть.РФ'
-    if (brand) title = `Автомобили ${ssr_brandSearch} с пробегом.`
+    let description = 'Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Уфе, Набережных челнах, Нижнекамске, Самаре и других городах России. ✅ Купить автомобили с пробегом из каталога - иномарки, Lada в наличии. ☎ Звоните по телефону 8-800-500-11-56.'
+    if (brandFilter) {
+        title = `Автомобили ${brandFilter} с пробегом.`
+        description = `Купить ${brandFilter} с пробегом в автосалонах Автосеть.рф: цены, фото и характеристики. ☎ 8-800-500-11-56.`
+    }
+    title = title.replace(/\.$/, '') + pageSuffix
+    description += descriptionSuffix
 
+    const canonicalUrl = `${SITE_ORIGIN}/cars${pageNumber > 0 ? `/${pageNumber}` : ''}${pagerBrand}`
+    // фильтровые адреса не индексируем, но ссылки внутри оставляем проходимыми
+    const filterQuery = CARS_FILTER_KEYS.some(key => req.query[key] !== undefined && req.query[key] !== '')
+    const robots = filterQuery ? 'noindex, follow' : 'index, follow'
+
+    const ssr_brandSearch = brandDbName
     const carsSSRJson = JSON.stringify({
         items: carList.items,
         totalCount: carList.totalCount
     }).replaceAll('<', '\\u003c')
 
-    const carsSchemaJson = buildCarsSchema(carList.items, {brand, page: ssr_page, brandName: ssr_brandSearch})
+    const carsSchemaJson = buildCarsSchema(carList.items, {
+        brand: brandCanonical,
+        page: pageNumber,
+        brandName: brandFilter
+    })
 
     // сохранённый пользователем вид витрины, чтобы SSR сразу рисовал нужную сетку
     const viewMatch = /(?:^|;\s*)TYPE_VIEW=(dot8|dot4|dot1)/.exec(req.headers.cookie || '')
@@ -662,9 +739,9 @@ async function carsList(req, res) {
         filterActive,
         viewClass,
         page,
-        brand,
-        ssr_page, ssr_page_total, ssr_brandSearch,
-        title
+        brand: brandCanonical,
+        ssr_page: pageNumber, ssr_page_total, ssr_brandSearch, ssr_brandSlug: brandCanonical,
+        title, description, canonicalUrl, robots
     })
     return res
 }

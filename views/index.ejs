@@ -221,7 +221,7 @@
                 <% carCount.forEach(function(el) { %>
                     <% if (el.count) { %>
                         <div>
-                            <a href='/cars/0/<%= el.latBrand %>'>
+                            <a href='/cars/<%= el.latBrand %>'>
                                 <span class='icon' style="width: 37px;height: 29px"></span>
                                 <span class='text'><%= el.name.toUpperCase() %></span>
                                 <span class='total'><%= el.count %></span>
