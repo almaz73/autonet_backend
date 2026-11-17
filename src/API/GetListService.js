@@ -202,12 +202,7 @@ class GetListService {
     async getSpecials(city) {
         const db = global.db
         try {
-            let query;
-            let params;
-
-            if (city) {
-                //  language=SQLite
-                query = `
+            const selectFields = `
                     SELECT ac.id,
                            ac.prop_brand             as brand,
                            ac.prop_model             as model,
@@ -226,70 +221,65 @@ class GetListService {
                            ac.prop_steering_wheel    as wheelType,
                            ac.images
                     FROM a_car ac
-                    WHERE prop_city = ?
-                      AND price > 400000
-                      AND price < 800000
-                    LIMIT 15
-                `;
-                params = [city];
-            } else {
-                //  language=SQLite
-                query = `
-                    SELECT ac.id,
-                           ac.prop_brand             as brand,
-                           ac.prop_model             as model,
-                           ac.prop_year              as yearReleased,
-                           ac.price,
-                           ac.prop_milleage          as milleage,
-                           ac.prop_power             as enginePower,
-                           ac.prop_engine_capacity   as engineCapacity,
-                           ac.prop_transmission_type as gearboxType,
-                           ac.prop_body_type         as bodyType,
-                           ac.prop_engine_type       as engineType,
-                           ac.prop_drive             as driveType,
-                           ac.prop_address           as fullAddress,
-                           ac.prop_color             as color,
-                           ac.prop_city              as city,
-                           ac.prop_steering_wheel    as wheelType,
-                           ac.images
-                    FROM a_car ac
-                    WHERE price > 400000
-                      AND price < 800000
-                    LIMIT 15
-                `;
-                params = [];
-            }
-
-            const results = await db.all(query, params);
+                    WHERE ac.price > 400000
+                      AND ac.price < 800000`
             const uniqueBrands = new Set();
             const uniqueResults = [];
 
-            for (const el of results) {
-                const brandKey = `${el.brand}`;
-                try{
-                    if (!uniqueBrands.has(brandKey)) {
-                        uniqueBrands.add(brandKey);
-                        uniqueResults.push(el);
+            const collect = (results) => {
+                for (const el of results) {
+                    const brandKey = `${el.brand}`;
+                    try {
+                        if (!uniqueBrands.has(brandKey)) {
+                            uniqueBrands.add(brandKey);
+                            uniqueResults.push(el);
 
-                        if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)
-                        if (el.gearboxType) {
-                            if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
-                            if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
-                            if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
-                            if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
+                            if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)
+                            if (el.gearboxType) {
+                                if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
+                                if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
+                                if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
+                                if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
+                            }
+                            el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
+                            el.images.length = 5
+                            el.images = el.images.map(item => '/pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
                         }
-                        el.images = el.images ? el.images.split(',').map(url => url.trim()) : [];
-                        el.images.length = 5
-                        el.images = el.images.map(item => '/pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
+                    } catch (error) {
+                        console.error('Error parsing images for car ID ' + el.id + ':', error.message);
+                        el.images = [];
                     }
-                } catch (error) {
-                    console.error('Error parsing images for car ID ' + el.id + ':', error.message);
-                    el.images = [];
                 }
             }
 
-            uniqueResults.length = 5
-            return uniqueResults;
+            if (city) {
+                //  language=SQLite
+                collect(await db.all(
+                    selectFields + ' AND UPPER(ac.prop_city) = UPPER(?) LIMIT 15',
+                    [city]
+                ))
+            } else {
+                //  language=SQLite
+                collect(await db.all(selectFields + ' LIMIT 15', []))
+            }
+
+            // в выбранном городе меньше 5 машин — добираем предложения из других городов
+            if (uniqueResults.length < 5) {
+                let query = selectFields
+                const params = []
+                if (city) {
+                    query += ' AND UPPER(ac.prop_city) != UPPER(?)'
+                    params.push(city)
+                }
+                if (uniqueResults.length) {
+                    query += ` AND UPPER(ac.prop_brand) NOT IN (${uniqueResults.map(() => '?').join(',')})`
+                    params.push(...uniqueResults.map(el => String(el.brand).toUpperCase()))
+                }
+                //  language=SQLite
+                collect(await db.all(query + ' LIMIT 30', params))
+            }
+
+            return uniqueResults.slice(0, 5);
         } catch (error) {
             console.error('Error retrieving special cars from a_car table:', error.message);
             throw error;

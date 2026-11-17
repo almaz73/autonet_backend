@@ -126,7 +126,7 @@ class Controllers {
 
     async getLatestCarArrivials(req, res) {
         try {
-            const list = await A_car.getLatestCarArrivials(req.query.page)
+            const list = await A_car.getLatestCarArrivials(req.query.page, req.query.city)
             res.json(list);
         } catch (error) {
             console.error('Error getLatestCarArrivials:', error);

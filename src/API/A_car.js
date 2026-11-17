@@ -94,9 +94,10 @@ class CityListService {
     /**
      * Список последних поступлений,
      */
-    async getLatestCarArrivials(startPage) {
+    async getLatestCarArrivials(startPage, city) {
         let pageSize = 5
         let ids = []
+        const db = global.db
         const filePath = path.join(FolderLINKS, '_newAutoIDS.js'); // вытаскивание по дате
         try {
             const fileContent = fs.readFileSync(filePath, 'utf8');
@@ -127,6 +128,26 @@ class CityListService {
             return null
         }
 
+        // выбранный город показываем первым, остальные авто добивают блок до 5 позиций
+        if (city && city !== 'Россия') {
+            try {
+                // language=SQLite
+                const cityRows = await db.all(
+                    `SELECT id FROM a_car WHERE id IN (${ids.map(() => '?').join(',')}) AND UPPER(prop_city) = UPPER(?)`,
+                    [...ids, city]
+                )
+                const cityIds = new Set(cityRows.map(row => row.id))
+                if (cityIds.size && cityIds.size < ids.length) {
+                    ids = [
+                        ...ids.filter(id => cityIds.has(id)),
+                        ...ids.filter(id => !cityIds.has(id))
+                    ]
+                }
+            } catch (error) {
+                console.error('Error prioritizing new cars by city:', error.message);
+            }
+        }
+
         if (!startPage || isNaN(startPage) || startPage == 0) startPage = 1
 
         let pageIds = []
@@ -136,7 +157,6 @@ class CityListService {
         if ((startPage - 1) * pageSize > ids.length) return null
         else pageIds = ids.slice((startPage - 1) * pageSize, startPage * pageSize);
 
-        const db = global.db
         try {
             // language=SQLite
             let query = `
