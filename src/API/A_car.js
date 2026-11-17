@@ -212,6 +212,93 @@ class CityListService {
         }
     }
 
+    // модели бренда с количеством и диапазоном цен/годов — для посадочных страниц моделей
+    async getModelCounts(brand) {
+        const db = global.db
+        try {
+            const params = []
+            let where = `prop_model IS NOT NULL AND prop_model != ''`
+            if (brand) {
+                where += ' AND UPPER(prop_brand) = UPPER(?)'
+                params.push(brand)
+            }
+            // language=SQLite
+            return await db.all(`
+                SELECT prop_brand as brand,
+                       prop_model as model,
+                       COUNT(*)   as count,
+                       MIN(price) as priceFrom,
+                       MAX(price) as priceTo,
+                       MIN(prop_year) as yearFrom,
+                       MAX(prop_year) as yearTo
+                FROM a_car
+                WHERE ${where}
+                GROUP BY prop_brand, prop_model`, params)
+        } catch (error) {
+            console.error('Error retrieving model counts:', error.message);
+            throw error;
+        }
+    }
+
+    // города с количеством машин — для городских посадочных
+    async getCityCounts() {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.all(`
+                SELECT prop_city as city, COUNT(*) as count
+                FROM a_car
+                WHERE prop_city IS NOT NULL
+                  AND prop_city != ''
+                GROUP BY prop_city`)
+        } catch (error) {
+            console.error('Error retrieving city counts:', error.message);
+            throw error;
+        }
+    }
+
+    // модель + город с количеством машин; опционально по бренду
+    async getModelCityCounts(brand) {
+        const db = global.db
+        try {
+            const params = []
+            let where = `prop_model IS NOT NULL AND prop_model != '' AND prop_city IS NOT NULL AND prop_city != ''`
+            if (brand) {
+                where += ' AND UPPER(prop_brand) = UPPER(?)'
+                params.push(brand)
+            }
+            // language=SQLite
+            return await db.all(`
+                SELECT prop_model as model, prop_city as city, COUNT(*) as count
+                FROM a_car
+                WHERE ${where}
+                GROUP BY prop_model, prop_city`, params)
+        } catch (error) {
+            console.error('Error retrieving model-city counts:', error.message);
+            throw error;
+        }
+    }
+
+    // раздел каталога по id: нужен, когда фильтр пришёл как /cars?modelId=...
+    async getSectionInfo(id) {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.get(`
+                SELECT CASE
+                           WHEN s.Brand IS NOT NULL AND s.Brand != '' THEN s.Brand
+                           ELSE p.Brand
+                           END      as brand,
+                       s.Model      as model
+                FROM a_section s
+                         LEFT JOIN a_section p ON p.id = s.parentId
+                WHERE s.id = ?`, [id]) || null
+        } catch (error) {
+            console.error('Error retrieving section info:', error.message);
+            throw error;
+        }
+    }
+
 
     async getCitiesFromACar() {
         const db = global.db

@@ -7,6 +7,7 @@ import {FolderForSitemap, isLocal, transliterate} from "../constants.js";
 import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import {sitePages} from '../../sitePages.js'
+import {MODEL_MIN_CARS, CITY_MODEL_MIN_CARS, catalogSlug, buildModelClusters, clusterCityCounts} from '../shared/catalogUrls.js'
 import xml2js from "xml2js";
 import {sendEmail} from "../post/sendEmail.js"
 
@@ -59,6 +60,8 @@ const today = new Date().toISOString().split('T')[0]
 await makeDoubleOldSitemap()
 // создание костяка из файла sitePages
 await addRootPages()
+// посадочные моделей и городов — только те, что проходят порог по количеству авто
+await addCatalogPages()
 // акции, контакты и статьи — из client.sqlite, даты обновления — из истории изменений
 await addClientDbPages()
 // получаю список всех авто и добавляю, дату обновления беру со старого sitemap
@@ -156,6 +159,65 @@ async function getHistoryDates(db, column) {
         GROUP BY ${column}
     `, [historySince.toISOString()])
     return new Map(rows.map((row) => [row.id, row.lastmod]))
+}
+
+// посадочные моделей (/cars/<brand>/<model>) и городов (/cars/<brand>/<model>/<city>).
+// пороги те же, что в SSR: тонкие страницы в индекс не отдаём
+async function addCatalogPages() {
+    const db = await open({
+        filename: DB_PATH,
+        driver: sqlite3.Database,
+        mode: sqlite3.OPEN_READONLY,
+    })
+
+    try {
+        const brands = await db.all(`
+            SELECT sec.brand as name
+            FROM a_section sec
+            WHERE sec.brand IS NOT NULL
+              AND sec.brand != ''
+            GROUP BY sec.brand
+        `)
+
+        for (const brand of brands) {
+            const brandSlugValue = catalogSlug(brand.name)
+            if (!brandSlugValue) continue
+
+            const modelRows = await db.all(`
+                SELECT prop_model as model, COUNT(*) as count
+                FROM a_car
+                WHERE UPPER(prop_brand) = UPPER(?)
+                  AND prop_model IS NOT NULL
+                  AND prop_model != ''
+                GROUP BY prop_model
+            `, [brand.name])
+            const {clusters} = buildModelClusters(modelRows)
+
+            const cityRows = await db.all(`
+                SELECT prop_model as model, prop_city as city, COUNT(*) as count
+                FROM a_car
+                WHERE UPPER(prop_brand) = UPPER(?)
+                  AND prop_model IS NOT NULL
+                  AND prop_model != ''
+                  AND prop_city IS NOT NULL
+                  AND prop_city != ''
+                GROUP BY prop_model, prop_city
+            `, [brand.name])
+
+            for (const cluster of clusters.values()) {
+                if (cluster.count < MODEL_MIN_CARS) continue
+                addLink(`${SITE_ORIGIN}/cars/${brandSlugValue}/${cluster.slug}`)
+
+                const cities = clusterCityCounts(cityRows, cluster)
+                for (const city of cities.values()) {
+                    if (city.count < CITY_MODEL_MIN_CARS) continue
+                    addLink(`${SITE_ORIGIN}/cars/${brandSlugValue}/${cluster.slug}/${city.slug}`)
+                }
+            }
+        }
+    } finally {
+        await db.close()
+    }
 }
 
 async function addAllAuto() {

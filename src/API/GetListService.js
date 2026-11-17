@@ -108,6 +108,17 @@ class GetListService {
                 params.push(filter.brand)
             }
 
+            // кластер модели («Rio» + «Rio X-Line» + «RioX») с посадочной страницы
+            if (filter.models) {
+                const models = (Array.isArray(filter.models) ? filter.models : String(filter.models).split(','))
+                    .map(model => String(model).trim())
+                    .filter(Boolean)
+                if (models.length) {
+                    whereConditions.push(`UPPER(ac.prop_model) IN (${models.map(() => '?').join(',')})`);
+                    params.push(...models.map(model => model.toUpperCase()))
+                }
+            }
+
             if (filter.modelId) {
                 whereConditions.push('ac.section = ?');
                 params.push(filter.modelId)

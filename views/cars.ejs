@@ -37,6 +37,11 @@
         var ssr_brandSlug = '<%- ssr_brandSlug %>'
         var ssr_brandDbName = '<%- ssr_brandSearch %>'
         var ssr_page_total = '<%- ssr_page_total %>'
+        var ssr_modelSlug = '<%- ssr_modelSlug %>'
+        var ssr_modelName = '<%- ssr_modelName %>'
+        var ssr_citySlug = '<%- ssr_citySlug %>'
+        var ssr_cityName = '<%- ssr_cityName %>'
+        window.ssr_models = <%- ssrModelsJson %>;
     </script>
     <script>
         window.__carsSSR = <%- carsSSRJson %>;
@@ -55,7 +60,13 @@
             <a href='/'>Главная</a> /
             <a href='/cars'>Автомобили</a>
             <% if (brand){ %>/
-            <div id='path'><%- brand %></div>
+            <div id='path'><a href='/cars/<%= brand %>'><%= brandName %></a></div>
+            <% if (modelSlug){ %>/
+            <a href='/cars/<%= brand %>/<%= modelSlug %>'><%= modelName %> с пробегом</a>
+            <% if (citySlug){ %>/
+            <span><%= cityName %></span>
+            <% } %>
+            <% } %>
             <% } %>
         </div>
     </div>
@@ -103,6 +114,9 @@
                 </span>
             </span>
         </div>
+        <% if (vitrinaIntro) { %>
+        <p class='vitrina_intro'><%= vitrinaIntro %></p>
+        <% } %>
         <cards class="cards <%= viewClass %>">
             <% carsView.forEach(function(car, i) { %>
                 <%- include('partials/car_card', {car: car, idx: i + 1}) %>
@@ -115,6 +129,30 @@
             <% }); %>
             <div class="pager">Страницы: <span id="pager"><%- page %></span></div>
         </cards>
+        <% if (modelLinks.length || cityLinks.length) { %>
+        <div class='vitrina_links'>
+            <% if (modelLinks.length) { %>
+            <div class='vitrina_links__block'>
+                <h2><%= brandName %> — модели в наличии</h2>
+                <div class='vitrina_links__list'>
+                    <% modelLinks.forEach(function(link) { %>
+                    <a href='<%= link.href %>'><%= link.label %> <span class='total'><%= link.count %></span></a>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+            <% if (cityLinks.length) { %>
+            <div class='vitrina_links__block'>
+                <h2><%= brandName %> <%= modelName %> по городам</h2>
+                <div class='vitrina_links__list'>
+                    <% cityLinks.forEach(function(link) { %>
+                    <a href='<%= link.href %>'><%= link.label %> <span class='total'><%= link.count %></span></a>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+        </div>
+        <% } %>
         <br><br>
     </div>
 

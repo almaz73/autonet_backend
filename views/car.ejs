@@ -68,9 +68,12 @@
             <a href='/'>Главная</a> /
             <a href='/cars'>Автомобили</a> /
             <span id='auto-brand-path'>
-                <a href='/cars<% if (carData.brand){ %>/0/<%- carData.brand %><% } %>'>
+                <a href='/cars<% if (brandSlugValue){ %>/<%- brandSlugValue %><% } %>'>
                   Автомобили <%- carData.brand %> с пробегом
                 </a>
+                <% if (modelSlugValue) { %>
+                / <a href='/cars/<%- brandSlugValue %>/<%- modelSlugValue %>'><%- carData.brand %> <%- carData.model %></a>
+                <% } %>
             </span> /
             <span class='auto-name'>
                 <%- title %>
