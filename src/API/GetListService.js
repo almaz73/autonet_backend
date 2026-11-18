@@ -114,8 +114,10 @@ class GetListService {
                     .map(model => String(model).trim())
                     .filter(Boolean)
                 if (models.length) {
-                    whereConditions.push(`UPPER(ac.prop_model) IN (${models.map(() => '?').join(',')})`);
-                    params.push(...models.map(model => model.toUpperCase()))
+                    // UPPER считаем в SQLite: встроенный UPPER меняет регистр только у латиницы,
+                    // а JS toUpperCase поднимает и кириллицу — сравнение «ГАЗЕЛЬ NEXT» с «ГАЗель Next» не совпадало
+                    whereConditions.push(`UPPER(ac.prop_model) IN (${models.map(() => 'UPPER(?)').join(',')})`);
+                    params.push(...models)
                 }
             }
 
@@ -272,8 +274,8 @@ class GetListService {
                     params.push(city)
                 }
                 if (uniqueResults.length) {
-                    query += ` AND UPPER(ac.prop_brand) NOT IN (${uniqueResults.map(() => '?').join(',')})`
-                    params.push(...uniqueResults.map(el => String(el.brand).toUpperCase()))
+                    query += ` AND UPPER(ac.prop_brand) NOT IN (${uniqueResults.map(() => 'UPPER(?)').join(',')})`
+                    params.push(...uniqueResults.map(el => el.brand))
                 }
                 //  language=SQLite
                 collect(await db.all(query + ' LIMIT 30', params))
