@@ -236,22 +236,25 @@
 
     <div class='container'>
         <div class="car_vitrina">
-            <!-- <h1 id="vitrina_name">Специальные предложения по цене</h1>-->
             <h1 id="vitrina_name">Свежие поступления авто с пробегом</h1>
-
-            <span id="vitrina_name_choose" style="display: none">
-                 <a href="/" class="page__link cars_link" >
-                    <img src="/st/red_arrow.svg" loading='lazy' alt=''>
-                    <span></span>
-                 </a>
-            </span>
 
             <a href="/cars" class="page__link cars_link" >
                 <img src="/st/red_arrow.svg" loading='lazy' alt=''>
                 <span>Все предложения</span>
             </a>
         </div>
-        <cards class="cards dot4" data-col='dot4'>
+
+        <div class="vitrina_tabs" role="tablist" aria-label="Подборки автомобилей на главной">
+            <button type="button" class="vitrina_tab" role="tab" id="vitrina_tab_specials"
+                    aria-selected="false" aria-controls="main_vitrina_cards" tabindex="-1"
+                    data-tab="specials">Спецпредложения</button>
+            <button type="button" class="vitrina_tab active" role="tab" id="vitrina_tab_latest"
+                    aria-selected="true" aria-controls="main_vitrina_cards" tabindex="0"
+                    data-tab="latest">Свежие поступления</button>
+        </div>
+
+        <cards id="main_vitrina_cards" class="cards dot4" data-col='dot4' role="tabpanel"
+               aria-labelledby="vitrina_tab_latest">
             <% carList.forEach(function(el) { %>
                 <%= el.items %>
                 <div class='cart' id='galery_${N}'>
