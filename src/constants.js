@@ -1,7 +1,7 @@
 import * as os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-export const Version = 'ver.3.528'
+export const Version = 'ver.3.530'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования
@@ -53,7 +53,8 @@ export let xmlNames = [
 ];
 
 export let xmlUrls_forDev = [
-    'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml'
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/alfa-trade.xml',
+    'https://export.cartat.ru/avtoset_upload/Avtoset_new/AlfaAvto5_Tver.xml',
 ];
 export let xmlNames_forDev = xmlUrls_forDev.map(el => el.slice(52))
 
