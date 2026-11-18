@@ -66,17 +66,10 @@
         <div class='bread_cranbs'>
             <a href='/'>Главная</a> /
             <a href='/cars'>Автомобили</a> /
-            <span id='auto-brand-path'>
-                <a href='/cars<% if (brandSlugValue){ %>/<%- brandSlugValue %><% } %>'>
-                  Автомобили <%- carData.brand %> с пробегом
-                </a>
-                <% if (modelSlugValue) { %>
-                / <a href='/cars/<%- brandSlugValue %>/<%- modelSlugValue %>'><%- carData.brand %> <%- carData.model %></a>
-                <% } %>
-            </span> /
-            <span class='auto-name'>
-                <%- carName %>
-            </span>
+            <a id='auto-brand-link' href='/cars<% if (brandSlugValue){ %>/<%- brandSlugValue %><% } %>'>Автомобили <%- carData.brand %> с пробегом</a>
+            <% if (modelSlugValue) { %>/
+            <a id='auto-model-link' href='/cars/<%- brandSlugValue %>/<%- modelSlugValue %>'><%- carData.brand %> <%- carData.model %></a><% } %>
+            / <span class='auto-name'><%- carName %></span>
         </div>
     </div>
 
@@ -107,6 +100,7 @@
 
 <% if (!gone) { %>
 <script type="application/ld+json"><%- carSchemaJson %></script>
+<script type="application/ld+json"><%- breadcrumbSchemaJson %></script>
 <% } %>
 
 </body>

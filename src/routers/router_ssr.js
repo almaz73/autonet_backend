@@ -931,6 +931,27 @@ async function carsList(req, res, next) {
         cityName
     })
 
+    const breadcrumbItems = [
+        {name: 'Главная', url: `${SCHEMA_SITE}/`},
+        {name: 'Автомобили', url: `${SCHEMA_SITE}/cars`},
+    ]
+    if (brandCanonical) {
+        breadcrumbItems.push({name: brandFilter || brandCanonical, url: `${SCHEMA_SITE}/cars/${brandCanonical}`})
+    }
+    if (isModelPage) {
+        breadcrumbItems.push({
+            name: `${cluster.display} с пробегом`,
+            url: `${SCHEMA_SITE}/cars/${brandCanonical}/${modelSlugValue}`
+        })
+    }
+    if (isCityPage) {
+        breadcrumbItems.push({
+            name: cityName,
+            url: `${SCHEMA_SITE}/cars/${brandCanonical}/${modelSlugValue}/${citySlug}`
+        })
+    }
+    const breadcrumbSchemaJson = buildBreadcrumbSchema(breadcrumbItems)
+
     // сохранённый пользователем вид витрины, чтобы SSR сразу рисовал нужную сетку
     const viewMatch = /(?:^|;\s*)TYPE_VIEW=(dot8|dot4|dot1)/.exec(req.headers.cookie || '')
     const viewClass = viewMatch ? viewMatch[1] : 'dot8'
@@ -944,6 +965,7 @@ async function carsList(req, res, next) {
         carsView,
         carsSSRJson,
         carsSchemaJson,
+        breadcrumbSchemaJson,
         vitrinaName,
         vitrinaIntro,
         filterActive,
@@ -1197,6 +1219,22 @@ function buildCarSchema(car, url) {
     return JSON.stringify(schema).replaceAll('<', '\\u003c')
 }
 
+// хлебные крошки в разметке: уровни повторяют видимую строку под шапкой
+function buildBreadcrumbSchema(items) {
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: items.map((item, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: item.name,
+            ...(item.url ? {item: item.url} : {}),
+        })),
+    }
+
+    return JSON.stringify(schema).replaceAll('<', '\\u003c')
+}
+
 // устаревшие адреса /cars/car.html?id=<uuid> остались в поисковой выдаче:
 // отдаём 410 Gone и страницу «Автомобиль снят с продажи», чтобы роботы убрали их из индекса
 function legacyCarPage(req, res) {
@@ -1252,6 +1290,8 @@ async function carAlone(req, res) {
         // один канонический адрес карточки: бренд и модель в нижнем регистре, как у посадочных.
         // строчные варианты и старые адреса вида /cars/VAZ(LADA)/... уходят сюда одним 301
         let canonicalPath = ''
+        const brandSlugValue = gone ? '' : brandSlug(carData.brand || '')
+        const modelSlugValue = gone ? '' : catalogSlug(carData.model || '')
         if (!gone) {
             canonicalPath = carPath(carData.brand, carData.model, carData.linkId)
             if (decodePath(req.path) !== canonicalPath) {
@@ -1286,12 +1326,34 @@ async function carAlone(req, res) {
         const keywords = gone ? '' : carData.configuration;
         const carSchemaJson = gone ? '' : buildCarSchema(carData, SCHEMA_SITE + canonicalPath)
 
+        // модель в крошках ссылается на посадочную только если она существует, иначе остаётся названием
+        let modelCrumbUrl = ''
+        if (!gone && brandSlugValue && modelSlugValue) {
+            const modelIndex = buildModelClusters(await A_car.getModelCounts(carData.brand))
+            const cluster = findCluster(modelIndex, carData.model)
+            if (cluster && cluster.count >= MODEL_MIN_CARS) {
+                modelCrumbUrl = `${SCHEMA_SITE}/cars/${brandSlugValue}/${cluster.slug}`
+            }
+        }
+        const breadcrumbSchemaJson = gone ? '' : buildBreadcrumbSchema([
+            {name: 'Главная', url: `${SCHEMA_SITE}/`},
+            {name: 'Автомобили', url: `${SCHEMA_SITE}/cars`},
+            ...(brandSlugValue
+                ? [{name: carData.brand, url: `${SCHEMA_SITE}/cars/${brandSlugValue}`}]
+                : []),
+            ...(carData.model
+                ? [{name: `${carData.brand} ${carData.model}`, ...(modelCrumbUrl ? {url: modelCrumbUrl} : {})}]
+                : []),
+            {name: carName},
+        ])
+
         if (gone) res.status(410)
 
         res.render('car', {
             gone,
             carName,
             carSchemaJson,
+            breadcrumbSchemaJson,
             title,
             description,
             keywords,
@@ -1301,8 +1363,8 @@ async function carAlone(req, res) {
             carData,
             brand, model, linkId,
             canonicalUrl: canonicalPath ? SCHEMA_SITE + canonicalPath : '',
-            brandSlugValue: gone ? '' : brandSlug(carData.brand || ''),
-            modelSlugValue: gone ? '' : catalogSlug(carData.model || '')
+            brandSlugValue,
+            modelSlugValue
         });
     } catch (error) {
         console.error('Error rendering car page:', error);
