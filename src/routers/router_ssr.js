@@ -1165,19 +1165,35 @@ async function carAlone(req, res) {
             }
         }
 
-        // Generate title and description based on car data
+        // H1 карточки — короткое название, а title и description собираем под запросы
+        // «бренд модель год купить с пробегом город»
+        const displayBrand = gone ? brand : carData.brand
+        const displayModel = gone ? model : carData.model
+        const carName = gone ? '' : `${displayBrand} ${displayModel} ${carData.yearReleased}`
+        const lowerFirst = (value) => value ? String(value).charAt(0).toLowerCase() + String(value).slice(1) : ''
+        const carCity = !gone && carData.city ? ' ' + cityIn(carData.city) : ''
+        const carPrice = !gone && carData.price ? `${formatPrice(carData.price)} ₽` : ''
+        const carMileage = !gone && carData.milleage ? ` с пробегом ${formatPrice(carData.milleage)} км` : ''
+        const carSpecs = []
+        if (!gone) {
+            if (carData.engineType) carSpecs.push(`${lowerFirst(carData.engineType)} двигатель${carData.enginePower ? ' ' + carData.enginePower + ' л.с.' : ''}`)
+            if (carData.gearboxType) carSpecs.push(`${lowerFirst(carData.gearboxType)} коробка передач`)
+            if (carData.driveType) carSpecs.push(`${lowerFirst(carData.driveType)} привод`)
+        }
+
         const title = gone
             ? `Автомобиль ${brand} ${model} снят с продажи - Автосеть.РФ`
-            : `${carData.brand} ${carData.model} ${carData.yearReleased}  ${carData.prop_address ? ' - ' + carData.prop_address : ''}`;
+            : `Купить ${displayBrand} ${displayModel} ${carData.yearReleased} с пробегом${carCity}${carPrice ? ' — ' + carPrice : ''}`;
         const description = gone
             ? 'Автомобиль снят с продажи и больше недоступен.'
-            : `Купить ${carData.brand} ${carData.model} ${carData.yearReleased} года выпуска с пробегом в ${carData.city} за ${carData.price} рублей. Характеристики: ${carData.engineType} двигатель, ${carData.enginePower} л.с., ${carData.gearboxType} коробка передач, ${carData.driveType} привод.`;
+            : `${displayBrand} ${displayModel} ${carData.yearReleased} года${carMileage}${carCity}: цена ${carPrice}${carSpecs.length ? ', ' + carSpecs.join(', ') : ''}. Купить с пробегом в автосалоне Автосеть.РФ — проверка, кредит и обмен. ☎ 8-800-500-11-56.`;
         const keywords = gone ? '' : carData.configuration;
 
         if (gone) res.status(410)
 
         res.render('car', {
             gone,
+            carName,
             title,
             description,
             keywords,

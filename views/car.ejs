@@ -75,7 +75,7 @@
                 <% } %>
             </span> /
             <span class='auto-name'>
-                <%- title %>
+                <%- carName %>
             </span>
         </div>
     </div>
@@ -86,7 +86,7 @@
                 <%- include('partials/car/big-photo')%>
                 <%- include('partials/car/address')%>
                 <div class='sticky-left'>
-                    <%- include('partials/car/charaсteristiс')%>
+                    <%- include('partials/car/charaсteristiс', {headingTag: 'h1'})%>
                 </div>
                 <%- include('partials/car/equipment')%>
                 <abdul></abdul>
@@ -94,7 +94,8 @@
             </div>
             <div class='right'>
                 <div class='sticky'>
-                    <%- include('partials/car/charaсteristiс')%>
+                    <%# копия для десктопа: название остаётся текстом, H1 на странице один %>
+                    <%- include('partials/car/charaсteristiс', {headingTag: 'div'})%>
                 </div>
             </div>
         </div>
