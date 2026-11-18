@@ -255,8 +255,12 @@ async function addAllAuto() {
 
 
     for (let car of allAuto) {
+        // без марки или модели адрес карточки превращается в /cars///... и не открывается
+        const brandValue = String(car.brand ?? '').trim()
+        const modelValue = String(car.model ?? '').trim()
+        if (!brandValue || !modelValue) continue
         // тот же канон, что отдаёт SSR: бренд и модель слагами
-        let link = carPath(car.brand, car.model, carFriendly(car.year, car.city, car.price, car.milleage))
+        let link = carPath(brandValue, modelValue, carFriendly(car.year, car.city, car.price, car.milleage))
         let relative = link.replace(/^\/cars\//, '')
         // в старом sitemap адрес мог быть в другом регистре — дату всё равно сохраняем
         let sitemapNode = sitemapNodes.find(el => String(el.loc).toLowerCase() === relative.toLowerCase())
