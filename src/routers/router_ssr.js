@@ -914,6 +914,7 @@ async function carsList(req, res, next) {
     }).replaceAll('<', '\\u003c')
 
     const carsSchemaJson = buildCarsSchema(carList.items, {
+        totalCount: carList.totalCount,
         brand: brandCanonical,
         model: modelSlugValue,
         city: citySlug,
@@ -1036,9 +1037,13 @@ function pickSchemaCars(items) {
     return picked.length ? picked : items.slice(0, SCHEMA_MAX_ITEMS)
 }
 
-function buildCarsSchema(items, {brand, model, city, page, brandName, modelName, cityName}) {
+function buildCarsSchema(items, {totalCount, brand, model, city, page, brandName, modelName, cityName}) {
     const cars = pickSchemaCars(items)
     const pageNumber = Number(page) || 0
+    // numberOfItems — сколько авто подходит под выборку целиком, а не только в разметке;
+    // itemListElement ограничен SCHEMA_MAX_ITEMS, иначе страница вырастает в разы
+    const itemsTotal = Number(totalCount)
+    const numberOfItems = Number.isFinite(itemsTotal) && itemsTotal > 0 ? itemsTotal : cars.length
     const tail = [brand, model, city].filter(Boolean).map(part => '/' + encodeURIComponent(part)).join('')
     const url = `${SCHEMA_SITE}/cars` + (pageNumber > 0 ? `/${pageNumber}` : '') + tail
     const where = city ? ' ' + cityIn(cityName || city) : ''
@@ -1054,7 +1059,7 @@ function buildCarsSchema(items, {brand, model, city, page, brandName, modelName,
             ? 'Легковые автомобили разных марок в наличии по цене от 400 000 до 800 000 рублей'
             : 'Список автомобилей в наличии с ценами и характеристиками',
         url,
-        numberOfItems: cars.length,
+        numberOfItems,
         itemListElement: cars.map((car, index) => {
             const carUrl = absoluteCarUrl(car)
             const image = absoluteCarImage(car)
