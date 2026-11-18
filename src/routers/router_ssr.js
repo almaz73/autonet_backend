@@ -773,6 +773,10 @@ async function carsList(req, res, next) {
 
     // один 301 на канон: /cars/0 → /cars, /cars/Kia → /cars/kia, /cars/kia/ → /cars/kia
     const modelSlugValue = cluster ? cluster.slug : ''
+    const firstPagePath = '/cars'
+        + (brandCanonical ? '/' + brandCanonical : '')
+        + (modelSlugValue ? '/' + modelSlugValue : '')
+        + (citySlug ? '/' + citySlug : '')
     const canonicalPath = pagePrefix
         + (brandCanonical ? '/' + brandCanonical : '')
         + (modelSlugValue ? '/' + modelSlugValue : '')
@@ -896,7 +900,10 @@ async function carsList(req, res, next) {
         vitrinaIntro = `${brandFilter} ${cluster.display} с пробегом${where}: ${carList.totalCount} проверенных автомобилей${price}. Цены, фото и характеристики — в каталоге Автосеть.РФ.`
     }
 
-    const canonicalUrl = `${SITE_ORIGIN}${canonicalPath}`
+    // страницы 2+ — продолжение серии: canonical ведём на первую страницу и не индексируем их сами,
+    // но оставляем follow, чтобы краулер доходил до карточек
+    const isPaged = pageNumber > 0
+    const canonicalUrl = `${SITE_ORIGIN}${isPaged ? firstPagePath : canonicalPath}`
     // фильтровые адреса не индексируем, но ссылки внутри оставляем проходимыми
     const pathQueryKeys = new Set(['brand'])
     if (cluster) {
@@ -905,7 +912,7 @@ async function carsList(req, res, next) {
     }
     if (citySlug) pathQueryKeys.add('city')
     const filterQuery = CARS_FILTER_KEYS.some(key => !pathQueryKeys.has(key) && req.query[key] !== undefined && req.query[key] !== '')
-    const robots = filterQuery ? 'noindex, follow' : 'index, follow'
+    const robots = filterQuery || isPaged ? 'noindex, follow' : 'index, follow'
 
     const ssr_brandSearch = brandDbName
     const carsSSRJson = JSON.stringify({
