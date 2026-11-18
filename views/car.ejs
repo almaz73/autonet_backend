@@ -105,5 +105,9 @@
 
 <%- include('partials/footer') %>
 
+<% if (!gone) { %>
+<script type="application/ld+json"><%- carSchemaJson %></script>
+<% } %>
+
 </body>
 </html>

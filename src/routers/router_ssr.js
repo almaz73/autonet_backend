@@ -1101,6 +1101,90 @@ function buildCarsSchema(items, {brand, model, city, page, brandName, modelName,
     return JSON.stringify(schema).replaceAll('<', '\\u003c')
 }
 
+// словари для schema.org: в базе значения на русском, разметка ждёт английские
+const CAR_BODY_SCHEMA = {
+    'Седан': 'Sedan',
+    'Хетчбэк': 'Hatchback',
+    'Универсал': 'Station Wagon',
+    'Внедорожник': 'SUV',
+    'Лифтбек': 'Liftback',
+    'Пикап': 'Pickup',
+    'Купе': 'Coupe',
+    'Минивэн': 'Minivan',
+    'Фургон': 'Van',
+    'Автобус': 'Bus',
+}
+const CAR_GEARBOX_SCHEMA = {
+    'Механическая': 'Manual',
+    'Автоматическая': 'Automatic',
+    'Робот': 'Automated manual',
+    'Вариатор': 'CVT',
+}
+const CAR_FUEL_SCHEMA = {
+    'Бензиновый': 'Petrol',
+    'Дизельный': 'Diesel',
+    'Гибридный': 'Hybrid',
+    'Электро': 'Electric',
+}
+const CAR_DRIVE_SCHEMA = {
+    'Передний': 'https://schema.org/FrontWheelDriveConfiguration',
+    'Задний': 'https://schema.org/RearWheelDriveConfiguration',
+    'Полный': 'https://schema.org/AllWheelDriveConfiguration',
+}
+
+// schema.org Car + Offer для карточки авто: разметка на тех же данных, что видны на странице
+function buildCarSchema(car, url) {
+    const mileage = Number(car.milleage)
+    const capacity = Number(car.engineCapacity)
+    const power = Number(car.enginePower)
+    const hasMileage = Number.isFinite(mileage) && mileage > 0
+    const hasDisplacement = Number.isFinite(capacity) && capacity > 0
+    const hasPower = Number.isFinite(power) && power > 0
+    const images = (Array.isArray(car.images) ? car.images : []).map(src => {
+        const big = src.replace('_small.webp', '_big.webp')
+        return /^https?:\/\//.test(big) ? big : `${SCHEMA_SITE}${big.startsWith('/') ? '' : '/'}${big}`
+    })
+
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'Car',
+        name: `${car.brand} ${car.model} ${car.yearReleased}`,
+        brand: {'@type': 'Brand', name: car.brand},
+        model: car.model,
+        vehicleModelDate: String(car.yearReleased),
+        modelDate: String(car.yearReleased),
+        url,
+        image: images.length ? images : `${SCHEMA_SITE}/st/auto.webp`,
+        ...(car.color ? {color: car.color} : {}),
+        ...(car.bodyType ? {bodyType: CAR_BODY_SCHEMA[car.bodyType] || car.bodyType} : {}),
+        ...(hasMileage ? {mileageFromOdometer: {'@type': 'QuantitativeValue', value: mileage, unitCode: 'KMT'}} : {}),
+        ...(car.gearboxType ? {vehicleTransmission: CAR_GEARBOX_SCHEMA[car.gearboxType] || car.gearboxType} : {}),
+        ...(car.engineType ? {fuelType: CAR_FUEL_SCHEMA[car.engineType] || car.engineType} : {}),
+        ...(CAR_DRIVE_SCHEMA[car.driveType] ? {driveWheelConfiguration: CAR_DRIVE_SCHEMA[car.driveType]} : {}),
+        ...(hasDisplacement || hasPower ? {
+            vehicleEngine: {
+                '@type': 'EngineSpecification',
+                ...(hasDisplacement
+                    ? {engineDisplacement: {'@type': 'QuantitativeValue', value: Number((capacity / 1000).toFixed(1)), unitCode: 'LTR'}}
+                    : {}),
+                ...(hasPower ? {enginePower: {'@type': 'QuantitativeValue', value: power, unitCode: 'BHP'}} : {}),
+            },
+        } : {}),
+        offers: {
+            '@type': 'Offer',
+            url,
+            price: Number(car.price),
+            priceCurrency: 'RUB',
+            availability: 'https://schema.org/InStock',
+            itemCondition: hasMileage ? 'https://schema.org/UsedCondition' : 'https://schema.org/NewCondition',
+            seller: {'@type': 'Organization', name: 'Автосеть.РФ', url: SCHEMA_SITE},
+        },
+    }
+
+    // '<' экранируем, чтобы данные не могли закрыть тег script
+    return JSON.stringify(schema).replaceAll('<', '\\u003c')
+}
+
 // устаревшие адреса /cars/car.html?id=<uuid> остались в поисковой выдаче:
 // отдаём 410 Gone и страницу «Автомобиль снят с продажи», чтобы роботы убрали их из индекса
 function legacyCarPage(req, res) {
@@ -1188,12 +1272,14 @@ async function carAlone(req, res) {
             ? 'Автомобиль снят с продажи и больше недоступен.'
             : `${displayBrand} ${displayModel} ${carData.yearReleased} года${carMileage}${carCity}: цена ${carPrice}${carSpecs.length ? ', ' + carSpecs.join(', ') : ''}. Купить с пробегом в автосалоне Автосеть.РФ — проверка, кредит и обмен. ☎ 8-800-500-11-56.`;
         const keywords = gone ? '' : carData.configuration;
+        const carSchemaJson = gone ? '' : buildCarSchema(carData, SCHEMA_SITE + canonicalPath)
 
         if (gone) res.status(410)
 
         res.render('car', {
             gone,
             carName,
+            carSchemaJson,
             title,
             description,
             keywords,
