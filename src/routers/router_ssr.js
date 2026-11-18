@@ -660,13 +660,25 @@ async function indexPage(req, res) {
     // три случайных отзыва с пятью звёздами для блока внизу главной
     const mainReviews = await getRandomFiveStarReviews(3)
 
+    // сниппет главной: поисковики показывают цифры вместо «звоните по телефону»
+    const stats = await A_car.getCatalogStats().catch(() => null)
+    const priceRange = stats && Number(stats.priceFrom) > 0 && Number(stats.priceTo) > 0
+        ? `, цены от ${formatPrice(stats.priceFrom)} до ${formatPrice(stats.priceTo)} ₽`
+        : ''
+    const title = 'Автомобили с пробегом (бу) в автосалонах Казани и других городов России - Автосеть.РФ'
+    const description = stats && Number(stats.count) > 0
+        ? `Автомобили с пробегом в Казани и других городах России: ${formatPrice(stats.count)} авто в наличии${priceRange}. Большой выбор марок и моделей б/у авто в автосалонах Автосеть.РФ — проверка, кредит, обмен. ☎ 8-800-500-11-56.`
+        : 'Купите автомобили с пробегом в Казани и других городах. 🚗 БУ авто в автосалонах Автосеть.рф. Подробная информация по телефону: ☎ 8-800-500-11-56.'
+
     res.render('index', {
         js1, js2, js3, js4, js5, js6, js7, js8, js9,
         cssFiles,
         carCount,
         carList,
         mainReviews,
-        page
+        page,
+        title,
+        description
     })
     return res
 }
@@ -836,21 +848,26 @@ async function carsList(req, res, next) {
 
     const pageSuffix = pageNumber > 0 ? ` — страница ${pageNumber + 1}` : ''
     const descriptionSuffix = pageNumber > 0 ? ` Страница ${pageNumber + 1}.` : ''
+    // общий каталог: цифры в описании вместо «звоните по телефону»
+    const catalogStats = !brandFilter ? await A_car.getCatalogStats().catch(() => null) : null
     let title
     let description
     if (isModelPage) {
         const where = isCityPage ? ' ' + cityIn(cityName) : ''
         const priceFrom = cluster.priceFrom ? `, цены от ${formatPrice(cluster.priceFrom)} ₽` : ''
         const priceTo = cluster.priceTo ? ` до ${formatPrice(cluster.priceTo)} ₽` : ''
-        const years = cluster.yearFrom && cluster.yearTo ? `, ${cluster.yearFrom}–${cluster.yearTo} г.` : ''
+        const years = cluster.yearFrom && cluster.yearTo ? `, ${cluster.yearFrom}–${cluster.yearTo} г` : ''
         title = `Купить ${brandFilter} ${cluster.display} с пробегом${where} — ${carList.totalCount} авто в наличии`
-        description = `${brandFilter} ${cluster.display} с пробегом${where}: ${carList.totalCount} автомобилей в наличии${priceFrom}${priceTo}${years}. Проверенные авто в автосалонах Автосеть.РФ. ☎ 8-800-500-11-56.`
+        description = `${brandFilter} ${cluster.display} с пробегом${where}: ${carList.totalCount} ${pluralCars(carList.totalCount)} в наличии${priceFrom}${priceTo}${years}. Проверенные авто в автосалонах Автосеть.РФ. ☎ 8-800-500-11-56.`
     } else if (brandFilter) {
         title = `Автомобили ${brandFilter} с пробегом.`
-        description = `Купить ${brandFilter} с пробегом в автосалонах Автосеть.рф: цены, фото и характеристики. ☎ 8-800-500-11-56.`
+        description = `Купить ${brandFilter} с пробегом: ${formatPrice(carList.totalCount)} авто в наличии, цены, фото и характеристики. Проверенные автомобили в автосалонах Автосеть.РФ. ☎ 8-800-500-11-56.`
     } else {
+        const priceRange = catalogStats && Number(catalogStats.priceFrom) > 0 && Number(catalogStats.priceTo) > 0
+            ? `, цены от ${formatPrice(catalogStats.priceFrom)} до ${formatPrice(catalogStats.priceTo)} ₽`
+            : ''
         title = 'Авто с пробегом (БУ). Купить авто в автосалонах Казани и всей России - Автосеть.РФ'
-        description = 'Цены на Б/У авто 🚗 в автосалонах Автосеть.рф в Казани, Уфе, Набережных челнах, Нижнекамске, Самаре и других городах России. ✅ Купить автомобили с пробегом из каталога - иномарки, Lada в наличии. ☎ Звоните по телефону 8-800-500-11-56.'
+        description = `Автомобили с пробегом в Казани и других городах России: ${formatPrice(carList.totalCount)} авто в наличии${priceRange}. ✔ Иномарки и Lada, большой выбор марок и моделей б/у в автосалонах Автосеть.РФ — проверка, кредит, обмен. ☎ 8-800-500-11-56.`
     }
     title = title.replace(/\.$/, '') + pageSuffix
     description += descriptionSuffix
@@ -995,6 +1012,16 @@ const CARS_FILTER_KEYS = [
 ]
 
 const formatPrice = (val) => parseInt(val).toLocaleString('ru-RU')
+
+// «1 автомобиль», «2 автомобиля», «5 автомобилей» — для описаний в сниппете
+function pluralCars(count) {
+    const n = Math.abs(Number(count) || 0)
+    const mod10 = n % 10
+    const mod100 = n % 100
+    if (mod10 === 1 && mod100 !== 11) return 'автомобиль'
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'автомобиля'
+    return 'автомобилей'
+}
 
 // повторяет prepareCars + createNode из src/js/filter, чтобы SSR и клиент давали одинаковую вёрстку
 function buildCarsView(items) {

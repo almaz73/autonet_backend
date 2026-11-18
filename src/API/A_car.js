@@ -241,6 +241,25 @@ class CityListService {
         }
     }
 
+    // общие цифры каталога для description: сколько авто, марок, городов и диапазон цен.
+    // считаем всю таблицу — это ровно тот список, что отдаёт /api/getList без фильтров
+    async getCatalogStats() {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.get(`
+                SELECT COUNT(*)                  as count,
+                       COUNT(DISTINCT prop_brand) as brands,
+                       COUNT(DISTINCT prop_city)  as cities,
+                       MIN(CASE WHEN price > 0 THEN price END) as priceFrom,
+                       MAX(CASE WHEN price > 0 THEN price END) as priceTo
+                FROM a_car`)
+        } catch (error) {
+            console.error('Error retrieving catalog stats:', error.message);
+            throw error
+        }
+    }
+
     // модели бренда с количеством и диапазоном цен/годов — для посадочных страниц моделей
     async getModelCounts(brand) {
         const db = global.db
