@@ -76,6 +76,11 @@ const PromoListTable = ({OriginalComponent, resource, records, ...props}) => {
         <>
             {editedId ? <style>{highlightCss(resource.id, editedId)}</style> : null}
             <OriginalComponent resource={resource} records={records} {...props}/>
+            {resource?.id === 'promo' ? (
+                <div style={{marginTop: 12, fontSize: 14, color: '#898A9A'}}>
+                    Не забывайте удалять старые акции.
+                </div>
+            ) : null}
         </>
     )
 }
