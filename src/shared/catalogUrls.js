@@ -35,13 +35,13 @@ export function displayModel(name) {
     ).join('-')).join(' ')
 }
 
-// вариант модели: «rio-x-line» и слитный «riox» относятся к «rio»,
-// а «320» к модели «3» уже нет — цифра после цифры это другая модель
+// вариант модели — только слитное написание: «riox» к «rio», но не «rio-x-line»,
+// «granta-cross» и «rio-x-line» — самостоятельные модели со своими посадочными.
+// «320» к модели «3» тоже не вариант: цифра после цифры это другая модель
 function isModelVariant(slug, base) {
     if (slug === base) return true
     if (!slug.startsWith(base)) return false
     const next = slug.charAt(base.length)
-    if (next === '-') return true
     return /[a-z]/.test(next) && base.length >= 3
 }
 
