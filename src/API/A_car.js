@@ -120,11 +120,11 @@ class CityListService {
             })
         }
         if (!ids || ids.length === 0) {
-            console.log('[getLatestCarArrivials] нет актуальных id новых авто', {
-                file: filePath,
-                cwd: process.cwd(),
-                now: new Date().toString(),
-            })
+            // console.log('[getLatestCarArrivials] нет актуальных id новых авто', {
+            //     file: filePath,
+            //     cwd: process.cwd(),
+            //     now: new Date().toString(),
+            // })
             return null
         }
 

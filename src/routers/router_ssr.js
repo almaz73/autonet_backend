@@ -5,6 +5,7 @@ import zlib from 'node:zlib'
 import {Op} from 'sequelize'
 import A_car from "../API/A_car.js";
 import {dealers, news, documents, review, sequelize} from '../clientBaza/db.js'
+import * as promoDAO from '../clientBaza/promo/promoDAO.js'
 import {FRONT_UPLOAD_DIR, DOCUMENT_LINK_PREFIX, formatFromName} from '../clientBaza/documents/documentFiles.js'
 import {formatFileSize} from '../shared/fileSize.js'
 import {manifest_links} from '../constants.js';
@@ -240,6 +241,67 @@ function pageAssets() {
             .filter(Boolean)
             .map((file) => file.replace(/^assets\//, '')),
     }
+}
+
+// стили и скрипты листинга акций: promo.css собирается отдельным entry
+function promoAssets() {
+    const style = sharedStyle()
+    const main = findChunk('_main-', '.js')
+    const promo = findChunk('promo/', '.css')
+    return {
+        jsFiles: [style.js, main.file]
+            .filter(Boolean)
+            .map((file) => file.replace(/^assets\//, '')),
+        cssFiles: [style.css, promo.file]
+            .filter(Boolean)
+            .map((file) => file.replace(/^assets\//, '')),
+    }
+}
+
+/** Листинг акций: ссылки на все активные акции, чтобы они не были сиротами **/
+
+const PROMO_LIST_TITLE = 'Акции и спецпредложения - Автосеть.РФ'
+const PROMO_LIST_DESCRIPTION = 'Специальные предложения и акции в автосалонах Автосеть.РФ: скидки на обслуживание, кредит, трейд-ин и автомобили с пробегом.'
+
+const promoDescriptionLines = (promo) => String(promo.description ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+async function promoList(req, res) {
+    try {
+        // канонический адрес — со слешем на конце
+        if (!req.path.endsWith('/')) return res.redirect(301, '/promo/')
+
+        // без кода акция не имеет канонического адреса — такую в sitemap тоже не берут
+        const promos = (await promoDAO.getActivePromoBanners(false)).filter((promo) => promo.code)
+        const [bigPromo, ...galleryPromos] = promos
+
+        res.render('promo-list', {
+            ...promoAssets(),
+            bigPromo: bigPromo || null,
+            bigDescription: bigPromo ? promoDescriptionLines(bigPromo).join('\n') : '',
+            items: galleryPromos.map((promo, index) => ({
+                ...promo,
+                // первый баннер уже стоит крупным, раскладка остальных как в promo.js:
+                // 4 вертикальных подряд, затем 2 горизонтальных
+                orientation: index % 6 < 4 ? 'ver' : 'hor',
+                lines: promoDescriptionLines(promo),
+            })),
+            canonical: `${SITE_ORIGIN}/promo/`,
+            title: PROMO_LIST_TITLE,
+            description: PROMO_LIST_DESCRIPTION,
+            ogImage: `${SITE_ORIGIN}/st/auto.webp`,
+            breadcrumbSchemaJson: buildBreadcrumbSchema([
+                {name: 'Главная', url: `${SITE_ORIGIN}/`},
+                {name: 'Акции и спецпредложения', url: `${SITE_ORIGIN}/promo/`},
+            ]),
+        })
+    } catch (error) {
+        console.error('Error rendering promo list:', error)
+        res.status(500).send('Internal Server Error')
+    }
+    return res
 }
 
 const formatNewsDate = (value) => {
@@ -606,6 +668,8 @@ router.get('/news/:id(\\d+)', newsPage);                    // Статья из
 router.get('/documents', documentsPage);                    // Документы из базы (и /documents/ тоже)
 
 router.get('/reviews', reviewsPage);                        // Отзывы с внешних площадок (и /reviews/ тоже)
+
+router.get('/promo', promoList);                            // Список активных акций из базы (и /promo/ тоже)
 
 
 async function indexPage(req, res) {

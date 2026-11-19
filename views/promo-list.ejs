@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title><%= title %></title>
+    <link rel="canonical" href="<%= canonical %>"/>
+    <meta property='og:type' content='website'>
+    <meta property='og:title' content='<%= title %>'>
+    <meta property='og:description' content='<%= description %>'>
+    <meta property='og:image' content='<%= ogImage %>'>
+    <meta property='og:url' content='<%= canonical %>'>
+    <meta property='og:locale' content='ru_RU'>
+    <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='index, follow'>
+    <meta name='description' content='<%= description %>'>
+    <% jsFiles.forEach(file => { %>
+    <script type="module" crossorigin src="/assets/<%= file %>"></script>
+    <% }) %>
+    <% cssFiles.forEach(file => { %>
+    <link rel="stylesheet" crossorigin href="/assets/<%= file %>">
+    <% }) %>
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <script type="application/ld+json"><%- breadcrumbSchemaJson %></script>
+</head>
+<body>
+
+<%- include('partials/verbox') %>
+<%- include('partials/ya_metrica') %>
+<%- include('partials/header') %>
+
+<main>
+
+    <div class='page_padding_20'>
+        <div class='bread_cranbs'>
+            <a href='/'>Главная</a> /
+            <span>Акции и спецпредложения</span>
+        </div>
+    </div>
+
+    <div class='container'>
+        <h1>Акции и спецпредложения</h1>
+    </div>
+
+    <% if (bigPromo) { %>
+    <div class='container promo-banner'>
+        <% if (bigDescription) { %><div class="inscription"><%= bigDescription %></div><% } %>
+        <a href='/promo/<%= bigPromo.code %>'>
+            <img src='/pub_promo/<%= bigPromo.id %>_h_m.webp?v=1' alt='<%= bigPromo.name %>' class='big'>
+            <img src='/pub_promo/<%= bigPromo.id %>_v_b.webp?v=1' alt='<%= bigPromo.name %>' class='small'>
+        </a>
+    </div>
+    <% } %>
+
+    <br><br><br>
+
+    <div class='container promo-photos' data-ssr='1'>
+        <% if (!items.length) { %>
+        <p>Сейчас нет активных акций.</p>
+        <% } %>
+        <% items.forEach(item => { %>
+        <a class="pr-ban-ver <%= item.orientation %>" href='/promo/<%= item.code %>'>
+            <img<% if (item.orientation === 'ver') { %> style="max-width: 275px;"<% } %> src='/pub_promo/<%= item.id %>_<%= item.orientation === 'ver' ? 'v_l' : 'h_l' %>.webp'
+                 loading='lazy' alt='<%= item.name %>'>
+            <% if (item.lines.length) { %>
+            <div class="dd">
+                <% item.lines.forEach(line => { %><div<% if (item.styles) { %> style="<%= item.styles %>"<% } %>><%= line %></div><% }) %>
+            </div>
+            <% } %>
+        </a>
+        <% }) %>
+    </div>
+</main>
+
+<%- include('partials/footer') %>
+
+</body>
+</html>
