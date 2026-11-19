@@ -826,7 +826,9 @@ async function carsList(req, res, next) {
 
     let citySlug = ''
     let cityName = ''
-    const queryCity = q('city')
+    const queryCityRaw = q('city')
+    // «Все» — это отсутствие фильтра по городу, а не город: такой адрес не канон
+    const queryCity = queryCityRaw === 'Все' ? '' : queryCityRaw
     if (rawCity) {
         const city = cluster ? (await getCityIndex()).get(catalogSlug(rawCity)) : null
         // город неизвестен — возможно, это карточка авто со старым linkId
@@ -859,7 +861,7 @@ async function carsList(req, res, next) {
         + (citySlug ? '/' + citySlug : '')
     const dropKeys = ['brand']
     if (cluster) dropKeys.push('modelId', 'model')
-    if (citySlug) dropKeys.push('city')
+    if (citySlug || queryCityRaw === 'Все') dropKeys.push('city')
     const duplicatePathQuery = dropKeys.some(key => req.query[key] !== undefined)
     if (req.path !== canonicalPath || duplicatePathQuery) return redirectCars(res, req, canonicalPath, dropKeys)
 
@@ -874,6 +876,7 @@ async function carsList(req, res, next) {
         if (req.query[key] !== undefined && req.query[key] !== '') filters[key] = req.query[key]
     }
     delete filters.brand
+    if (filters.city === 'Все') delete filters.city
     if (cluster) delete filters.modelId
     if (cityName) filters.city = cityName
     const brandFilter = brandDbName
