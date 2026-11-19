@@ -305,6 +305,52 @@ class CityListService {
         }
     }
 
+    // агрегаты фильтровых посадочных: город × кузов с раскладкой по ценовым корзинам
+    async getLandingCounts() {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.all(`
+                SELECT prop_city                                                      as city,
+                       prop_body_type                                                 as body,
+                       COUNT(*)                                                       as count,
+                       SUM(CASE WHEN price > 0 AND price <= 1000000 THEN 1 ELSE 0 END) as do1,
+                       SUM(CASE WHEN price > 0 AND price <= 2000000 THEN 1 ELSE 0 END) as do2,
+                       SUM(CASE WHEN price > 0 AND price <= 3000000 THEN 1 ELSE 0 END) as do3,
+                       SUM(CASE WHEN price > 3000000 THEN 1 ELSE 0 END)                as ot3
+                FROM a_car
+                WHERE prop_city IS NOT NULL
+                  AND prop_city != ''
+                  AND prop_body_type IS NOT NULL
+                  AND prop_body_type != ''
+                GROUP BY prop_city, prop_body_type`)
+        } catch (error) {
+            console.error('Error retrieving landing counts:', error.message);
+            throw error;
+        }
+    }
+
+    // город × КПП для посадочных /cars/<city>/<gearbox>
+    async getLandingGearboxCounts() {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.all(`
+                SELECT prop_city               as city,
+                       prop_transmission_type as gearbox,
+                       COUNT(*)               as count
+                FROM a_car
+                WHERE prop_city IS NOT NULL
+                  AND prop_city != ''
+                  AND prop_transmission_type IS NOT NULL
+                  AND prop_transmission_type != ''
+                GROUP BY prop_city, prop_transmission_type`)
+        } catch (error) {
+            console.error('Error retrieving landing gearbox counts:', error.message);
+            throw error;
+        }
+    }
+
     // модель + город с количеством машин; опционально по бренду
     async getModelCityCounts(brand) {
         const db = global.db

@@ -41,6 +41,7 @@
         var ssr_modelName = '<%- ssr_modelName %>'
         var ssr_citySlug = '<%- ssr_citySlug %>'
         var ssr_cityName = '<%- ssr_cityName %>'
+        window.ssr_landing = <%- landingJson %>;
         window.ssr_models = <%- ssrModelsJson %>;
     </script>
     <script>
@@ -59,7 +60,11 @@
         <div class='bread_cranbs'>
             <a href='/'>Главная</a> /
             <a href='/cars'>Автомобили</a>
-            <% if (brand){ %>/
+            <% if (landingCrumbs.length) { %>
+                <% landingCrumbs.forEach(function(crumb, i) { %> /
+                    <% if (i === landingCrumbs.length - 1) { %><span><%= crumb.name %></span><% } else { %><a href='<%= crumb.href %>'><%= crumb.name %></a><% } %>
+                <% }); %>
+            <% } else if (brand){ %>/
             <div id='path'><a href='/cars/<%= brand %>'><%= brandName %></a></div>
             <% if (modelSlug){ %>/
             <a href='/cars/<%= brand %>/<%= modelSlug %>'><%= modelName %> с пробегом</a>
@@ -129,7 +134,7 @@
             <% }); %>
             <div class="pager">Страницы: <span id="pager"><%- page %></span></div>
         </cards>
-        <% if (modelLinks.length || cityLinks.length) { %>
+        <% if (modelLinks.length || cityLinks.length || landingLinkBlocks.length) { %>
         <div class='vitrina_links'>
             <% if (modelLinks.length) { %>
             <div class='vitrina_links__block'>
@@ -151,6 +156,16 @@
                 </div>
             </div>
             <% } %>
+            <% landingLinkBlocks.forEach(function(block) { %>
+            <div class='vitrina_links__block'>
+                <h2><%= block.title %></h2>
+                <div class='vitrina_links__list'>
+                    <% block.links.forEach(function(link) { %>
+                    <a href='<%= link.href %>'><%= link.label %> <span class='total'><%= link.count %></span></a>
+                    <% }); %>
+                </div>
+            </div>
+            <% }); %>
         </div>
         <% } %>
         <br><br>

@@ -19,6 +19,17 @@ import {
     buildCityMap,
     clusterCityCounts
 } from '../shared/catalogUrls.js';
+import {
+    LANDING_MIN_CARS,
+    bodyInfo,
+    cityInfo,
+    landingPath,
+    priceBucketByFilter,
+    GEARBOXES,
+    GEARBOX_BY_SLUG,
+    PRICE_BUCKETS,
+    PRICE_BY_SLUG
+} from '../shared/filterLandings.js';
 import GetListService from "../API/GetListService.js";
 // import {seoRedirects} from "./htaccess_middleware.js"
 
@@ -82,6 +93,7 @@ const CITY_PREPOSITIONAL = {
     'Киров': 'Кирове',
     'Москва': 'Москве',
     'Санкт-Петербург': 'Санкт-Петербурге',
+    'Тверь': 'Твери',
 }
 
 function cityIn(name) {
@@ -109,6 +121,346 @@ function decodePath(path) {
     } catch {
         return path
     }
+}
+
+/* ---------------- фильтровые посадочные: город × кузов × цена, город × КПП ---------------- */
+
+let landingContext = null
+let landingContextAt = 0
+const LANDING_CACHE_TTL = 5 * 60 * 1000
+
+// словарь известных городов, кузовов и брендов: по нему разбираем ЧПУ и строим ссылки
+async function getLandingContext() {
+    if (landingContext && Date.now() - landingContextAt < LANDING_CACHE_TTL) return landingContext
+    const [cityRows, bodyRows, brandRows] = await Promise.all([
+        A_car.getCityCounts(),
+        A_car.getBodyTypes(),
+        A_car.getCarCount()
+    ])
+    const cities = new Map()
+    for (const row of cityRows) {
+        const name = String(row.city || '').trim()
+        if (!name || name === 'Россия' || name === 'Все') continue
+        const slug = catalogSlug(name)
+        if (slug) cities.set(slug, {slug, name, count: Number(row.count) || 0})
+    }
+    const bodies = new Map()
+    for (const row of bodyRows) {
+        const info = bodyInfo(row.title)
+        if (info.slug && info.title) bodies.set(info.slug, info)
+    }
+    const brandSlugs = new Set()
+    for (const row of brandRows) {
+        const slug = brandSlug(row.name)
+        if (slug) brandSlugs.add(slug)
+    }
+    landingContext = {cities, bodies, brandSlugs}
+    landingContextAt = Date.now()
+    return landingContext
+}
+
+const PRICE_COUNTERS = {'do-1-mln': 'do1', 'do-2-mln': 'do2', 'do-3-mln': 'do3', 'ot-3-mln': 'ot3'}
+const emptyPriceCounts = () => ({do1: 0, do2: 0, do3: 0, ot3: 0})
+
+let landingLinkData = null
+let landingLinkDataAt = 0
+
+// агрегаты для перелинковки: город × кузов × цена и город × КПП
+async function getLandingLinkData() {
+    if (landingLinkData && Date.now() - landingLinkDataAt < LANDING_CACHE_TTL) return landingLinkData
+    const [rows, gearRows] = await Promise.all([
+        A_car.getLandingCounts(),
+        A_car.getLandingGearboxCounts()
+    ])
+    const byCity = new Map()
+    const byBody = new Map()
+    const cityGear = new Map()
+
+    for (const row of rows) {
+        const cityName = String(row.city || '').trim()
+        const bodyRaw = String(row.body || '').trim()
+        if (!cityName || !bodyRaw) continue
+        const body = bodyInfo(bodyRaw)
+        const count = Number(row.count) || 0
+        const prices = {
+            do1: Number(row.do1) || 0,
+            do2: Number(row.do2) || 0,
+            do3: Number(row.do3) || 0,
+            ot3: Number(row.ot3) || 0
+        }
+
+        let cityData = byCity.get(cityName)
+        if (!cityData) {
+            cityData = {name: cityName, bodies: new Map(), prices: emptyPriceCounts()}
+            byCity.set(cityName, cityData)
+        }
+        cityData.bodies.set(bodyRaw, {body, count, prices})
+        for (const key of Object.keys(cityData.prices)) cityData.prices[key] += prices[key]
+
+        let bodyData = byBody.get(bodyRaw)
+        if (!bodyData) {
+            bodyData = {body, count: 0, cities: new Map(), prices: emptyPriceCounts()}
+            byBody.set(bodyRaw, bodyData)
+        }
+        bodyData.count += count
+        bodyData.cities.set(cityName, (bodyData.cities.get(cityName) || 0) + count)
+        for (const key of Object.keys(bodyData.prices)) bodyData.prices[key] += prices[key]
+    }
+
+    for (const row of gearRows) {
+        const cityName = String(row.city || '').trim()
+        const gear = GEARBOXES.find(item => item.title === String(row.gearbox || '').trim())
+        if (!cityName || !gear) continue
+        let counts = cityGear.get(cityName)
+        if (!counts) {
+            counts = new Map()
+            cityGear.set(cityName, counts)
+        }
+        counts.set(gear.slug, (counts.get(gear.slug) || 0) + (Number(row.count) || 0))
+    }
+
+    landingLinkData = {byCity, byBody, cityGear}
+    landingLinkDataAt = Date.now()
+    return landingLinkData
+}
+
+// блоки перелинковки посадочной: только комбинации, прошедшие порог
+function buildLandingLinkBlocks(landing, data) {
+    const blocks = []
+    const push = (title, links) => {
+        const filtered = links.filter(link => link.count >= LANDING_MIN_CARS)
+        if (!filtered.length) return
+        blocks.push({title, links: filtered.sort((a, b) => b.count - a.count).slice(0, 16)})
+    }
+    // база без ценовой корзины: ссылки на цены получаются добавлением slug
+    const priceLinks = (counts, base, excludeSlug) => PRICE_BUCKETS
+        .filter(bucket => bucket.slug !== excludeSlug)
+        .map(bucket => ({
+            href: base + '/' + bucket.slug,
+            label: bucket.short.charAt(0).toUpperCase() + bucket.short.slice(1),
+            count: counts[PRICE_COUNTERS[bucket.slug]] || 0
+        }))
+    const cityTotal = (city) => [...city.bodies.values()].reduce((sum, item) => sum + item.count, 0)
+
+    const cityName = landing.city ? landing.city.name : ''
+    const citySlug = landing.city ? landing.city.slug : ''
+    const cityBase = citySlug ? '/cars/' + citySlug : ''
+    const bodyRaw = landing.body ? landing.body.title : ''
+    const bodySlug = landing.body ? landing.body.slug : ''
+    const bodyBase = bodySlug ? (cityBase || '/cars') + '/' + bodySlug : ''
+    const priceSlug = landing.price ? landing.price.slug : ''
+    const priceCounter = landing.price ? PRICE_COUNTERS[landing.price.slug] : ''
+    const cityData = cityName ? data.byCity.get(cityName) : null
+    const bodyData = bodyRaw ? data.byBody.get(bodyRaw) : null
+
+    if (cityData) {
+        const scopedBody = landing.body ? cityData.bodies.get(bodyRaw) : null
+
+        if (landing.gearbox) {
+            const gearCounts = data.cityGear.get(cityName) || new Map()
+            push('Другая коробка передач', GEARBOXES
+                .filter(gear => gear.slug !== landing.gearbox.slug)
+                .map(gear => ({
+                    href: cityBase + '/' + gear.slug,
+                    label: gear.crumb,
+                    count: gearCounts.get(gear.slug) || 0
+                })))
+            push(`Кузова ${cityIn(cityName)}`, [...cityData.bodies.values()]
+                .map(item => ({
+                    href: cityBase + '/' + item.body.slug,
+                    label: item.body.plural,
+                    count: item.count
+                })))
+            return blocks
+        }
+
+        if (landing.body && landing.price) {
+            push('Другие цены', priceLinks(scopedBody.prices, bodyBase, priceSlug))
+            push('Другие кузова по этой цене', [...cityData.bodies.values()]
+                .filter(item => item.body.slug !== bodySlug)
+                .map(item => ({
+                    href: cityBase + '/' + item.body.slug + '/' + priceSlug,
+                    label: item.body.plural,
+                    count: item.prices[priceCounter] || 0
+                })))
+            push('Этот кузов в других городах', [...data.byCity.entries()]
+                .filter(([name]) => name !== cityName)
+                .map(([name, city]) => {
+                    const scoped = city.bodies.get(bodyRaw)
+                    return {
+                        href: '/cars/' + catalogSlug(name) + '/' + bodySlug + '/' + priceSlug,
+                        label: name,
+                        count: (scoped && scoped.prices[priceCounter]) || 0
+                    }
+                }))
+            return blocks
+        }
+
+        if (landing.body) {
+            push('Выбрать цену', priceLinks(scopedBody.prices, bodyBase))
+            push(`${landing.body.plural} в других городах`, [...bodyData.cities.entries()]
+                .filter(([name]) => name !== cityName)
+                .map(([name, count]) => ({
+                    href: '/cars/' + catalogSlug(name) + '/' + bodySlug,
+                    label: name,
+                    count
+                })))
+            return blocks
+        }
+
+        // город без кузова: возможен как /cars/<city>, так и /cars/<city>/<price>
+        const gearCounts = data.cityGear.get(cityName) || new Map()
+        push(`Кузова ${cityIn(cityName)}`, [...cityData.bodies.values()]
+            .map(item => ({
+                href: cityBase + '/' + item.body.slug + (priceSlug ? '/' + priceSlug : ''),
+                label: item.body.plural,
+                count: priceSlug ? item.prices[priceCounter] || 0 : item.count
+            })))
+        push('Коробка передач', GEARBOXES
+            .map(gear => ({
+                href: cityBase + '/' + gear.slug,
+                label: gear.crumb,
+                count: gearCounts.get(gear.slug) || 0
+            })))
+        push('Выбрать цену', priceLinks(cityData.prices, cityBase, priceSlug))
+        if (!priceSlug) {
+            push('Другие города', [...data.byCity.entries()]
+                .filter(([name]) => name !== cityName)
+                .map(([name, city]) => ({href: '/cars/' + catalogSlug(name), label: name, count: cityTotal(city)})))
+        }
+        return blocks
+    }
+
+    if (bodyData) {
+        const priceSuffix = priceSlug ? '/' + priceSlug : ''
+        push(landing.price ? 'Другие цены' : 'Выбрать цену',
+            priceLinks(bodyData.prices, bodyBase, landing.price ? priceSlug : ''))
+        push(`${bodyData.body.plural} в городах${landing.price ? ' по этой цене' : ''}`,
+            [...data.byCity.entries()]
+                .map(([name, city]) => {
+                    const scoped = city.bodies.get(bodyRaw)
+                    return {
+                        href: '/cars/' + catalogSlug(name) + '/' + bodySlug + priceSuffix,
+                        label: name,
+                        count: landing.price ? (scoped && scoped.prices[priceCounter]) || 0 : (scoped && scoped.count) || 0
+                    }
+                }))
+    }
+
+    return blocks
+}
+
+// страница посадочной, которой не хватило порога, отдаёт вес родителю
+function landingParentPath(landing) {
+    const cityBase = landing.city ? '/cars/' + landing.city.slug : ''
+    if (landing.gearbox) return cityBase
+    if (landing.body) {
+        const bodyBase = (cityBase || '/cars') + '/' + landing.body.slug
+        if (landing.price) return bodyBase
+        return cityBase || '/cars'
+    }
+    if (landing.price) return cityBase || '/cars'
+    return cityBase || '/cars'
+}
+
+// разбор ЧПУ: /cars/<city>[/<body>][/<price>], /cars/<city>/<gearbox>, /cars/<body>[/<price>], страница — последним сегментом
+async function parseLanding(req) {
+    const ctx = await getLandingContext()
+    const tokens = ['a', 'b', 'c', 'd']
+        .map(key => req.params[key])
+        .filter(value => typeof value === 'string' && value)
+    if (!tokens.length) return null
+    if (/^\d+$/.test(tokens[0])) return null
+
+    let page = 0
+    let hadPage = false
+    if (/^\d+$/.test(tokens[tokens.length - 1])) {
+        page = Number(tokens.pop())
+        hadPage = true
+        if (!tokens.length) return null
+    }
+    // /0 — это первая страница: склеиваем её с чистым адресом самой посадочной, а не с её родителем
+    const finish = (result) => hadPage && page === 0 ? {redirect: landingPath(result)} : result
+
+    const [first, ...tail] = tokens
+    if (ctx.brandSlugs.has(first)) return null
+
+    const city = ctx.cities.get(first)
+    if (city) {
+        const parent = '/cars/' + city.slug
+        if (!tail.length) return finish({city, page}, parent)
+        if (tail.length === 1) {
+            const body = ctx.bodies.get(tail[0])
+            if (body) return finish({city, body, page}, parent)
+            const gearbox = GEARBOX_BY_SLUG.get(tail[0])
+            if (gearbox) return finish({city, gearbox, page}, parent)
+            const price = PRICE_BY_SLUG.get(tail[0])
+            if (price) return finish({city, price, page}, parent)
+            return {redirect: parent}
+        }
+        if (tail.length === 2) {
+            const body = ctx.bodies.get(tail[0])
+            const price = PRICE_BY_SLUG.get(tail[1])
+            if (body && price) return finish({city, body, price, page}, parent)
+            if (body) return {redirect: parent + '/' + body.slug}
+            return {redirect: parent}
+        }
+        return {redirect: parent}
+    }
+
+    const body = ctx.bodies.get(first)
+    if (body) {
+        const parent = '/cars/' + body.slug
+        if (!tail.length) return finish({body, page}, parent)
+        if (tail.length === 1) {
+            const price = PRICE_BY_SLUG.get(tail[0])
+            if (price) return finish({body, price, page}, parent)
+            return {redirect: parent}
+        }
+        return {redirect: parent}
+    }
+
+    return null
+}
+
+// обратный 301: фильтровый набор в query, совпавший с матрицей, уходит на чистый адрес
+async function matchLandingQuery(query) {
+    const allowed = new Set(['city', 'bodyType', 'gearboxType', 'priceFrom', 'priceTo'])
+    const keys = Object.keys(query).filter(key => typeof query[key] === 'string' && query[key].trim())
+    if (!keys.length || keys.some(key => !allowed.has(key))) return null
+    const ctx = await getLandingContext()
+
+    const cityName = String(query.city || '').trim()
+    const city = cityName ? ctx.cities.get(catalogSlug(cityName)) : null
+    if (cityName && (!city || city.name !== cityName)) return null
+
+    const bodyTitle = String(query.bodyType || '').trim()
+    const body = bodyTitle ? [...ctx.bodies.values()].find(item => item.title === bodyTitle) : null
+    if (bodyTitle && !body) return null
+
+    const gearTitle = String(query.gearboxType || '').trim()
+    const gearbox = gearTitle ? GEARBOXES.find(item => item.title === gearTitle) : null
+    if (gearTitle && !gearbox) return null
+
+    const price = query.priceFrom || query.priceTo
+        ? priceBucketByFilter(query.priceFrom, query.priceTo)
+        : null
+    if ((query.priceFrom || query.priceTo) && !price) return null
+
+    // в матрице нет посадочных без города и кузова, а КПП живёт только в паре с городом
+    if (!city && !body) return null
+    if (gearbox && (body || price)) return null
+
+    const filters = {}
+    if (city) filters.city = city.name
+    if (body) filters.bodyType = body.title
+    if (gearbox) filters.gearboxType = gearbox.title
+    if (price && price.from) filters.priceFrom = price.from
+    if (price && price.to) filters.priceTo = price.to
+
+    const probe = await GetListService.getList({...filters, limit: 1, offset: 0})
+    if ((probe.totalCount || 0) < LANDING_MIN_CARS) return null
+    return landingPath({city, body, gearbox, price})
 }
 
 // слеш на конце витрин и карточек убирают их обработчики: там известен канон,
@@ -650,6 +1002,14 @@ router.get('/cars/:number(\\d+)/:brand([^/]+)/:model([^/]+)/:city([a-z][a-z0-9-]
 
 router.get('/reserve', legacyReserve);                      // Старое бронирование /reserve?vin=... → карточка или 410
 router.get('/cars/car.html', legacyCarPage);                // Старые ссылки /cars/car.html?id=... → 410
+
+// фильтровые посадочные матрицы: /cars/kazan, /cars/kazan/crossover/do-2-mln, /cars/kazan/avtomat.
+// бренд важнее совпадения slug'ов: неподходящий путь carsLanding отдаёт следующему маршруту
+router.get('/cars/:a([^/]+)', carsLanding);
+router.get('/cars/:a([^/]+)/:b([^/]+)', carsLanding);
+router.get('/cars/:a([^/]+)/:b([^/]+)/:c([^/]+)', carsLanding);
+router.get('/cars/:a([^/]+)/:b([^/]+)/:c([^/]+)/:d([^/]+)', carsLanding);
+
 router.get('/cars/:brand([^/]+)', carsList);                // /cars/kia
 
 // городская посадочная модели: /cars/kia/rio/kazan
@@ -775,6 +1135,12 @@ async function carsList(req, res, next) {
     const rawModel = typeof req.params.model === 'string' ? req.params.model : ''
     const rawCity = typeof req.params.city === 'string' ? req.params.city : ''
     const pagePrefix = `/cars${pageNumber > 0 ? '/' + pageNumber : ''}`
+
+    // обратная канонизация матрицы: набор фильтров, совпавший с посадочной, живёт в ЧПУ
+    if (pageNumber === 0 && !rawBrand && !rawModel && !rawCity) {
+        const landingUrl = await matchLandingQuery(req.query).catch(() => null)
+        if (landingUrl) return redirectCars(res, req, landingUrl, LANDING_FILTER_KEYS)
+    }
 
     // бренд канонически живёт в пути: /cars?brand=kia → /cars/kia
     let brandCanonical = ''
@@ -1063,6 +1429,9 @@ async function carsList(req, res, next) {
         cityName,
         modelLinks,
         cityLinks,
+        landingCrumbs: [],
+        landingLinkBlocks: [],
+        landingJson: 'null',
         ssr_page: pageNumber, ssr_page_total, ssr_brandSearch, ssr_brandSlug: brandCanonical,
         ssr_modelSlug: modelSlugValue, ssr_modelName: cluster ? cluster.display : '',
         ssr_citySlug: citySlug, ssr_cityName: cityName,
@@ -1077,6 +1446,216 @@ const CARS_FILTER_KEYS = [
     'driveType', 'engineCapacity', 'yearReleasedFrom', 'yearReleasedTo',
     'priceFrom', 'priceTo', 'milleageFrom', 'milleageTo', 'priceOrder'
 ]
+
+// фильтры, которые в матрице выражены сегментами пути
+const LANDING_FILTER_KEYS = ['city', 'bodyType', 'gearboxType', 'priceFrom', 'priceTo']
+const LANDING_FILTER_SET = new Set(LANDING_FILTER_KEYS)
+
+// разбор матричного ЧПУ и отдача страницы; если путь не наш — отдаём следующему обработчику
+async function carsLanding(req, res, next) {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+    let landing
+    try {
+        landing = await parseLanding(req)
+    } catch (error) {
+        console.error('Error parsing landing:', error)
+        return next()
+    }
+    if (!landing) return next()
+    // слеш на конце матричных ЧПУ — дубль адреса, канон без него
+    if (req.path.length > 1 && req.path.endsWith('/')) {
+        return res.redirect(301, req.path.replace(/\/+$/, '') + req.originalUrl.slice(req.path.length))
+    }
+    if (landing.redirect) return res.redirect(301, landing.redirect + req.originalUrl.slice(req.path.length))
+    try {
+        return await renderCarsLanding(res, req, landing)
+    } catch (error) {
+        console.error('Error rendering cars landing:', error)
+        return next()
+    }
+}
+
+async function renderCarsLanding(res, req, landing) {
+    const manifest = manifest_links['cars/index.html']
+    if (!manifest) return res.status(404).send('Vite manifest not found');
+
+    const js1 = manifest.imports && manifest.imports[0].slice(1)
+    const js2 = manifest.imports && manifest.imports[1].slice(1)
+    const js3 = manifest.imports && manifest.imports[2].slice(1)
+    const js4 = manifest.imports && manifest.imports[3].slice(1)
+    const js5 = manifest.imports && manifest.imports[4].slice(1)
+    const js6 = manifest.imports && manifest.imports[5].slice(1)
+    const js7 = manifest.imports && manifest.imports[6].slice(1)
+    const carsjs = manifest.file
+
+    const cssFiles = collectCss(manifest_links, 'cars/index.html')
+
+    const pageNumber = Number(landing.page) || 0
+    const path = landingPath(landing)
+
+    const pathFilters = {}
+    if (landing.city) pathFilters.city = landing.city.name
+    if (landing.body) pathFilters.bodyType = landing.body.title
+    if (landing.gearbox) pathFilters.gearboxType = landing.gearbox.title
+    if (landing.price && landing.price.from) pathFilters.priceFrom = landing.price.from
+    if (landing.price && landing.price.to) pathFilters.priceTo = landing.price.to
+
+    // дополнительные фильтры из строки запроса в матрицу не входят: страница остаётся, но не индексируется
+    const filters = {...pathFilters}
+    for (const key of CARS_FILTER_KEYS) {
+        if (LANDING_FILTER_SET.has(key)) continue
+        if (req.query[key] !== undefined && req.query[key] !== '') filters[key] = req.query[key]
+    }
+    const hasExtraFilters = Object.keys(filters).length > Object.keys(pathFilters).length
+
+    const carList = await GetListService.getList({
+        ...filters,
+        offset: pageNumber * 20,
+        limit: 20
+    })
+
+    // порог — свойство самой посадочной, query-фильтры его не понижают
+    const landingTotal = hasExtraFilters
+        ? (await GetListService.getList({...pathFilters, limit: 1, offset: 0})).totalCount
+        : carList.totalCount
+
+    // ниже порога посадочная не нужна: отдаём вес родителю вместе с фильтрами из query
+    if ((landingTotal || 0) < LANDING_MIN_CARS) {
+        return redirectCars(res, req, landingParentPath(landing), LANDING_FILTER_KEYS)
+    }
+    if (pageNumber > 0 && !carList.items.length) {
+        return redirectCars(res, req, path, LANDING_FILTER_KEYS)
+    }
+
+    const allBrands = await A_car.getCarCount()
+    const carCount = allBrands.slice(0, 20)
+    carCount.forEach(el => {
+        el.latBrand = brandSlug(el.name)
+    })
+
+    const carView = buildCarsView(carList.items)
+    const cityName = landing.city ? landing.city.name : ''
+    const cityLabel = cityName ? ' ' + cityIn(cityName) : ''
+    const priceLabel = landing.price ? ' ' + landing.price.label : ''
+    const countText = `${formatPrice(carList.totalCount)} ${pluralCars(carList.totalCount)} в наличии`
+
+    let vitrinaName
+    if (landing.gearbox) {
+        vitrinaName = `Автомобили ${landing.gearbox.phrase}${cityLabel}`
+    } else if (landing.body) {
+        vitrinaName = `${landing.body.plural} с пробегом${cityLabel}${priceLabel}`
+    } else {
+        vitrinaName = `Автомобили с пробегом${cityLabel}${priceLabel}`
+    }
+
+    const pageSuffix = pageNumber > 0 ? ` — страница ${pageNumber + 1}` : ''
+    let title
+    if (landing.gearbox) {
+        title = `Автомобили ${landing.gearbox.phrase}${cityLabel} — ${countText}`
+    } else if (landing.body) {
+        title = `Купить ${landing.body.plural.toLowerCase()} с пробегом${cityLabel}${priceLabel} — ${countText}`
+    } else {
+        title = `Автомобили с пробегом${cityLabel}${priceLabel} — ${countText}`
+    }
+    title = title.replace(/\.$/, '') + pageSuffix
+    const description = `${vitrinaName}: ${countText}. Цены, фото и характеристики, проверенные авто в автосалонах Автосеть.РФ. ☎ 8-800-500-11-56.`
+        + (pageNumber > 0 ? ` Страница ${pageNumber + 1}.` : '')
+    const vitrinaIntro = `${vitrinaName}: ${countText}. Цены, фото и характеристики — в каталоге Автосеть.РФ.`
+
+    let page = ''
+    const ssr_page_total = Math.ceil(carList.totalCount / 20)
+    if (carList.items.length) {
+        for (let i = 1; i <= ssr_page_total; i++) {
+            const href = i === 1 ? path : `${path}/${i - 1}`
+            page += `<a href="${href}">${i}</a><span> | </span>`;
+        }
+    }
+
+    const landingCrumbs = []
+    if (landing.city) {
+        landingCrumbs.push({name: landing.city.name, href: '/cars/' + landing.city.slug})
+    }
+    if (landing.body) {
+        const href = (landing.city ? '/cars/' + landing.city.slug : '/cars') + '/' + landing.body.slug
+        landingCrumbs.push({name: landing.body.plural, href})
+    }
+    if (landing.price) landingCrumbs.push({name: landing.price.label, href: path})
+    if (landing.gearbox) landingCrumbs.push({name: landing.gearbox.crumb, href: path})
+
+    const breadcrumbItems = [
+        {name: 'Главная', url: `${SCHEMA_SITE}/`},
+        {name: 'Автомобили', url: `${SCHEMA_SITE}/cars`},
+        ...landingCrumbs.map(item => ({name: item.name, url: SCHEMA_SITE + item.href}))
+    ]
+    const breadcrumbSchemaJson = buildBreadcrumbSchema(breadcrumbItems)
+
+    const linkData = await getLandingLinkData().catch(() => null)
+    const landingLinkBlocks = linkData ? buildLandingLinkBlocks(landing, linkData) : []
+
+    const carsSchemaJson = buildCarsSchema(carList.items, {
+        totalCount: carList.totalCount,
+        page: pageNumber,
+        cityName,
+        path,
+        name: vitrinaName
+    })
+
+    const carsSSRJson = JSON.stringify({
+        items: carList.items,
+        totalCount: carList.totalCount
+    }).replaceAll('<', '\\u003c')
+
+    const landingJson = JSON.stringify({
+        path,
+        page: pageNumber,
+        city: cityName,
+        bodyType: landing.body ? landing.body.title : '',
+        gearboxType: landing.gearbox ? landing.gearbox.title : '',
+        priceFrom: landing.price && landing.price.from ? String(landing.price.from) : '',
+        priceTo: landing.price && landing.price.to ? String(landing.price.to) : ''
+    }).replaceAll('<', '\\u003c')
+
+    // страницы 2+ и доп. фильтры — продолжение выборки: canonical на первую страницу, noindex
+    const canonicalUrl = `${SITE_ORIGIN}${path}`
+    const robots = pageNumber > 0 || hasExtraFilters ? 'noindex, follow' : 'index, follow'
+
+    const viewMatch = /(?:^|;\s*)TYPE_VIEW=(dot8|dot4|dot1)/.exec(req.headers.cookie || '')
+    const viewClass = viewMatch ? viewMatch[1] : 'dot8'
+
+    res.render('cars', {
+        js1, js2, js3, js4, js5, js6, js7,
+        carsjs,
+        cssFiles,
+        carCount,
+        carList,
+        carsView: carView,
+        carsSSRJson,
+        carsSchemaJson,
+        breadcrumbSchemaJson,
+        vitrinaName,
+        vitrinaIntro,
+        filterActive: true,
+        viewClass,
+        page,
+        brand: '',
+        brandName: '',
+        modelSlug: '',
+        modelName: '',
+        citySlug: landing.city ? landing.city.slug : '',
+        cityName,
+        modelLinks: [],
+        cityLinks: [],
+        landingCrumbs,
+        landingLinkBlocks,
+        landingJson,
+        ssr_page: pageNumber, ssr_page_total, ssr_brandSearch: '', ssr_brandSlug: '',
+        ssr_modelSlug: '', ssr_modelName: '',
+        ssr_citySlug: landing.city ? landing.city.slug : '', ssr_cityName: cityName,
+        ssrModelsJson: '[]',
+        title, description, canonicalUrl, robots
+    })
+    return res
+}
 
 const formatPrice = (val) => parseInt(val).toLocaleString('ru-RU')
 
@@ -1160,7 +1739,7 @@ function pickSchemaCars(items) {
     return picked.length ? picked : items.slice(0, SCHEMA_MAX_ITEMS)
 }
 
-function buildCarsSchema(items, {totalCount, brand, model, city, page, brandName, modelName, cityName}) {
+function buildCarsSchema(items, {totalCount, brand, model, city, page, brandName, modelName, cityName, path, name: nameOverride}) {
     const cars = pickSchemaCars(items)
     const pageNumber = Number(page) || 0
     // numberOfItems — сколько авто подходит под выборку целиком, а не только в разметке;
@@ -1168,11 +1747,13 @@ function buildCarsSchema(items, {totalCount, brand, model, city, page, brandName
     const itemsTotal = Number(totalCount)
     const numberOfItems = Number.isFinite(itemsTotal) && itemsTotal > 0 ? itemsTotal : cars.length
     const tail = [brand, model, city].filter(Boolean).map(part => '/' + encodeURIComponent(part)).join('')
-    const url = `${SCHEMA_SITE}/cars` + (pageNumber > 0 ? `/${pageNumber}` : '') + tail
+    const url = path
+        ? `${SCHEMA_SITE}${path}` + (pageNumber > 0 ? `/${pageNumber}` : '')
+        : `${SCHEMA_SITE}/cars` + (pageNumber > 0 ? `/${pageNumber}` : '') + tail
     const where = city ? ' ' + cityIn(cityName || city) : ''
-    const name = model
+    const name = nameOverride || (model
         ? `Автомобили ${brandName || brand} ${modelName || model}${where}`
-        : brand ? `Автомобили ${brandName || brand}` : 'Автомобили в наличии'
+        : brand ? `Автомобили ${brandName || brand}` : 'Автомобили в наличии')
 
     const schema = {
         '@context': 'https://schema.org',

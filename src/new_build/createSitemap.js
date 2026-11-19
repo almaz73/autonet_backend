@@ -8,6 +8,7 @@ import {open} from 'sqlite';
 import sqlite3 from 'sqlite3';
 import {sitePages} from '../../sitePages.js'
 import {MODEL_MIN_CARS, CITY_MODEL_MIN_CARS, catalogSlug, carFriendly, carPath, buildModelClusters, clusterCityCounts} from '../shared/catalogUrls.js'
+import {LANDING_MIN_CARS, bodyInfo, GEARBOXES, PRICE_BUCKETS} from '../shared/filterLandings.js'
 import xml2js from "xml2js";
 import {sendEmail} from "../post/sendEmail.js"
 
@@ -62,6 +63,8 @@ await makeDoubleOldSitemap()
 await addRootPages()
 // посадочные моделей и городов — только те, что проходят порог по количеству авто
 await addCatalogPages()
+// фильтровые посадочные матрицы: город × кузов × цена, город × КПП, кузов × цена
+await addLandingPages()
 // акции, контакты и статьи — из client.sqlite, даты обновления — из истории изменений
 await addClientDbPages()
 // получаю список всех авто и добавляю, дату обновления беру со старого sitemap
@@ -218,6 +221,104 @@ async function addCatalogPages() {
     } finally {
         await db.close()
     }
+}
+
+// фильтровая матрица: /cars/<city>[/<body>][/<price>], /cars/<body>[/<price>], /cars/<city>/<gearbox>.
+// в индекс попадают только комбинации не меньше LANDING_MIN_CARS — те же, что SSR не редиректит
+async function addLandingPages() {
+    const db = await open({
+        filename: DB_PATH,
+        driver: sqlite3.Database,
+        mode: sqlite3.OPEN_READONLY,
+    })
+
+    const priceSums = `
+        SUM(CASE WHEN price > 0 AND price <= 1000000 THEN 1 ELSE 0 END) as do1,
+        SUM(CASE WHEN price > 0 AND price <= 2000000 THEN 1 ELSE 0 END) as do2,
+        SUM(CASE WHEN price > 0 AND price <= 3000000 THEN 1 ELSE 0 END) as do3,
+        SUM(CASE WHEN price > 3000000 THEN 1 ELSE 0 END) as ot3`
+
+    try {
+        const cityRows = await db.all(`
+            SELECT prop_city as city, COUNT(*) as count, ${priceSums}
+            FROM a_car
+            WHERE prop_city IS NOT NULL AND prop_city != ''
+            GROUP BY prop_city`)
+
+        const bodyRows = await db.all(`
+            SELECT prop_body_type as body, COUNT(*) as count, ${priceSums}
+            FROM a_car
+            WHERE prop_body_type IS NOT NULL AND prop_body_type != ''
+            GROUP BY prop_body_type`)
+
+        const cityBodyRows = await db.all(`
+            SELECT prop_city as city, prop_body_type as body, COUNT(*) as count, ${priceSums}
+            FROM a_car
+            WHERE prop_city IS NOT NULL AND prop_city != ''
+              AND prop_body_type IS NOT NULL AND prop_body_type != ''
+            GROUP BY prop_city, prop_body_type`)
+
+        const cityGearRows = await db.all(`
+            SELECT prop_city as city, prop_transmission_type as gearbox, COUNT(*) as count
+            FROM a_car
+            WHERE prop_city IS NOT NULL AND prop_city != ''
+              AND prop_transmission_type IS NOT NULL AND prop_transmission_type != ''
+            GROUP BY prop_city, prop_transmission_type`)
+
+        const citySlugOf = (name) => {
+            const value = String(name || '').trim()
+            if (!value || value === 'Россия' || value === 'Все') return ''
+            return catalogSlug(value)
+        }
+
+        for (const row of cityRows) {
+            const citySlug = citySlugOf(row.city)
+            if (!citySlug || row.count < LANDING_MIN_CARS) continue
+            addLink(`${SITE_ORIGIN}/cars/${citySlug}`)
+            for (const bucket of PRICE_BUCKETS) {
+                if ((row[bucketCountKey(bucket)] || 0) < LANDING_MIN_CARS) continue
+                addLink(`${SITE_ORIGIN}/cars/${citySlug}/${bucket.slug}`)
+            }
+        }
+
+        for (const row of bodyRows) {
+            const info = bodyInfo(row.body)
+            if (!info.slug || row.count < LANDING_MIN_CARS) continue
+            addLink(`${SITE_ORIGIN}/cars/${info.slug}`)
+            for (const bucket of PRICE_BUCKETS) {
+                if ((row[bucketCountKey(bucket)] || 0) < LANDING_MIN_CARS) continue
+                addLink(`${SITE_ORIGIN}/cars/${info.slug}/${bucket.slug}`)
+            }
+        }
+
+        for (const row of cityBodyRows) {
+            const citySlug = citySlugOf(row.city)
+            const info = bodyInfo(row.body)
+            if (!citySlug || !info.slug || row.count < LANDING_MIN_CARS) continue
+            addLink(`${SITE_ORIGIN}/cars/${citySlug}/${info.slug}`)
+            for (const bucket of PRICE_BUCKETS) {
+                if ((row[bucketCountKey(bucket)] || 0) < LANDING_MIN_CARS) continue
+                addLink(`${SITE_ORIGIN}/cars/${citySlug}/${info.slug}/${bucket.slug}`)
+            }
+        }
+
+        for (const row of cityGearRows) {
+            const citySlug = citySlugOf(row.city)
+            const gear = GEARBOXES.find(item => item.title === String(row.gearbox || '').trim())
+            if (!citySlug || !gear || row.count < LANDING_MIN_CARS) continue
+            addLink(`${SITE_ORIGIN}/cars/${citySlug}/${gear.slug}`)
+        }
+    } finally {
+        await db.close()
+    }
+}
+
+// ключ агрегата цены в строках SQL выше
+function bucketCountKey(bucket) {
+    if (bucket.to === 1000000) return 'do1'
+    if (bucket.to === 2000000) return 'do2'
+    if (bucket.to === 3000000) return 'do3'
+    return 'ot3'
 }
 
 async function addAllAuto() {
