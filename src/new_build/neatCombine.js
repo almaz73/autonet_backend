@@ -17,6 +17,7 @@ import {_createHelpFiles} from "../new_build/services/_createHelpFiles.js"
 import {_addNewPhotos} from '../new_build/services/_addNewPhotos.js'
 import {_publicBD} from "../new_build/services/_publicBD.js"
 import {_updHistory} from "../new_build/services/_updHistory.js";
+import {_createYmlFeed} from "../new_build/services/_createYmlFeed.js";
 import {sendEmail} from "../post/sendEmail.js";
 
 
@@ -41,7 +42,8 @@ export async function startUpdate(step = 0) {
     // 5. Вспомогательные файлы
     // 6. Загрузка фоток
     // 7. Публикация БД
-    // 8. Сохранение истории`)
+    // 8. Сохранение истории
+    // 9. Товарный фид (yml.xml)
     const startTime = performance.now();
     let abortedStep = 0
 
@@ -69,6 +71,7 @@ export async function startUpdate(step = 0) {
     await runStep(6, false, _addNewPhotos)
     await runStep(7, true, () => _publicBD(db))
     await runStep(8, false, () => _updHistory())
+    await runStep(9, false, () => _createYmlFeed(db))
 
     if (abortedStep) addReportAboutUpdate(`\n:: Обновление остановлено на шаге ${abortedStep} ::`)
 

@@ -691,8 +691,7 @@ class CityListService {
 
     // позиции для товарного фида: одна запись на конкретный автомобиль.
     // берём только карточки, которые открываются на сайте: есть марка, модель и цена
-    async getCarsForFeed() {
-        const db = global.db
+    async getCarsForFeed(db = global.db) {
         try {
             // language=SQLite
             return await db.all(`
