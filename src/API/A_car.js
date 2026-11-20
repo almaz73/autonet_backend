@@ -215,30 +215,22 @@ class CityListService {
         }
     }
 
-    async getCarCount(city) {
+    async getCarCount() {
         const db = global.db
         try {
-            // Query the a_section table joined with a_car to get brand counts.
-            // Город ограничивает только join: разделы без машин в городе остаются с count = 0,
-            // чтобы фронт мог держать полный справочник марок отдельно от списка фильтра.
-            const params = []
-            let cityJoin = ''
-            if (city) {
-                cityJoin = ' AND UPPER(ac.prop_city) = UPPER(?)'
-                params.push(city)
-            }
+            // Query the a_section table joined with a_car to get brand counts
             // language=SQLite
             let results = await db.all(`
                 SELECT sec.id       as brandId,
                        COUNT(ac.id) as count,
                        sec.brand    as name
                 FROM a_section sec
-                         LEFT JOIN a_car ac ON UPPER(sec.brand) = UPPER(ac.prop_brand)${cityJoin}
+                         LEFT JOIN a_car ac ON UPPER(sec.brand) = UPPER(ac.prop_brand)
                 WHERE sec.brand IS NOT NULL
                   AND sec.brand != ''
                 GROUP BY sec.id, sec.brand
                 ORDER BY sec.brand
-            `, params);
+            `);
 
             results = results.sort((a, b) => b.count - a.count)
 

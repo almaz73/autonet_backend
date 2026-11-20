@@ -148,7 +148,7 @@ class Controllers {
 
     async getCarCount(req, res) {
         try {
-            const list = await A_car.getCarCount(req.query.city)
+            const list = await A_car.getCarCount()
             res.json(list);
         } catch (error) {
             console.error('Error getCarCount:', error);
