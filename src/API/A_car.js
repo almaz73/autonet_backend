@@ -689,6 +689,44 @@ class CityListService {
         }
     }
 
+    // позиции для товарного фида: одна запись на конкретный автомобиль.
+    // берём только карточки, которые открываются на сайте: есть марка, модель и цена
+    async getCarsForFeed() {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.all(`
+                SELECT ac.id,
+                       ac.prop_guarantee         as linkId,
+                       ac.prop_brand             as brand,
+                       ac.prop_model             as model,
+                       ac.prop_year              as year,
+                       ac.price,
+                       ac.prop_milleage          as mileage,
+                       ac.prop_city              as city,
+                       ac.prop_color             as color,
+                       ac.prop_engine_capacity   as engineCapacity,
+                       ac.prop_engine_type       as engineType,
+                       ac.prop_power             as power,
+                       ac.prop_transmission_type as gearbox,
+                       ac.prop_drive             as drive,
+                       ac.prop_body_type         as body,
+                       ac.prop_steering_wheel    as wheel,
+                       ac.prop_VIN               as vin,
+                       ac.images
+                FROM a_car ac
+                WHERE ac.prop_brand IS NOT NULL
+                  AND TRIM(ac.prop_brand) != ''
+                  AND ac.prop_model IS NOT NULL
+                  AND TRIM(ac.prop_model) != ''
+                  AND ac.price > 0
+                ORDER BY ac.prop_brand, ac.prop_model, ac.price`)
+        } catch (error) {
+            console.error('Error retrieving cars for feed:', error.message)
+            throw error
+        }
+    }
+
     async getOldLinks() {
         const db = global.db
         try {

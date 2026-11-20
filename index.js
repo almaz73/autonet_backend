@@ -13,6 +13,7 @@ import router_bd from "./src/routers/router_bd.js";
 import router_ssr from "./src/routers/router_ssr.js";
 import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
+import router_feed from "./src/routers/router_feed.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
 import {routerAdminJs, adminJs, adminLoginRateLimit} from './src/admin/in_admin.options.js'
@@ -22,7 +23,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 // Роутеры проекта созданы через new Router() (это отдельные Express-приложения),
 // поэтому X-Powered-By отключаем у каждого из них, а не только у основного app
-for (const subApp of [router, routerAuth, routerPromo, routerArticles, router_bd, router_ssr, router_buyout, router_history, routerAdminJs]) {
+for (const subApp of [router, routerAuth, routerPromo, routerArticles, router_bd, router_ssr, router_buyout, router_history, router_feed, routerAdminJs]) {
     subApp?.disable?.('x-powered-by')
 }
 
@@ -143,6 +144,8 @@ app.get('/robots.txt', (req, res) => {
     res.sendFile(path.join(__dirname, 'robots.txt'))
 })
 
+// товарный фид для Яндекс.Маркета/Директа: динамический YML по всем автомобилям каталога
+app.use('/', router_feed)
 app.use('/', router_ssr)
 app.use(express.static(frontendPath)); // 2. Раздаем статику
 app.use('/admin-assets', express.static(path.join(__dirname, 'src', 'admin', 'assets')));
