@@ -74,6 +74,28 @@ function findCluster(index, value) {
     return index.clusters.get(slug) || index.clusters.get(index.members.get(slug)) || null
 }
 
+// куда вести удалённую карточку: посадочная модели — ближайшая живая страница
+// с такими же авто. Модели нет или она тонкая — страница бренда, бренда нет — каталог.
+// 301 на релевантную страницу сохраняет ссылочный вес и не выглядит как 404 для роботов
+async function deletedCarTarget(rawBrand, rawModel) {
+    const brandCanonical = brandSlug(rawBrand)
+    if (!brandCanonical) return '/cars'
+
+    try {
+        const brands = await A_car.getCarCount()
+        const brand = brands.find(item => item.name && brandSlug(item.name) === brandCanonical && Number(item.count) > 0)
+        if (!brand) return '/cars'
+
+        const modelIndex = buildModelClusters(await A_car.getModelCounts(brand.name))
+        const cluster = findCluster(modelIndex, rawModel)
+        if (cluster && cluster.count >= MODEL_MIN_CARS) return `/cars/${brandCanonical}/${cluster.slug}`
+        return `/cars/${brandCanonical}`
+    } catch (error) {
+        console.error('Error resolving deleted car target:', error)
+        return '/cars'
+    }
+}
+
 // «в Казани», а не «в Казань»: города в базе стоят в именительном падеже
 const CITY_PREPOSITIONAL = {
     'Казань': 'Казани',
@@ -1000,8 +1022,8 @@ router.get('/cars/:number(\\d+)/:brand([^/]+)', carsList);  // /cars/<N>/<brand>
 router.get('/cars/:number(\\d+)/:brand([^/]+)/:model([^/]+)', carsList);  // /cars/<N>/<brand>/<model>
 router.get('/cars/:number(\\d+)/:brand([^/]+)/:model([^/]+)/:city([a-z][a-z0-9-]*)', carsList); // /cars/<N>/<brand>/<model>/<city>
 
-router.get('/reserve', legacyReserve);                      // Старое бронирование /reserve?vin=... → карточка или 410
-router.get('/cars/car.html', legacyCarPage);                // Старые ссылки /cars/car.html?id=... → 410
+router.get('/reserve', legacyReserve);                      // Старое бронирование /reserve?vin=... → карточка или каталог
+router.get('/cars/car.html', legacyCarPage);                // Старые ссылки /cars/car.html?id=... → 301 в каталог
 
 // фильтровые посадочные матрицы: /cars/kazan, /cars/kazan/crossover/do-2-mln, /cars/kazan/avtomat.
 // бренд важнее совпадения slug'ов: неподходящий путь carsLanding отдаёт следующему маршруту
@@ -1894,16 +1916,25 @@ function buildCarSchema(car, url) {
     return JSON.stringify(schema).replaceAll('<', '\\u003c')
 }
 
-// хлебные крошки в разметке: уровни повторяют видимую строку под шапкой
-function buildBreadcrumbSchema(items) {
+// хлебные крошки в разметке: уровни повторяют видимую строку под шапкой.
+// Google требует item у каждого уровня (у последнего допустимо опустить), поэтому
+// крошку без ссылки в середине — модель без посадочной — в разметку не берём:
+// иначе Search Console ругается «Missing field "item" (in "itemListElement")»
+function buildBreadcrumbSchema(items, pageUrl = '') {
+    const levels = items
+        .map((item, index) => index === items.length - 1 && !item.url && pageUrl
+            ? {...item, url: pageUrl}
+            : item)
+        .filter(item => item.url)
+
     const schema = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
-        itemListElement: items.map((item, index) => ({
+        itemListElement: levels.map((item, index) => ({
             '@type': 'ListItem',
             position: index + 1,
             name: item.name,
-            ...(item.url ? {item: item.url} : {}),
+            item: item.url,
         })),
     }
 
@@ -1911,26 +1942,9 @@ function buildBreadcrumbSchema(items) {
 }
 
 // устаревшие адреса /cars/car.html?id=<uuid> остались в поисковой выдаче:
-// отдаём 410 Gone и страницу «Автомобиль снят с продажи», чтобы роботы убрали их из индекса
+// 301 в каталог сохраняет вес ссылок, которые иначе терялись на 410 Gone
 function legacyCarPage(req, res) {
-    const manifest = manifest_links['cars/car.html']
-
-    if (!manifest) return res.status(404).send('Vite manifest not found')
-
-    const [js1, js2, js3, js4, js5] = (manifest.imports || []).slice(0, 5).map(file => file.slice(1))
-    const cssFiles = collectCss(manifest_links, 'cars/car.html')
-
-    res.status(410).render('car', {
-        gone: true,
-        title: 'Автомобиль снят с продажи - Автосеть.РФ',
-        description: 'Автомобиль снят с продажи и больше недоступен.',
-        keywords: '',
-        js1, js2, js3, js4, js5,
-        carjs: manifest.file,
-        cssFiles,
-        carData: null,
-        brand: '', model: '', linkId: '',
-    })
+    return res.redirect(301, '/cars')
 }
 
 async function carAlone(req, res) {
@@ -1959,58 +1973,50 @@ async function carAlone(req, res) {
 
         let carData = await A_car.getAutoByLinkId(linkId)
 
-        // авто удалено из системы: 410 Gone + noindex, чтобы поисковики убрали страницу из индекса
-        const gone = !carData
+        // авто удалено из системы: 301 на живую посадочную модели или бренда вместо 410 —
+        // редирект сохраняет поисковый трафик и передаёт вес релевантной странице
+        if (!carData) return res.redirect(301, await deletedCarTarget(brand, model))
 
         // один канонический адрес карточки: бренд и модель в нижнем регистре, как у посадочных.
         // строчные варианты и старые адреса вида /cars/VAZ(LADA)/... уходят сюда одним 301
-        let canonicalPath = ''
-        const brandSlugValue = gone ? '' : brandSlug(carData.brand || '')
-        const modelSlugValue = gone ? '' : catalogSlug(carData.model || '')
-        if (!gone) {
-            canonicalPath = carPath(carData.brand, carData.model, carData.linkId)
-            if (decodePath(req.path) !== canonicalPath) {
-                const queryIndex = req.originalUrl.indexOf('?')
-                const query = queryIndex === -1 ? '' : req.originalUrl.slice(queryIndex)
-                return res.redirect(301, canonicalPath + query)
-            }
+        const brandSlugValue = brandSlug(carData.brand || '')
+        const modelSlugValue = catalogSlug(carData.model || '')
+        const canonicalPath = carPath(carData.brand, carData.model, carData.linkId)
+        if (decodePath(req.path) !== canonicalPath) {
+            const queryIndex = req.originalUrl.indexOf('?')
+            const query = queryIndex === -1 ? '' : req.originalUrl.slice(queryIndex)
+            return res.redirect(301, canonicalPath + query)
         }
 
         // H1 карточки — короткое название, а title и description собираем под запросы
         // «бренд модель год купить с пробегом город»
-        const displayBrand = gone ? brand : carData.brand
-        const displayModel = gone ? model : carData.model
-        const carName = gone ? '' : `${displayBrand} ${displayModel} ${carData.yearReleased}`
+        const displayBrand = carData.brand
+        const displayModel = carData.model
+        const carName = `${displayBrand} ${displayModel} ${carData.yearReleased}`
         const lowerFirst = (value) => value ? String(value).charAt(0).toLowerCase() + String(value).slice(1) : ''
-        const carCity = !gone && carData.city ? ' ' + cityIn(carData.city) : ''
-        const carPrice = !gone && carData.price ? `${formatPrice(carData.price)} ₽` : ''
-        const carMileage = !gone && carData.milleage ? ` с пробегом ${formatPrice(carData.milleage)} км` : ''
+        const carCity = carData.city ? ' ' + cityIn(carData.city) : ''
+        const carPrice = carData.price ? `${formatPrice(carData.price)} ₽` : ''
+        const carMileage = carData.milleage ? ` с пробегом ${formatPrice(carData.milleage)} км` : ''
         const carSpecs = []
-        if (!gone) {
-            if (carData.engineType) carSpecs.push(`${lowerFirst(carData.engineType)} двигатель${carData.enginePower ? ' ' + carData.enginePower + ' л.с.' : ''}`)
-            if (carData.gearboxType) carSpecs.push(`${lowerFirst(carData.gearboxType)} коробка передач`)
-            if (carData.driveType) carSpecs.push(`${lowerFirst(carData.driveType)} привод`)
-        }
+        if (carData.engineType) carSpecs.push(`${lowerFirst(carData.engineType)} двигатель${carData.enginePower ? ' ' + carData.enginePower + ' л.с.' : ''}`)
+        if (carData.gearboxType) carSpecs.push(`${lowerFirst(carData.gearboxType)} коробка передач`)
+        if (carData.driveType) carSpecs.push(`${lowerFirst(carData.driveType)} привод`)
 
-        const title = gone
-            ? `Автомобиль ${brand} ${model} снят с продажи - Автосеть.РФ`
-            : `Купить ${displayBrand} ${displayModel} ${carData.yearReleased} с пробегом${carCity}${carPrice ? ' — ' + carPrice : ''}`;
-        const description = gone
-            ? 'Автомобиль снят с продажи и больше недоступен.'
-            : `${displayBrand} ${displayModel} ${carData.yearReleased} года${carMileage}${carCity}: цена ${carPrice}${carSpecs.length ? ', ' + carSpecs.join(', ') : ''}. Купить с пробегом в автосалоне Автосеть.РФ — проверка, кредит и обмен. ☎ 8-800-500-11-56.`;
-        const keywords = gone ? '' : carData.configuration;
-        const carSchemaJson = gone ? '' : buildCarSchema(carData, SCHEMA_SITE + canonicalPath)
+        const title = `Купить ${displayBrand} ${displayModel} ${carData.yearReleased} с пробегом${carCity}${carPrice ? ' — ' + carPrice : ''}`;
+        const description = `${displayBrand} ${displayModel} ${carData.yearReleased} года${carMileage}${carCity}: цена ${carPrice}${carSpecs.length ? ', ' + carSpecs.join(', ') : ''}. Купить с пробегом в автосалоне Автосеть.РФ — проверка, кредит и обмен. ☎ 8-800-500-11-56.`;
+        const keywords = carData.configuration;
+        const carSchemaJson = buildCarSchema(carData, SCHEMA_SITE + canonicalPath)
 
         // модель в крошках ссылается на посадочную только если она существует, иначе остаётся названием
         let modelCrumbUrl = ''
-        if (!gone && brandSlugValue && modelSlugValue) {
+        if (brandSlugValue && modelSlugValue) {
             const modelIndex = buildModelClusters(await A_car.getModelCounts(carData.brand))
             const cluster = findCluster(modelIndex, carData.model)
             if (cluster && cluster.count >= MODEL_MIN_CARS) {
                 modelCrumbUrl = `${SCHEMA_SITE}/cars/${brandSlugValue}/${cluster.slug}`
             }
         }
-        const breadcrumbSchemaJson = gone ? '' : buildBreadcrumbSchema([
+        const breadcrumbSchemaJson = buildBreadcrumbSchema([
             {name: 'Главная', url: `${SCHEMA_SITE}/`},
             {name: 'Автомобили', url: `${SCHEMA_SITE}/cars`},
             ...(brandSlugValue
@@ -2020,12 +2026,9 @@ async function carAlone(req, res) {
                 ? [{name: `${carData.brand} ${carData.model}`, ...(modelCrumbUrl ? {url: modelCrumbUrl} : {})}]
                 : []),
             {name: carName},
-        ])
-
-        if (gone) res.status(410)
+        ], SCHEMA_SITE + canonicalPath)
 
         res.render('car', {
-            gone,
             carName,
             carSchemaJson,
             breadcrumbSchemaJson,
@@ -2050,7 +2053,7 @@ async function carAlone(req, res) {
 }
 
 // старый сайт открывал бронирование по VIN: /reserve?vin=... — так индексировалась бОльшая часть сайта.
-// авто ещё в продаже → 301 на карточку (вес ссылки сохраняется), иначе 410 Gone, чтобы адрес ушёл из индекса
+// авто ещё в продаже → 301 на карточку, удалено → 301 в каталог: редирект сохраняет поисковый трафик
 async function legacyReserve(req, res, next) {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
 
@@ -2070,20 +2073,7 @@ async function legacyReserve(req, res, next) {
         return res.redirect(301, carPath(car.brand, car.model, car.linkId))
     }
 
-    return res.status(410).type('html').send(`<!DOCTYPE html>
-<html lang='ru'>
-<head>
-<meta charset='utf-8'>
-<meta name='robots' content='noindex'>
-<meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>Предложение больше не действует - Автосеть.РФ</title>
-</head>
-<body>
-<h1>Предложение больше не действует</h1>
-<p>Этот автомобиль больше не продаётся. Посмотрите похожие предложения в каталоге.</p>
-<p><a href='/cars'>Перейти в каталог автомобилей</a></p>
-</body>
-</html>`)
+    return res.redirect(301, '/cars')
 }
 
 async function buyoutPage(req, res) {
