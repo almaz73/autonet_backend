@@ -13,6 +13,7 @@ import router_bd from "./src/routers/router_bd.js";
 import router_ssr from "./src/routers/router_ssr.js";
 import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
+import router_parsing from "./src/parsing/router_parsing.js";
 import {statisticsReady} from "./src/clientBaza/history/statisticsDb.js";
 import router_feed from "./src/routers/router_feed.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
@@ -24,7 +25,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 // Роутеры проекта созданы через new Router() (это отдельные Express-приложения),
 // поэтому X-Powered-By отключаем у каждого из них, а не только у основного app
-for (const subApp of [router, routerAuth, routerPromo, routerArticles, router_bd, router_ssr, router_buyout, router_history, router_feed, routerAdminJs]) {
+for (const subApp of [router, routerAuth, routerPromo, routerArticles, router_bd, router_ssr, router_buyout, router_history, router_parsing, router_feed, routerAdminJs]) {
     subApp?.disable?.('x-powered-by')
 }
 
@@ -190,6 +191,8 @@ app.use('/api', (req, res, next) => {
 })
 
 app.use('/api/auth', routerAuth)
+// парсинг монтируем до остальных /api-роутеров: нижестоящие навешивают JWT на весь /api
+app.use('/api', router_parsing) // приём объявлений от расширения-парсера, защита секретом в заголовке
 app.use('/api', router)
 app.use('/api', router_buyout); // интеграция с внутренним сайтом/ отправка на оценку
 app.use('/api', routerPromo)

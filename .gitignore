@@ -3,3 +3,4 @@
 database.sqlite
 admin-sessions.sqlite*
 .env
+parsing.sqlite*
