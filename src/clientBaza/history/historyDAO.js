@@ -1,7 +1,7 @@
-import {getDB} from '../db.js';
+import {getStatisticsDB} from './statisticsDb.js';
 
 function getAllhistory(callback, page = 1, pageSize = 10) {
-    const db = getDB();
+    const db = getStatisticsDB();
     const offset = (page - 1) * pageSize;
 
     // Build base SQL query
@@ -46,7 +46,7 @@ function getAllhistory(callback, page = 1, pageSize = 10) {
 }
 
 function getHistoryPeriod(callback, page = 1, pageSize = 10) {
-    const db = getDB();
+    const db = getStatisticsDB();
     const offset = (page - 1) * pageSize;
 
     // Build base SQL query
@@ -92,7 +92,7 @@ function getHistoryPeriod(callback, page = 1, pageSize = 10) {
 
 
 function getHistoryPeriodDays(callback, page = 1, pageSize = 10) {
-    const db = getDB();
+    const db = getStatisticsDB();
     const offset = (page - 1) * pageSize;
 
     // language=SQLite

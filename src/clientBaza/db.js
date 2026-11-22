@@ -197,18 +197,6 @@ const changeHistory = sequelize.define('changeHistory', {
     timestamps: false,
 });
 
-// Define User model if not already defined
-const history_period = sequelize.define('Сколько дней висело', {
-    startedDate: { type: DataTypes.TEXT, allowNull: false },
-    endDate: { type: DataTypes.TEXT, allowNull: false },
-    car: { type: DataTypes.TEXT, allowNull: false },
-    days: { type: DataTypes.INTEGER, allowNull: false },
-    id: {type: DataTypes.INTEGER, primaryKey: true, allowNull: false},
-}, {
-    tableName: 'history_period',
-    timestamps: false,
-});
-
 // Passenger загружает ESM через require(), поэтому top-level await здесь нельзя
 const dbReady = sequelize.sync() // This will create tables if they don't exist
     .then(async () => {
@@ -412,4 +400,4 @@ function createTables(db) {
     });
 }
 
-export { sequelize, Admins, history_period, clientEmails, news, promo, dealers, documents, review, changeHistory, dbReady };
+export { sequelize, Admins, clientEmails, news, promo, dealers, documents, review, changeHistory, dbReady };

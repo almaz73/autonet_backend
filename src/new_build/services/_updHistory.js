@@ -1,22 +1,19 @@
-import path from "path";
 import fs from "fs";
-import {fileURLToPath} from "url";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
-import {FolderLINKS, isToday} from "../../constants.js";
+import {FolderLINKS, isToday, StatisticsDB_PATH} from "../../constants.js";
+import {createStatisticsTables} from "../../clientBaza/history/statisticsSchema.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const CLIENT_DB_PATH = path.resolve(__dirname, '../../../client.sqlite')
 const CAR_PREFIX = 'https://xn--80aej9aped4f.xn--p1ai/cars/'
 const DAY_MS = 1000 * 60 * 60 * 24
 
 // 1. Сохранить авто, добавленные за сегодня, объединив с уже записанными сегодня
 // 2. Сохранить удалённые авто: один период продажи на авто, без повторов
-export async function _updHistory(dbPath = CLIENT_DB_PATH) {
+export async function _updHistory(dbPath = StatisticsDB_PATH) {
     const db = await open({filename: dbPath, driver: sqlite3.Database})
     try {
         await db.exec('PRAGMA busy_timeout = 5000')
-        await createTables(db)
+        await createStatisticsTables(db)
 
         await db.exec('BEGIN')
         try {
@@ -31,30 +28,6 @@ export async function _updHistory(dbPath = CLIENT_DB_PATH) {
     } finally {
         await db.close()
     }
-}
-
-async function createTables(db) {
-    // language=SQLite
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS history
-        (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            date       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            count      INTEGER NOT NULL,
-            carsPerDay TEXT    NOT NULL
-        )
-    `)
-    // language=SQLite
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS history_period
-        (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            car         TEXT,
-            startedDate TEXT,
-            endDate     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            days        INTEGER
-        )
-    `)
 }
 
 // файлы прошлого запуска не должны попадать в сегодняшнюю историю

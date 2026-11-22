@@ -13,6 +13,7 @@ import router_bd from "./src/routers/router_bd.js";
 import router_ssr from "./src/routers/router_ssr.js";
 import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
+import {statisticsReady} from "./src/clientBaza/history/statisticsDb.js";
 import router_feed from "./src/routers/router_feed.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
 import Controllers from "./src/xml_import/Controllers.js";
@@ -238,6 +239,10 @@ async function startApp() {
 
         // Make db available globally or pass to controllers
         global.db = db;
+
+        // statistics.sqlite: таблицы истории и разовый перенос из client.sqlite
+        // должны завершиться до первых запросов к /api/history и админке
+        await statisticsReady
 
         app.listen(PORT, HOST, () => console.log(`SERVER STARTED ON http://${HOST}:${PORT}`))
     } catch (e) {

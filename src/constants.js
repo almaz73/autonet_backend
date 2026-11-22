@@ -1,7 +1,7 @@
 import * as os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-export const Version = 'ver.3.530'
+export const Version = 'ver.3.531 - бд statistics'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования
@@ -9,6 +9,9 @@ export const devMode = false // для тестирования
 // абсолютные пути: не зависят от cwd процесса (nodemon, Passenger, воркер стартуют из разных папок)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FRONT_DIR = path.resolve(__dirname, '../../front')
+
+// отдельная база для статистики каталога: история добавлений и периодов продаж
+export const StatisticsDB_PATH = path.resolve(__dirname, '../statistics.sqlite')
 
 export const FolderPhoto = '../front/pub_auto'
 export const FolderXML = '../front/XML'
