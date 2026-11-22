@@ -82,32 +82,23 @@ function run(sql, params = []) {
     })
 }
 
-// повторный сбор того же объявления обновляет запись, а не создаёт дубль
+// уже сохранённые объявления пропускаем: повторная присылка того же id ничего не меняет
 // language=SQLite
-const UPSERT_SQL = `
-    INSERT INTO avito_cars (id, auto, price, params, city, dealer, badge, collector, comment, saved_at, user, state)
+const INSERT_SQL = `
+    INSERT OR IGNORE INTO avito_cars (id, auto, price, params, city, dealer, badge, collector, comment, saved_at, user, state)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', 'localtime'), ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-        auto      = excluded.auto,
-        price     = excluded.price,
-        params    = excluded.params,
-        city      = excluded.city,
-        dealer    = excluded.dealer,
-        badge     = excluded.badge,
-        collector = excluded.collector,
-        comment   = excluded.comment,
-        saved_at  = excluded.saved_at,
-        user      = excluded.user,
-        state     = excluded.state
 `
 
+// возвращает {saved, skipped}: skipped — id, которые уже были в базе
 export async function saveAvitoCars(cars) {
     await parsingDbReady
 
+    let saved = 0
     await run('BEGIN')
     try {
         for (const car of cars) {
-            await run(UPSERT_SQL, [car.id, car.auto, car.price, car.params, car.city, car.dealer, car.badge, car.collector, car.comment, car.user, car.state])
+            const result = await run(INSERT_SQL, [car.id, car.auto, car.price, car.params, car.city, car.dealer, car.badge, car.collector, car.comment, car.user, car.state])
+            if (result.changes) saved++
         }
         await run('COMMIT')
     } catch (error) {
@@ -115,5 +106,5 @@ export async function saveAvitoCars(cars) {
         throw error
     }
 
-    return cars.length
+    return {saved, skipped: cars.length - saved}
 }

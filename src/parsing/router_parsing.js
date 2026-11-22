@@ -64,8 +64,8 @@ router.post('/addAvitoCars', async (req, res) => {
     }
 
     try {
-        const saved = await saveAvitoCars(cars)
-        res.json({ok: true, saved})
+        const {saved, skipped} = await saveAvitoCars(cars)
+        res.json({ok: true, saved, skipped})
     } catch (error) {
         console.error('Error saving parsed avito cars:', error)
         res.status(500).json({error: 'Failed to save parsed cars'})
