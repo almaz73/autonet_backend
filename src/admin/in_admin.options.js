@@ -209,7 +209,15 @@ export const adminJs = new AdminJS({
                 listProperties: ['fio', 'address', 'link', 'type_form', 'created_at'],
                 navigation: null,
                 actions: {
-                    list: withoutPromoManager,
+                    list: {
+                        ...allRoles,
+                        before: (request) => {
+                            if (!request.query?.perPage) {
+                                request.query = {...request.query, perPage: 25}
+                            }
+                            return request
+                        },
+                    },
                     show: withoutPromoManager,
                     new: adminOnly,
                     edit: adminOnly,

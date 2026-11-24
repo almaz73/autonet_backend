@@ -7,11 +7,11 @@ const ClientCreatedAt = ({ record }) => {
 
     if (!value) return null
 
-    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value))
+    const [year, month, day, hours, minutes] = String(value).split(/[- :]/);
 
-    if (!match) return <>{value}</>
+    if (!year) return <>{value}</>
 
-    return <>{`${match[3]}.${match[2]}.${match[1]}`}</>
+    return <>{`${day}.${month}.${year}  ${hours}:${minutes}`}</>
 }
 
 export default ClientCreatedAt
