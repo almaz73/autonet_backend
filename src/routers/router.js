@@ -63,7 +63,7 @@ router.get('/captcha', issueCaptcha)
 router.post('/captcha/verify', verifyCaptcha)
 router.post('/postEmail', emailRateLimit, validateEmailRequest, requireCaptcha, Post.postEmailYa)
 router.post('/postEmailWithAttachement', emailRateLimit, upload.single('file'), validateEmailAttachment, requireCaptcha, Post.postEmailWithAttachementYa)
-router.post('/postReview', siteReviewRateLimit, async (req, res) => {
+router.post('/postReview', siteReviewRateLimit, requireCaptcha, async (req, res) => {
     try {
         const result = await saveSiteReview(req.body)
         if (result.error) return res.status(400).json({error: result.error})
