@@ -213,14 +213,15 @@ export const adminJs = new AdminJS({
                         ...allRoles,
                         before: (request) => {
                             if (!request.query?.perPage) {
-                                request.query = {...request.query, perPage: 25}
+                                request.query = {...request.query, perPage: 50}
                             }
                             return request
                         },
                     },
                     show: withoutPromoManager,
                     new: adminOnly,
-                    edit: adminOnly,
+                    // соглашения приходят из форм, редактировать их в админке нельзя
+                    edit: {isAccessible: false, isVisible: false},
                     delete: adminOnly,
                     bulkDelete: noBulkActions,
                     search: withoutPromoManager,
@@ -241,7 +242,8 @@ export const adminJs = new AdminJS({
                         components: {list: Components.ClientLink},
                     },
                     created_at: {
-                        components: {list: Components.ClientCreatedAt},
+                        // в списке и при просмотре — одинаковый вид: 24.11.2026 08:33
+                        components: {list: Components.ClientCreatedAt, show: Components.ClientCreatedAt},
                     },
                 },
             },

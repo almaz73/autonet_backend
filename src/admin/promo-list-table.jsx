@@ -1,6 +1,7 @@
 import React, {useEffect} from 'react'
 
-// id последней открытой записи: его пишет edit-компонент, список подсвечивает строку
+// id последней открытой записи: его пишет edit-компонент (или клик по строке там, где редактирования нет),
+// список подсвечивает строку
 const storageKey = (resourceId) => `${resourceId}LastEditedId`
 
 export const writeLastEditedId = (resourceId, id) => {
@@ -21,7 +22,11 @@ const readLastEditedId = (resourceId) => {
 }
 
 // разделы, в которых запоминаем последнюю открытую запись
-const TRACKED_RESOURCES = ['promo', 'dealers', 'news']
+const TRACKED_RESOURCES = ['promo', 'dealers', 'news', 'clientEmails']
+
+// у соглашений нет редактирования: запоминаем запись по клику в списке,
+// остальные разделы пишут id из своих edit-компонентов
+const CLICK_TRACKED_RESOURCES = ['clientEmails']
 
 const highlightCss = (resourceId, id) => `
     tr[data-css="${resourceId}-table-row"][data-id="${id}"] > td {
@@ -38,6 +43,19 @@ const PromoListTable = ({OriginalComponent, resource, records, ...props}) => {
     const editedId = resource && TRACKED_RESOURCES.includes(resource.id)
         ? readLastEditedId(resource.id)
         : null
+
+    useEffect(() => {
+        if (!resource || !CLICK_TRACKED_RESOURCES.includes(resource.id)) return
+
+        const rememberClick = (event) => {
+            const row = event.target?.closest?.(`tr[data-css="${resource.id}-table-row"]`)
+            const id = row?.getAttribute('data-id')
+            if (id) writeLastEditedId(resource.id, id)
+        }
+
+        document.addEventListener('click', rememberClick, true)
+        return () => document.removeEventListener('click', rememberClick, true)
+    }, [resource?.id])
 
     useEffect(() => {
         if (!editedId) return
