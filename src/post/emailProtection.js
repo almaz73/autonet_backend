@@ -15,7 +15,7 @@ const DAY = 24 * 60 * MINUTE
 
 const WINDOW_MS = 10 * MINUTE        // окно для «всплеска» заявок с одного IP
 const MAX_PER_WINDOW = 5             // не больше 5 заявок за 10 минут с одного IP
-const MAX_PER_DAY = 40               // не больше 40 заявок за сутки с одного IP
+const MAX_PER_DAY = 5                // не больше 5 заявок за сутки с одного IP
 const MIN_INTERVAL_MS = 3 * 1000     // между заявками с одного IP — не чаще раза в 3 секунды
 const GLOBAL_MAX_PER_DAY = 300       // общий предохранитель: не больше 300 писем в сутки
 const DEDUPE_WINDOW_MS = 15 * MINUTE // одинаковая заявка в этом окне повторно не отправляется

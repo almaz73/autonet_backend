@@ -2,6 +2,7 @@ import Router from 'express'
 import Controllers from "../xml_import/Controllers.js";
 import Post from '../post/Post.js'
 import {emailRateLimit, validateEmailRequest, validateEmailAttachment} from '../post/emailProtection.js'
+import {issueCaptcha, verifyCaptcha, requireCaptcha} from '../post/captcha.js'
 import multer from "multer";
 import {getActiveBanners, getMainBanners} from '../clientBaza/promo/generationPagesForPromo.js'
 import {getDealers} from '../clientBaza/dealers/dealersDAO.js'
@@ -57,8 +58,11 @@ router.get('/getColorList', Controllers.getColorList)
 router.get('/getYearGap', Controllers.getYearGap)
 
 // Почтовые формы: лимит по IP ставим до multer, чтобы спам не занимал память загрузкой файла
-router.post('/postEmail', emailRateLimit, validateEmailRequest, Post.postEmailYa)
-router.post('/postEmailWithAttachement', emailRateLimit, upload.single('file'), validateEmailAttachment, Post.postEmailWithAttachementYa)
+// капча серверная: сдвиг выдаёт /api/captcha, без токена письмо не уходит
+router.get('/captcha', issueCaptcha)
+router.post('/captcha/verify', verifyCaptcha)
+router.post('/postEmail', emailRateLimit, validateEmailRequest, requireCaptcha, Post.postEmailYa)
+router.post('/postEmailWithAttachement', emailRateLimit, upload.single('file'), validateEmailAttachment, requireCaptcha, Post.postEmailWithAttachementYa)
 router.post('/postReview', siteReviewRateLimit, async (req, res) => {
     try {
         const result = await saveSiteReview(req.body)
