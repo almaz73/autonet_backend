@@ -13,6 +13,9 @@ Disallow: /api/
 # персональные страницы: содержимое зависит от браузера пользователя
 Disallow: /personal/
 
+# внутренняя витрина BigBen с базой объявлений — не для индексации
+Disallow: /bigben
+
 # копия sitemap для сравнения дат и список новых ссылок — не для индексации
 Disallow: /sitemap2.xml
 Disallow: /newLinks.txt

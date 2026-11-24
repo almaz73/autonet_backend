@@ -30,7 +30,7 @@ const Admins = sequelize.define('Admins', {
     role: {
         type: DataTypes.STRING,
         // матрица ролей описана в src/admin/in_admin.options.js
-        enum: ['superadmin', 'admin', 'promo_manager', 'manager'],
+        enum: ['superadmin', 'admin', 'promo_manager', 'manager', 'call_center_operator'],
         defaultValue: 'manager',
         allowNull: false,
         // приводим к нижнему регистру: в старых записях встречается 'superAdmin'

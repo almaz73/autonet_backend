@@ -82,6 +82,22 @@ function run(sql, params = []) {
     })
 }
 
+function all(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+            err ? reject(err) : resolve(rows)
+        })
+    })
+}
+
+function get(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+            err ? reject(err) : resolve(row)
+        })
+    })
+}
+
 // уже сохранённые объявления пропускаем: повторная присылка того же id ничего не меняет
 // language=SQLite
 const INSERT_SQL = `
@@ -107,4 +123,85 @@ export async function saveAvitoCars(cars) {
     }
 
     return {saved, skipped: cars.length - saved}
+}
+
+// первый токен поля auto — им считается марка авто
+const BRAND_SQL = `trim(substr(trim(auto), 1, instr(trim(auto) || ' ', ' ') - 1))`
+
+// список объявлений: фильтры по сборщику, статусу, городу и марке, новые сверху
+export async function listAvitoCars({page, limit, collector, state, city, brand}) {
+    await parsingDbReady
+
+    const conditions = []
+    const params = []
+    if (collector) {
+        conditions.push('trim(collector) = ?')
+        params.push(collector)
+    }
+    if (state !== null) {
+        conditions.push('state = ?')
+        params.push(state)
+    }
+    if (city) {
+        conditions.push('trim(city) = ?')
+        params.push(city)
+    }
+    if (brand) {
+        conditions.push(`${BRAND_SQL} = ?`)
+        params.push(brand)
+    }
+    const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
+
+    const {total} = await get(`SELECT COUNT(*) AS total FROM avito_cars${whereSql}`, params)
+    const items = await all(
+        `SELECT * FROM avito_cars${whereSql} ORDER BY saved_at DESC, id DESC LIMIT ? OFFSET ?`,
+        [...params, limit, (page - 1) * limit]
+    )
+
+    return {items, total}
+}
+
+// варианты для фильтров — из фактических данных базы
+export async function getAvitoFilterOptions() {
+    await parsingDbReady
+
+    const values = async (sql) => (await all(sql)).map(row => row.value).filter(Boolean)
+    const sortRu = (items) => items.sort((a, b) => a.localeCompare(b, 'ru'))
+
+    const collectors = await values(`SELECT DISTINCT trim(collector) AS value FROM avito_cars WHERE collector IS NOT NULL AND trim(collector) <> ''`)
+    const cities = await values(`SELECT DISTINCT trim(city) AS value FROM avito_cars WHERE city IS NOT NULL AND trim(city) <> ''`)
+    const brands = await values(`SELECT DISTINCT ${BRAND_SQL} AS value FROM avito_cars WHERE auto IS NOT NULL AND trim(auto) <> ''`)
+    const states = (await all(`SELECT DISTINCT state AS value FROM avito_cars WHERE state IS NOT NULL`))
+        .map(row => Number(row.value))
+        .filter(Number.isInteger)
+        .sort((a, b) => a - b)
+
+    return {
+        collectors: sortRu(collectors),
+        states,
+        cities: sortRu(cities),
+        brands: sortRu(brands),
+    }
+}
+
+// fields — только разрешённые роутером колонки, значения уже нормализованы
+export async function updateAvitoCar(id, fields) {
+    await parsingDbReady
+
+    const columns = Object.keys(fields)
+    if (!columns.length) return null
+
+    const assignments = columns.map(column => `${column} = ?`).join(', ')
+    const values = columns.map(column => fields[column])
+    const result = await run(`UPDATE avito_cars SET ${assignments} WHERE id = ?`, [...values, id])
+    if (!result.changes) return null
+
+    return get('SELECT * FROM avito_cars WHERE id = ?', [id])
+}
+
+export async function deleteAvitoCar(id) {
+    await parsingDbReady
+
+    const result = await run('DELETE FROM avito_cars WHERE id = ?', [id])
+    return result.changes
 }

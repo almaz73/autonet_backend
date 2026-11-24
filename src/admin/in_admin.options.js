@@ -60,7 +60,8 @@ const adminAuthDisabled = process.env.NODE_ENV !== 'production' && process.env.A
 //   superadmin    — полный доступ, включая администраторов и роли;
 //   admin         — всё, кроме раздела «Администраторы»;
 //   promo_manager — акции и контакты + просмотр истории изменений;
-//   manager       — просмотр всего, кроме «Администраторов» и «Времени продаж», без изменений.
+//   manager       — просмотр всего, кроме «Администраторов» и «Времени продаж», без изменений;
+//   call_center_operator — только вход в BigBen (/bigben), разделов админки не видит.
 // Доступ выдаётся только явно перечисленным ролям: неизвестная роль прав не получает.
 const roleOf = (context) => context.currentAdmin?.role?.toLowerCase()
 
@@ -184,6 +185,7 @@ export const adminJs = new AdminJS({
                             {value: 'admin', label: 'Администратор — всё, кроме администраторов'},
                             {value: 'promo_manager', label: 'Промо-менеджер — акции, контакты, история'},
                             {value: 'manager', label: 'Менеджер — просмотр всего, кроме администраторов'},
+                            {value: 'call_center_operator', label: 'Оператор кол-центра — вход в BigBen'},
                         ],
                     },
                 },

@@ -14,6 +14,7 @@ import router_ssr from "./src/routers/router_ssr.js";
 import router_buyout from "./src/routers/router_buyout.js";
 import router_history from "./src/routers/router_history.js";
 import router_parsing from "./src/parsing/router_parsing.js";
+import router_bigben from "./src/routers/router_bigben.js";
 import {statisticsReady} from "./src/clientBaza/history/statisticsDb.js";
 import router_feed from "./src/routers/router_feed.js";
 import {generationPagesForPromo} from "./src/clientBaza/promo/generationPagesForPromo.js";
@@ -25,7 +26,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 // Роутеры проекта созданы через new Router() (это отдельные Express-приложения),
 // поэтому X-Powered-By отключаем у каждого из них, а не только у основного app
-for (const subApp of [router, routerAuth, routerPromo, routerArticles, router_bd, router_ssr, router_buyout, router_history, router_parsing, router_feed, routerAdminJs]) {
+for (const subApp of [router, routerAuth, routerPromo, routerArticles, router_bd, router_ssr, router_buyout, router_history, router_parsing, router_bigben, router_feed, routerAdminJs]) {
     subApp?.disable?.('x-powered-by')
 }
 
@@ -145,6 +146,21 @@ app.use((req, res, next) => {
 app.get('/robots.txt', (req, res) => {
     res.sendFile(path.join(__dirname, 'robots.txt'))
 })
+
+// BigBen: внутренняя витрина распарсенных объявлений, сборка лежит в front/bigben.
+// раздел закрыт от индексации и от поисковых/краулинговых ботов
+const BOT_USER_AGENT = /bot\b|crawler|spider|slurp|scraper|archiver|yandex|baidu|bingpreview|ahrefs|semrush|mj12|dotbot|petalbot|applebot|gptbot|chatgpt|oai-searchbot|claude|anthropic|perplexity|bytespider|amazonbot|meta-externalagent/i
+app.use('/bigben', (req, res, next) => {
+    res.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+    if (BOT_USER_AGENT.test(req.get('user-agent') || '')) {
+        return res.status(403).type('text/plain').send('Forbidden')
+    }
+    next()
+})
+app.get('/bigben', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'bigben', 'index.html'))
+})
+app.use('/bigben/api', router_bigben)
 
 // товарный фид для Яндекс.Маркета/Директа: динамический YML по всем автомобилям каталога
 app.use('/', router_feed)
