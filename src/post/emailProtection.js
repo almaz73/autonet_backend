@@ -13,9 +13,11 @@ import {receivedDataTypes} from '../constants.js'
 const MINUTE = 60 * 1000
 const DAY = 24 * 60 * MINUTE
 
-const WINDOW_MS = 10 * MINUTE        // окно для «всплеска» заявок с одного IP
-const MAX_PER_WINDOW = 5             // не больше 5 заявок за 10 минут с одного IP
-const MAX_PER_DAY = 5                // не больше 5 заявок за сутки с одного IP
+// Квота считается только по фактически отправленным письмам (ответ 200),
+// поэтому ошибки капчи, валидации или SMTP не «съедают» дневной лимит.
+const WINDOW_MS = 10 * MINUTE        // окно для «всплеска» отправленных писем с одного IP
+const MAX_PER_WINDOW = 5             // не больше 5 писем за 10 минут с одного IP
+const MAX_PER_DAY = 20               // не больше 20 писем за сутки с одного IP
 const MIN_INTERVAL_MS = 3 * 1000     // между заявками с одного IP — не чаще раза в 3 секунды
 const GLOBAL_MAX_PER_DAY = 300       // общий предохранитель: не больше 300 писем в сутки
 const DEDUPE_WINDOW_MS = 15 * MINUTE // одинаковая заявка в этом окне повторно не отправляется
@@ -41,6 +43,8 @@ const ALLOWED_EXTENSIONS = new Set(['.pdf', '.doc', '.docx', '.rtf', '.txt', '.o
 const clients = new Map() // ip -> {attempts: number[], lastAt: number, hashes: Map<string, number>}
 let globalDay = ''
 let globalCount = 0
+
+const getIp = (req) => req.ip || req.socket?.remoteAddress || 'unknown'
 
 const getClient = (ip) => {
     let client = clients.get(ip)
@@ -82,7 +86,7 @@ const tooManyRequests = (res, retryAfterSeconds, message = 'Слишком мн�
  */
 export function emailRateLimit(req, res, next) {
     const now = Date.now()
-    const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+    const ip = getIp(req)
 
     if (clients.size > MAX_CLIENTS) pruneAll(now)
 
@@ -112,15 +116,36 @@ export function emailRateLimit(req, res, next) {
         return tooManyRequests(res, (DAY - (now - client.attempts[0])) / 1000)
     }
 
-    client.attempts.push(now)
+    // интервал ставим сразу, чтобы двойной клик не ушёл дважды,
+    // а квоту списываем только после успешной отправки письма
     client.lastAt = now
-    globalCount += 1
-
-    if (globalCount === GLOBAL_MAX_PER_DAY) {
-        console.error(`Достигнут суточный лимит писем с форм: ${GLOBAL_MAX_PER_DAY}. Дальнейшие заявки будут отклоняться до следующих суток.`)
-    }
+    countAfterSuccess(req, res)
 
     next()
+}
+
+// суточное окно и общий предохранитель пополняем по факту отправки:
+// 200 от контроллера (SMTP принял письмо) и это не повтор заявки
+const countAfterSuccess = (req, res) => {
+    const ip = getIp(req)
+    res.on('finish', () => {
+        if (res.statusCode !== 200 || req.emailDuplicate) return
+
+        const now = Date.now()
+        const today = dayKey(now)
+        if (globalDay !== today) {
+            globalDay = today
+            globalCount = 0
+        }
+
+        const client = pruneClient(getClient(ip), now)
+        client.attempts.push(now)
+        globalCount += 1
+
+        if (globalCount === GLOBAL_MAX_PER_DAY) {
+            console.error(`Достигнут суточный лимит писем с форм: ${GLOBAL_MAX_PER_DAY}. Дальнейшие заявки будут отклоняться до следующих суток.`)
+        }
+    })
 }
 
 const validatePayload = (type, text) => {
@@ -156,7 +181,7 @@ const isDuplicate = (ip, typeKey, text, now) => {
 // повторно запоминаем заявку только после успешной отправки:
 // если SMTP упал, пользователь сможет повторить отправку
 const rememberAfterSuccess = (req, res, typeKey, text) => {
-    const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+    const ip = getIp(req)
     res.on('finish', () => {
         if (res.statusCode !== 200) return
         const client = getClient(ip)
@@ -178,11 +203,13 @@ const sanitizeFileName = (name) => {
  */
 export function validateEmailRequest(req, res, next) {
     const now = Date.now()
-    const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+    const ip = getIp(req)
     const payload = validatePayload(req.body?.type, req.body?.text)
     if (!payload.ok) return res.status(400).json({error: payload.error})
 
     if (isDuplicate(ip, payload.typeKey, payload.text, now)) {
+        // повтор не отправляется и не списывает квоту
+        req.emailDuplicate = true
         return res.status(200).json({message: 'Данные успешно получены'})
     }
 
@@ -200,7 +227,7 @@ export function validateEmailAttachment(req, res, next) {
     if (!req.file) return res.status(400).json({error: 'Нет прикрепленного файла'})
 
     const now = Date.now()
-    const ip = req.ip || req.socket?.remoteAddress || 'unknown'
+    const ip = getIp(req)
     const mime = String(req.file.mimetype || '').toLowerCase()
     const ext = path.extname(req.file.originalname || '').toLowerCase()
 
@@ -217,6 +244,8 @@ export function validateEmailAttachment(req, res, next) {
     if (!payload.ok) return res.status(400).json({error: payload.error})
 
     if (isDuplicate(ip, payload.typeKey, payload.text, now)) {
+        // повтор не отправляется и не списывает квоту
+        req.emailDuplicate = true
         return res.status(200).json({message: 'Письмо с прикрепленным файлом удачно доставлено'})
     }
 

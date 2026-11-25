@@ -10,7 +10,7 @@ const formatCreatedAt = (value) => {
 
     if (!year) return String(value)
 
-    return `${day}.${month}.${year}  ${hours}:${minutes}`
+    return `${day}.${month}.${year}  ${+hours+3}:${minutes}` // тут +3 добавлен для корректировки часового пояса
 }
 
 const ClientCreatedAt = ({ record, where }) => {
