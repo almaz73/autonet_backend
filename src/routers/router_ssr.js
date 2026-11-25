@@ -37,6 +37,7 @@ const router = new Router()
 
 const MAP_WIDGET_URL = 'https://makemap.2gis.ru/widget'
 const DEALER_ZOOM = 16
+const CITY_OVERVIEW_ZOOM = 12
 const DEALER_MARKER_COLOR = '#E22427'
 
 const SITE_ORIGIN = 'https://xn--80aej9aped4f.xn--p1ai'
@@ -525,18 +526,23 @@ function parseCoords(value) {
     return Number.isFinite(lat) && Number.isFinite(lon) ? {lat, lon} : null
 }
 
-// виджет 2ГИС принимает data = base64url(zlib(JSON))
-function buildDealerMapSrc(dealer) {
-    const point = parseCoords(dealer.coords)
-    if (!point) return ''
-
-    const popup = `
+// попап метки: одинаковый для одиночной карты и карты всех точек города
+function dealerPopupHtml(dealer) {
+    return `
         <div style="font:14px/1.45 Gilroy,Arial,sans-serif;min-width:180px;background:white">
             <div style="font-weight:700;color:#111;margin-bottom:2px">${escapeHtml(dealer.city)}</div>
             <div style="color:#333">${formatMultiline(dealer.address)}</div>
             <div style="margin-top:4px"><a style="color:#E22427;text-decoration:none" href="${escapeHtml(telHref(dealer.tel))}">${escapeHtml(dealer.tel)}</a></div>
             <div style="color:#8a8a95;font-size:12px;margin-top:2px">${escapeHtml(dealer.days)}</div>
         </div>`
+}
+
+// виджет 2ГИС принимает data = base64url(zlib(JSON))
+function buildDealerMapSrc(dealer) {
+    const point = parseCoords(dealer.coords)
+    if (!point) return ''
+
+    const popup = dealerPopupHtml(dealer)
 
     const data = {
         orderedGeometries: [{
@@ -553,6 +559,41 @@ function buildDealerMapSrc(dealer) {
             id: dealer.id,
         }],
         mapPosition: {...point, zoom: DEALER_ZOOM},
+        scrollWheelZoom: false,
+    }
+
+    const compressed = zlib.deflateSync(Buffer.from(JSON.stringify(data), 'utf8'))
+    return `${MAP_WIDGET_URL}?data=${compressed.toString('base64url')}`
+}
+
+// запасная карта городской страницы: все точки города на одном виджете
+function buildCityDealersMapSrc(dealers) {
+    const points = dealers
+        .map((dealer) => ({dealer, point: parseCoords(dealer.coords)}))
+        .filter((item) => item.point)
+    if (!points.length) return ''
+
+    const geometries = points.map(({dealer, point}) => ({
+        type: 'Feature',
+        properties: {
+            description: Buffer.from(dealerPopupHtml(dealer), 'utf8').toString('base64'),
+            color: DEALER_MARKER_COLOR,
+            zIndex: 1000000000,
+        },
+        geometry: {type: 'Point', coordinates: [point.lon, point.lat]},
+        id: dealer.id,
+    }))
+
+    const lats = points.map(({point}) => point.lat)
+    const lons = points.map(({point}) => point.lon)
+    const center = {
+        lat: (Math.max(...lats) + Math.min(...lats)) / 2,
+        lon: (Math.max(...lons) + Math.min(...lons)) / 2,
+    }
+
+    const data = {
+        orderedGeometries: geometries,
+        mapPosition: {...center, zoom: CITY_OVERVIEW_ZOOM},
         scrollWheelZoom: false,
     }
 
@@ -1363,6 +1404,8 @@ async function cityPage(req, res, next) {
             })
             : ''
         const dealerSchemas = dealerViews.slice(0, 3).map(buildDealerSchema)
+        // несколько точек города показываем одной картой, как на главной
+        const cityMapSrc = dealerRows.length > 1 ? buildCityDealersMapSrc(dealerRows) : ''
 
         res.render('city', {
             js1, js2, js3, js4, js5, js6, js7,
@@ -1386,6 +1429,7 @@ async function cityPage(req, res, next) {
             vitrinaName,
             brandLinks,
             dealerViews,
+            cityMapSrc,
             cityReviews,
             otherCities,
             seoText1,

@@ -84,6 +84,7 @@
     <% } %>
 
     <% if (carsView.length) { %>
+    <br><br>
     <div class='container'>
         <div class="car_vitrina">
             <h2><%= vitrinaName %></h2>
@@ -102,16 +103,28 @@
     <% } %>
 
     <% if (dealerViews.length) { %>
-    <section class='container city-page__dealer'>
         <% if (dealerViews.length > 1) { %>
-        <h2>Адреса дилерских центров Автосеть.РФ</h2>
+        <div class='container city-page__dealer'>
+            <!-- несколько точек города: список адресов рядом с одной общей картой -->
+            <section class="dealers" data-dealers-map data-city="<%= cityName %>">
+                <h2>Адреса дилерских центров Автосеть.РФ</h2>
+                <div class="dealers__layout">
+                    <div class="dealers__list" aria-label="Список дилерских центров"></div>
+                    <div class="dealers__map">
+                        <!-- src — запасной вариант; актуальную карту со всеми метками собирает dealers-map.js -->
+                        <iframe title="Карта дилерских центров Автосеть.РФ <%= prepositional %>" frameborder="0"
+                                <% if (cityMapSrc) { %>src="<%= cityMapSrc %>"<% } %> allow="fullscreen"
+                                sandbox="allow-modals allow-forms allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation"></iframe>
+                    </div>
+                </div>
+            </section>
+        </div>
         <% } else { %>
-        <h2>Дилерский центр Автосеть.РФ <%= prepositional %></h2>
+        <section class='container city-page__dealer'>
+            <h2>Дилерский центр Автосеть.РФ <%= prepositional %></h2>
+            <%- include('partials/dealer_card', dealerViews[0]) %>
+        </section>
         <% } %>
-        <% dealerViews.forEach(function(view) { %>
-        <%- include('partials/dealer_card', view) %>
-        <% }); %>
-    </section>
     <% } %>
 
     <% if (cityReviews.length) { %>
@@ -166,6 +179,7 @@
             </div>
         </div>
     </div>
+    <br><br>
     <% } %>
 
 </main>
