@@ -593,6 +593,52 @@ function contactAssets() {
     }
 }
 
+// общий вид карточки дилера: страница контакта и городская главная показывают одно и то же
+function buildDealerView(dealer) {
+    if (!dealer) return null
+    const splitList = (value) => String(value || '').split(',').map((part) => part.trim()).filter(Boolean)
+    return {
+        dealer,
+        addressText: stripTags(dealer.address),
+        addressHtml: formatMultiline(dealer.address),
+        tels: splitList(dealer.tel).map((value) => ({value, href: telHref(value)})),
+        profiles: splitList(dealer.profile),
+        brands: splitList(dealer.brands),
+        email: String(dealer.email || '').trim(),
+        photoUrl: dealer.url ? encodeURI(dealer.url) : '',
+        mapSrc: buildDealerMapSrc(dealer),
+    }
+}
+
+// schema.org AutoDealer для карточки на городской странице
+function buildDealerSchema(view) {
+    const dealer = view.dealer
+    const point = parseCoords(dealer.coords)
+    const phone = view.tels.length ? view.tels[0].href.replace(/^tel:/, '') : ''
+    const photo = view.photoUrl
+        ? (/^https?:\/\//.test(view.photoUrl) ? view.photoUrl : `${SITE_ORIGIN}${view.photoUrl}`)
+        : `${SITE_ORIGIN}/st/auto.webp`
+
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'AutoDealer',
+        name: `Автосеть.РФ — ${dealer.city}, ${view.addressText}`,
+        url: `${SITE_ORIGIN}${dealer.link}`,
+        image: photo,
+        ...(phone ? {telephone: phone} : {}),
+        ...(view.email ? {email: view.email} : {}),
+        address: {
+            '@type': 'PostalAddress',
+            streetAddress: view.addressText,
+            addressLocality: dealer.city,
+            addressCountry: 'RU',
+        },
+        ...(point ? {geo: {'@type': 'GeoCoordinates', latitude: point.lat, longitude: point.lon}} : {}),
+    }
+
+    return JSON.stringify(schema).replaceAll('<', '\\u003c')
+}
+
 /** КОНЕЦ подготовка к работе с отдельными контактами **/
 
 /** Динамические страницы статей из таблицы news **/
@@ -938,6 +984,25 @@ async function getRandomFiveStarReviews(limit) {
     return rows.map(toReviewView)
 }
 
+// отзывы города: связываем их со страницами отзывов дилерских центров этого города
+async function getCityReviews(reviewLinks, limit) {
+    if (!reviewLinks.length) return []
+    const rows = await review.findAll({
+        where: {
+            [Op.and]: [
+                {published: true},
+                {review: {[Op.ne]: null}},
+                {review: {[Op.ne]: ''}},
+                {link: {[Op.in]: reviewLinks}},
+            ],
+        },
+        order: [['date', 'DESC'], ['id', 'DESC']],
+        limit,
+        raw: true,
+    })
+    return rows.map(toReviewView)
+}
+
 async function reviewsPage(req, res) {
     try {
         const requestedPage = Math.max(1, parseInt(req.query.PAGEN_2, 10) || 1)
@@ -1053,6 +1118,18 @@ router.get('/reviews', reviewsPage);                        // Отзывы с �
 
 router.get('/promo', promoList);                            // Список активных акций из базы (и /promo/ тоже)
 
+// личные страницы городов: /kazan, /tver. Всё остальное (статика, админка) отдаём дальше.
+// в path-to-regexp 0.1.13 звёздочка внутри инлайн-группы ломает захват, поэтому {0,63} вместо *
+router.get('/:city([A-Za-z][-A-Za-z0-9]{0,63})', cityPage);
+
+// города с авто: для блока ссылок на главной и «другие города» на городских страницах
+async function getCityLinks(excludeSlug = '') {
+    const context = await getLandingContext()
+    return [...context.cities.values()]
+        .filter((city) => city.slug !== excludeSlug && city.count > 0)
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ru'))
+        .map((city) => ({slug: city.slug, name: city.name, count: city.count}))
+}
 
 async function indexPage(req, res) {
     const manifest = manifest_links['index.html']
@@ -1106,15 +1183,36 @@ async function indexPage(req, res) {
     // три случайных отзыва с пятью звёздами для блока внизу главной
     const mainReviews = await getRandomFiveStarReviews(3)
 
+    // ссылки на городские страницы: без них новые разделы долго не попадают в индекс
+    const cityLinks = await getCityLinks().catch(() => [])
+
     // сниппет главной: поисковики показывают цифры вместо «звоните по телефону»
     const stats = await A_car.getCatalogStats().catch(() => null)
     const priceRange = stats && Number(stats.priceFrom) > 0 && Number(stats.priceTo) > 0
         ? `, цены от ${formatPrice(stats.priceFrom)} до ${formatPrice(stats.priceTo)} ₽`
         : ''
-    const title = 'Автомобили с пробегом (бу) в автосалонах Казани и других городов России - Автосеть.РФ'
-    const description = stats && Number(stats.count) > 0
-        ? `Автомобили с пробегом в Казани и других городах России: ${formatPrice(stats.count)} авто в наличии${priceRange}. Большой выбор марок и моделей б/у авто в автосалонах Автосеть.РФ — проверка, кредит, обмен. ☎ 8-800-500-11-56.`
-        : 'Купите автомобили с пробегом в Казани и других городах. 🚗 БУ авто в автосалонах Автосеть.рф. Подробная информация по телефону: ☎ 8-800-500-11-56.'
+    // города в описании — только те, для которых знаем предложный падеж,
+    // иначе получится «в городе Казань»
+    const citiesIn = cityLinks
+        .map(link => CITY_PREPOSITIONAL[link.name])
+        .filter(Boolean)
+        .slice(0, 3)
+    const citiesPhrase = citiesIn.length > 1
+        ? `${citiesIn.slice(0, -1).join(', ')} и ${citiesIn[citiesIn.length - 1]}`
+        : citiesIn[0] || ''
+    const homeH1 = 'Автомобили с пробегом в автосалонах Автосеть.РФ'
+    const homeCount = stats && Number(stats.count) > 0
+        ? `${formatPrice(stats.count)} авто в наличии` : ''
+    const title = homeCount ? `${homeH1}: ${homeCount}` : `${homeH1} — купить б/у авто`
+    const description = homeCount
+        ? `${homeH1}: ${homeCount}${priceRange}.`
+            + (citiesPhrase
+                ? ` Автосалоны в ${citiesPhrase}${citiesIn.length > 1 ? ', а также в других городах России.' : ' и других городах России.'}`
+                : ' Автосалоны в разных городах России.')
+            + ' Проверка юридической чистоты, кредит и трейд-ин. ☎ 8-800-500-11-56.'
+        : `${homeH1}: проверенные автомобили с пробегом, кредит и трейд-ин. ☎ 8-800-500-11-56.`
+    const keywords = 'купить авто с пробегом, б/у автомобили в автосалонах Автосеть.РФ'
+        + (citiesIn.length ? `, авто с пробегом в ${citiesIn[0]}` : '')
 
     res.render('index', {
         js1, js2, js3, js4, js5, js6, js7, js8, js9,
@@ -1122,10 +1220,185 @@ async function indexPage(req, res) {
         carCount,
         carList,
         mainReviews,
+        cityLinks,
         page,
         title,
-        description
+        description,
+        keywords
     })
+    return res
+}
+
+/* ---------------- личные страницы городов: /kazan, /tver ---------------- */
+
+const CITY_PAGE_CARS = 12
+const CITY_PAGE_REVIEWS = 6
+const DEALER_REVIEW_FIELDS = ['reviews_yandex', 'reviews_google', 'reviews_2gis', 'reviews_avito']
+
+// Каждый город получает свою главную: локальный ассортимент, витрину города,
+// дилерский центр с картой и отзывы. Полный каталог города живёт отдельно —
+// /cars/<city>, поэтому здесь только первые CITY_PAGE_CARS машин.
+async function cityPage(req, res, next) {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+
+    let city
+    try {
+        const context = await getLandingContext()
+        city = context.cities.get(decodePath(req.params.city || '').toLowerCase())
+    } catch (error) {
+        console.error('Error resolving city page:', error)
+        return next()
+    }
+    // это не город — отдаём путь статике и обработчику 404
+    if (!city || city.count <= 0) return next()
+
+    const canonicalPath = '/' + city.slug
+    // /Tver, /tver/ и кириллические варианты — дубли адреса, канон один
+    if (decodePath(req.path) !== canonicalPath) {
+        const queryIndex = req.originalUrl.indexOf('?')
+        const query = queryIndex === -1 ? '' : req.originalUrl.slice(queryIndex)
+        return res.redirect(301, canonicalPath + query)
+    }
+
+    const manifest = manifest_links['cars/index.html']
+    if (!manifest) return res.status(404).send('Vite manifest not found')
+
+    const js1 = manifest.imports && manifest.imports[0].slice(1)
+    const js2 = manifest.imports && manifest.imports[1].slice(1)
+    const js3 = manifest.imports && manifest.imports[2].slice(1)
+    const js4 = manifest.imports && manifest.imports[3].slice(1)
+    const js5 = manifest.imports && manifest.imports[4].slice(1)
+    const js6 = manifest.imports && manifest.imports[5].slice(1)
+    const js7 = manifest.imports && manifest.imports[6].slice(1)
+    const carsjs = manifest.file
+
+    const cssFiles = collectCss(manifest_links, 'cars/index.html')
+    const contacts = findChunk('_contacts-', '.js')
+    const contactsCss = (contacts.css && contacts.css[0]) || ''
+
+    try {
+        const [stats, brandRows, cars, dealerRows] = await Promise.all([
+            A_car.getCityCatalogStats(city.name).catch(() => null),
+            A_car.getCityBrandCounts(city.name, 20).catch(() => []),
+            A_car.getCityCars(city.name, CITY_PAGE_CARS).catch(() => ({items: [], totalCount: 0})),
+            dealers.findAll({where: {city: city.name}, order: [['id', 'ASC']], raw: true}).catch(() => []),
+        ])
+
+        const dealerViews = dealerRows.map(buildDealerView).filter(Boolean)
+        const reviewLinks = []
+        for (const row of dealerRows) {
+            for (const field of DEALER_REVIEW_FIELDS) {
+                const href = String(row[field] || '').trim()
+                if (href) reviewLinks.push(href)
+            }
+        }
+        const cityReviews = await getCityReviews(reviewLinks, CITY_PAGE_REVIEWS).catch(() => [])
+
+        const total = Number(cars.totalCount) || 0
+        const priceFrom = Number(stats && stats.priceFrom) || 0
+        const priceTo = Number(stats && stats.priceTo) || 0
+        const yearFrom = Number(stats && stats.yearFrom) || 0
+        const yearTo = Number(stats && stats.yearTo) || 0
+
+        const prepositional = cityIn(city.name)
+        const countText = `${formatPrice(total)} ${pluralCars(total)}`
+        const priceRange = priceFrom && priceTo
+            ? `, цены от ${formatPrice(priceFrom)} до ${formatPrice(priceTo)} ₽`
+            : priceFrom ? `, цены от ${formatPrice(priceFrom)} ₽` : ''
+        const yearRange = yearFrom && yearTo ? `, ${yearFrom}–${yearTo} г.в` : ''
+
+        const h1 = `Автомобили с пробегом ${prepositional}`
+        const firstDealer = dealerViews[0] || null
+        // заголовок и описание повторяют H1 и ведут к тем же фактам, что на странице:
+        // город, количество, цены, годы и адрес дилерского центра
+        const title = total
+            ? `${h1}: ${countText} в наличии${priceFrom ? ', цены от ' + formatPrice(priceFrom) + ' ₽' : ''} — автосалон Автосеть.РФ`
+            : `${h1} — автосалон Автосеть.РФ`
+        const description = total
+            ? `Автосалон Автосеть.РФ ${prepositional}: ${countText} с пробегом в наличии${priceRange}${yearRange}.`
+                + (firstDealer && firstDealer.addressText ? ` Адрес: ${firstDealer.addressText}.` : '')
+                + ' Проверка юридической чистоты, кредит и трейд-ин. ☎ 8-800-500-11-56.'
+            : `Автосалон Автосеть.РФ ${prepositional}: проверенные автомобили с пробегом, кредит и трейд-ин. ☎ 8-800-500-11-56.`
+
+        const keywords = `купить авто с пробегом ${prepositional}, автосалон ${city.name}, `
+            + `автомобили с пробегом ${city.name}, авто в наличии ${city.name}`
+
+        const carsView = buildCarsView(cars.items)
+        const brandLinks = brandRows.map(row => ({
+            name: row.name,
+            href: '/cars/' + brandSlug(row.name),
+            count: Number(row.count) || 0,
+        }))
+
+        const vitrinaName = `Автомобили ${prepositional} в наличии`
+        const introText = `В автосалоне Автосеть.РФ ${prepositional} ${countText} с пробегом`
+            + `${priceRange}${yearRange}. Все автомобили проходят проверку и предпродажную подготовку.`
+
+        const brandNames = brandLinks.slice(0, 8).map(brand => brand.name).join(', ')
+        const seoText1 = `Автосалон Автосеть.РФ ${prepositional} предлагает ${countText} с пробегом`
+            + `${priceRange}${yearRange}. В наличии `
+            + (brandNames ? `такие марки, как ${brandNames}` : 'популярные марки и модели')
+            + '. Купить автомобиль можно за наличные, в кредит или по программе трейд-ин: '
+            + 'старый автомобиль примем в зачёт стоимости нового.'
+        const seoText2 = 'Каждый автомобиль в каталоге проходит юридическую проверку и комплексную диагностику. '
+            + `Приезжайте в дилерский центр ${prepositional}, чтобы осмотреть автомобиль и оформить сделку`
+            + (firstDealer && firstDealer.tels.length ? `, или позвоните по телефону ${firstDealer.tels[0].value}` : '')
+            + '. Полный каталог с фильтрами по марке, кузову и цене доступен на отдельной странице.'
+
+        const otherCities = await getCityLinks(city.slug).catch(() => [])
+
+        const canonicalUrl = `${SITE_ORIGIN}${canonicalPath}`
+        // query-параметры не меняют выборку города: такие адреса не индексируем
+        const robots = Object.keys(req.query).length ? 'noindex, follow' : 'index, follow'
+
+        const breadcrumbSchemaJson = buildBreadcrumbSchema([
+            {name: 'Главная', url: `${SCHEMA_SITE}/`},
+            {name: city.name, url: canonicalUrl},
+        ])
+        const carsSchemaJson = carsView.length
+            ? buildCarsSchema(cars.items, {
+                totalCount: total,
+                name: h1,
+                path: canonicalPath,
+            })
+            : ''
+        const dealerSchemas = dealerViews.slice(0, 3).map(buildDealerSchema)
+
+        res.render('city', {
+            js1, js2, js3, js4, js5, js6, js7,
+            carsjs,
+            cssFiles,
+            contactsCss,
+            city,
+            citySlug: city.slug,
+            cityName: city.name,
+            prepositional,
+            h1,
+            introText,
+            title,
+            description,
+            keywords,
+            canonicalUrl,
+            robots,
+            carsView,
+            total,
+            countText,
+            vitrinaName,
+            brandLinks,
+            dealerViews,
+            cityReviews,
+            otherCities,
+            seoText1,
+            seoText2,
+            breadcrumbSchemaJson,
+            carsSchemaJson,
+            dealerSchemas,
+        })
+    } catch (error) {
+        console.error('Error rendering city page:', error)
+        res.status(500).send('Internal Server Error')
+    }
+
     return res
 }
 
@@ -1722,8 +1995,8 @@ function buildCarsView(items) {
 }
 
 // schema.org для витрины: список собирается из тех же машин, что отрисованы на странице,
-// поэтому разметка обновляется вместе с базой. Для подборки берём легковые автомобили
-// разных марок в диапазоне 400 000–800 000 ₽; если таких на странице нет — весь список.
+// поэтому разметка обновляется вместе с базой. Для подборки берём автомобили разных марок
+// (без автобусов, фургонов и грузовых) в диапазоне 400 000–800 000 ₽; если таких нет — весь список.
 const SCHEMA_SITE = SITE_ORIGIN
 const SCHEMA_PRICE_FROM = 400000
 const SCHEMA_PRICE_TO = 800000
@@ -1782,7 +2055,7 @@ function buildCarsSchema(items, {totalCount, brand, model, city, page, brandName
         '@type': 'ItemList',
         name,
         description: cars.some((car) => Number(car.price) >= SCHEMA_PRICE_FROM && Number(car.price) <= SCHEMA_PRICE_TO)
-            ? 'Легковые автомобили разных марок в наличии по цене от 400 000 до 800 000 рублей'
+            ? 'Автомобили разных марок с пробегом в наличии по цене от 400 000 до 800 000 рублей'
             : 'Список автомобилей в наличии с ценами и характеристиками',
         url,
         numberOfItems,
@@ -2114,27 +2387,15 @@ async function dealerPage(req, res) {
 
         if (!dealer) return res.status(404).render('404', {confirm: ''})
 
-        const addressText = stripTags(dealer.address)
-        const splitList = (value) => String(value || '').split(',').map((part) => part.trim()).filter(Boolean)
-        const tels = splitList(dealer.tel).map((value) => ({value, href: telHref(value)}))
-        const profiles = splitList(dealer.profile)
-        const email = String(dealer.email || '').trim()
-        const title = `${dealer.city}, ${addressText} — дилерский центр Автосеть.РФ`
-        const description = `Дилерский центр Автосеть.РФ: ${dealer.city}, ${addressText}.`
+        const view = buildDealerView(dealer)
+        const title = `${dealer.city}, ${view.addressText} — дилерский центр Автосеть.РФ`
+        const description = `Дилерский центр Автосеть.РФ: ${dealer.city}, ${view.addressText}.`
             + (dealer.tel ? ` Телефон: ${dealer.tel}.` : '')
             + (dealer.days ? ` Режим работы: ${dealer.days}.` : '')
 
         res.render('dealer', {
             ...contactAssets(),
-            dealer,
-            addressHtml: formatMultiline(dealer.address),
-            addressText,
-            brands: String(dealer.brands || '').split(',').map((brand) => brand.trim()).filter(Boolean),
-            profiles,
-            tels,
-            email,
-            photoUrl: dealer.url ? encodeURI(dealer.url) : '',
-            mapSrc: buildDealerMapSrc(dealer),
+            ...view,
             title,
             description,
         })

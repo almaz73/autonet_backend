@@ -14,7 +14,7 @@
     <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
     <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
     <meta name='robots' content='index, follow'>
-    <meta name='keywords' content='Купить автомобили с пробегом, авто в Казани'>
+    <meta name='keywords' content='<%= keywords %>'>
     <meta name='description' content='<%= description %>'>
     <meta property='og:description' content='<%= description %>'>
 
@@ -235,7 +235,7 @@
 
     <div class='container'>
         <div class="car_vitrina">
-            <h1 id="vitrina_name">Свежие поступления авто с пробегом</h1>
+            <h2 id="vitrina_name">Свежие поступления авто с пробегом</h2>
 
             <a href="/cars" class="page__link cars_link" >
                 <img src="/st/red_arrow.svg" loading='lazy' alt=''>
@@ -416,6 +416,8 @@
         </div>
     </div>
 
+
+
     <section class="dealers" data-dealers-map>
         <div class="dealers__head page__flex">
             <h2>Адреса дилерских центров Автосеть.РФ</h2>
@@ -444,15 +446,41 @@
         <img src='/st/geo_small.webp' class='mainPhoto_little' alt='география присутствия' loading='lazy'>
     </div>
 
+
+    <% if (cityLinks && cityLinks.length) { %>
+        <div class='container'>
+            <h2>Автосалоны Автосеть.РФ в городах</h2>
+            <div class='vitrina_links'>
+                <div class='vitrina_links__block'>
+
+                    <div class='vitrina_links__list'>
+                        <% cityLinks.forEach(function(link) { %>
+                            <a href='/<%= link.slug %>'><%= link.name %> <span class='total'><%= link.count %></span></a>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <br>
+    <% } %>
+
     <div class='container'>
-        <h2>Легковые авто с пробегом в автосалонах Автосеть.рф</h2>
+        <h1>Автомобили с пробегом в автосалонах Автосеть.РФ</h1>
         <p>
-            В Автосеть.рф можно купить автомобиль с пробегом в отличном состоянии. Автоцентры находятся в Казани,
-            Самаре, Екатеринбурге и других городах России. В продаже представлены самые востребованные модели известных
-            брендов: ВАЗ (Lada), Hyundai, Kia, Chevrolet, Skoda, Renault, Volkswagen, Ford, Toyota, Mitsubishi, Chery и
-            других. Каждый авто в каталоге проходит юридическую проверку, комплексную диагностику и предпродажную
-            подготовку. Благодаря хорошему техническому состоянию вы долго сможете пользоваться автомобилем без расходов
-            на ремонт.
+            В Автосеть.РФ можно купить автомобиль с пробегом в отличном состоянии.
+            <%
+                const dealerCities = cityLinks.slice(0, 6).map(function (link) { return link.name })
+                const dealerBrands = carCount.slice(0, 8).map(function (brand) { return brand.name })
+            %>
+            <% if (dealerCities.length) { %>
+            Автоцентры находятся в городах: <%= dealerCities.join(', ') %><%= cityLinks.length > dealerCities.length ? ' и других' : '' %>.
+            <% } else { %>
+            Автоцентры находятся в разных городах России.
+            <% } %>
+            В продаже представлены самые востребованные модели известных брендов<% if (dealerBrands.length) { %>:
+            <%= dealerBrands.join(', ') %><% } %>. Каждый авто в каталоге проходит юридическую проверку, комплексную
+            диагностику и предпродажную подготовку. Благодаря хорошему техническому состоянию вы долго сможете
+            пользоваться автомобилем без расходов на ремонт.
         </p>
         <h2>Чем удобна покупка б/у автомобиля?</h2>
         <p>

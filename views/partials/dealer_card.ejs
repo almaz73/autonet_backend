@@ -1,0 +1,66 @@
+<article class='dealer-page__card<%= photoUrl ? '' : ' dealer-page__card--no-photo' %>'>
+    <div class='dealer-page__info'>
+        <div class='dealer-block__profile'><%= dealer.city %></div>
+        <dl class='dealer-page__rows'>
+            <div class='dealer-page__row'>
+                <dt>Адрес</dt>
+                <dd><%- addressHtml %></dd>
+            </div>
+            <% if (tels.length) { %>
+            <div class='dealer-page__row'>
+                <dt>Телефоны</dt>
+                <dd class='dealer-page__list'>
+                    <% tels.forEach((tel) => { %>
+                    <a class='dealer-block__phone' href='<%= tel.href %>'><%= tel.value %></a>
+                    <% }) %>
+                </dd>
+            </div>
+            <% } %>
+
+            <% if (email) { %>
+            <div class='dealer-page__row'>
+                <dt>Email</dt>
+                <dd><a class='dealer-block__email' href='mailto:<%= email %>'><%= email %></a></dd>
+            </div>
+            <% } %>
+
+            <% if (dealer.days) { %>
+            <div class='dealer-page__row'>
+                <dt>Режим работы</dt>
+                <dd><%= dealer.days %></dd>
+            </div>
+            <% } %>
+            <% if (profiles.length) { %>
+            <div class='dealer-page__row'>
+                <dt>Профили</dt>
+                <dd class='dealer-page__list dealer-page__list--panel'>
+                    <% profiles.forEach((profile) => { %>
+                    <span class='dealer-page__profile'><%= profile %></span>
+                    <% }) %>
+                </dd>
+            </div>
+            <% } %>
+            <% if (brands.length) { %>
+            <div class='dealer-page__row'>
+                <dt>Бренды</dt>
+                <dd><%= brands.join(', ') %></dd>
+            </div>
+            <% } %>
+        </dl>
+        <div class='dealer-page__actions'>
+            <a class='dealer-page__back' href='/contacts/'>Все контакты</a>
+        </div>
+    </div>
+    <% if (photoUrl) { %>
+    <div class='dealer-page__photo'>
+        <img src='<%= photoUrl %>' alt='Фото дилерского центра <%= dealer.city %>' loading='lazy'
+             onerror="this.closest('.dealer-page__card').classList.add('dealer-page__card--no-photo'); this.parentElement.remove()">
+    </div>
+    <% } %>
+</article>
+
+<% if (mapSrc) { %>
+<div class='dealer-page__map'>
+    <iframe src='<%= mapSrc %>' title='Дилерский центр <%= dealer.city %> на карте'></iframe>
+</div>
+<% } %>

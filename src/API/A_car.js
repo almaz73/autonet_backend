@@ -196,7 +196,7 @@ class CityListService {
                     if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)
                     if (el.gearboxType) {
                         if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
-                        if (el.gearboxType === 'Автоматическая') el.gearboxType = 'АT'
+                        if (el.gearboxType === 'Автоматическая') el.gearboxType = 'AT'
                         if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
                         if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
                     }
@@ -302,6 +302,104 @@ class CityListService {
         } catch (error) {
             console.error('Error retrieving city counts:', error.message);
             throw error;
+        }
+    }
+
+    // цифры для городской страницы: сколько авто с фото, диапазон цен и годов
+    async getCityCatalogStats(city) {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.get(`
+                SELECT COUNT(*) as count,
+                       MIN(CASE WHEN price > 0 THEN price END) as priceFrom,
+                       MAX(CASE WHEN price > 0 THEN price END) as priceTo,
+                       MIN(CASE WHEN prop_year > 0 THEN prop_year END) as yearFrom,
+                       MAX(CASE WHEN prop_year > 0 THEN prop_year END) as yearTo
+                FROM a_car
+                WHERE UPPER(prop_city) = UPPER(?)
+                  AND images IS NOT NULL AND images != ''`, [city])
+        } catch (error) {
+            console.error('Error retrieving city catalog stats:', error.message);
+            throw error
+        }
+    }
+
+    // марки, которые реально есть в городе — для блока «популярные марки» и перелинковки
+    async getCityBrandCounts(city, limit = 20) {
+        const db = global.db
+        try {
+            // language=SQLite
+            return await db.all(`
+                SELECT prop_brand as name, COUNT(*) as count
+                FROM a_car
+                WHERE UPPER(prop_city) = UPPER(?)
+                  AND prop_brand IS NOT NULL AND prop_brand != ''
+                  AND images IS NOT NULL AND images != ''
+                GROUP BY prop_brand
+                ORDER BY count DESC, prop_brand ASC
+                LIMIT ?`, [city, limit])
+        } catch (error) {
+            console.error('Error retrieving city brand counts:', error.message);
+            throw error
+        }
+    }
+
+    // витрина города: только авто этого города, с фото, новые записи первыми
+    async getCityCars(city, limit = 20, offset = 0) {
+        const db = global.db
+        const where = `UPPER(ac.prop_city) = UPPER(?) AND ac.images IS NOT NULL AND ac.images != ''`
+        try {
+            // language=SQLite
+            const items = await db.all(`
+                SELECT ac.id,
+                       ac.prop_guarantee         as linkId,
+                       ac.prop_brand             as brand,
+                       ac.prop_model             as model,
+                       ac.prop_year              as yearReleased,
+                       ac.price,
+                       ac.prop_milleage          as milleage,
+                       ac.prop_power             as enginePower,
+                       ac.prop_engine_capacity   as engineCapacity,
+                       ac.prop_transmission_type as gearboxType,
+                       ac.prop_body_type         as bodyType,
+                       ac.prop_engine_type       as engineType,
+                       ac.prop_drive             as driveType,
+                       ac.prop_address           as fullAddress,
+                       ac.prop_color             as color,
+                       ac.prop_city              as city,
+                       ac.prop_steering_wheel    as wheelType,
+                       ac.images
+                FROM a_car ac
+                WHERE ${where}
+                ORDER BY ac.rowid DESC
+                LIMIT ? OFFSET ?`, [city, limit, offset])
+
+            // language=SQLite
+            const {totalCount} = await db.get(`SELECT COUNT(*) as totalCount FROM a_car ac WHERE ${where}`, [city])
+
+            for (const el of items) {
+                try {
+                    if (el.engineCapacity) el.engineCapacity = parseFloat(el.engineCapacity)
+                    if (el.gearboxType) {
+                        if (el.gearboxType === 'Механическая') el.gearboxType = 'MT'
+                        if (el.gearboxType === 'Автоматическая') el.gearboxType = 'AT'
+                        if (el.gearboxType === 'Робот') el.gearboxType = 'AMT'
+                        if (el.gearboxType === 'Вариатор') el.gearboxType = 'CVT'
+                    }
+                    el.images = el.images ? el.images.split(',').map(url => url.trim()) : []
+                    el.images.length = 5
+                    el.images = el.images.map(item => '/pub_auto/' + item.split('/').pop().split('.')[0] + '_small.webp')
+                } catch (error) {
+                    console.error('Error parsing images for car ID ' + el.id + ':', error.message)
+                    el.images = []
+                }
+            }
+
+            return {items, totalCount}
+        } catch (error) {
+            console.error('Error retrieving city cars:', error.message)
+            throw error
         }
     }
 

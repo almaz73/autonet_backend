@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <meta charset='UTF-8'/>
+    <link rel='icon' type='image/svg+xml' sizes='any' href='/st/favicon.svg'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title><%= title %></title>
+    <meta property='og:type' content='website'>
+    <meta property='og:title' content='<%= title %>'>
+    <meta property='og:description' content='<%= description %>'>
+    <meta property='og:image' content='https://xn--80aej9aped4f.xn--p1ai/st/auto.webp'>
+    <link rel='canonical' href='<%= canonicalUrl %>'/>
+    <meta property='og:url' content='<%= canonicalUrl %>'>
+    <meta property='og:locale' content='ru_RU'>
+    <meta property='og:site_name' content='АВТОСЕТЬ.РФ'>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+    <meta name='robots' content='<%= robots %>'>
+    <meta name='keywords' content='<%= keywords %>'>
+    <meta name='description' content='<%= description %>'>
+
+    <% cssFiles.forEach(function (file) { %>
+    <link rel="stylesheet" crossorigin href="/<%- file %>">
+    <% }); %>
+    <% if (contactsCss) { %>
+    <link rel="stylesheet" crossorigin href="/<%- contactsCss %>">
+    <% } %>
+
+    <script type="module" crossorigin src="/assets/<%- js1 %>"></script>
+    <script type="module" crossorigin src="/assets/<%- js2 %>"></script>
+    <script type="module" crossorigin src="/<%- carsjs %>"></script>
+
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <link rel="preload" href="/st/fonts/Gilroy-Light.otf" as="font" type="font/otf" crossorigin>
+    <link rel="preload" href="/st/fonts/Gilroy-ExtraBold.otf" as="font" type="font/otf" crossorigin>
+</head>
+<body>
+
+<%- include('partials/verbox') %>
+<%- include('partials/ya_metrica') %>
+<%- include('partials/header') %>
+
+<main class='city-page'>
+
+    <div class='page_padding_20'>
+        <div class='bread_cranbs'>
+            <a href='/'>Главная</a> /
+            <span><%= cityName %></span>
+        </div>
+    </div>
+
+    <div class='container city-page__head'>
+        <h1><%= h1 %></h1>
+        <p class='vitrina_intro'><%= introText %></p>
+        <div class='city-page__actions'>
+            <a href='/cars/<%= citySlug %>' class='page__link'>
+                <img src='/st/red_arrow.svg' loading='lazy' alt=''>
+                <span>Смотреть все <%= countText %></span>
+            </a>
+            <% if (dealerViews.length) { %>
+            <a href='<%= dealerViews[0].dealer.link %>' class='page__link'>
+                <img src='/st/red_arrow.svg' loading='lazy' alt=''>
+                <span>Контакты и адрес</span>
+            </a>
+            <% } %>
+        </div>
+    </div>
+
+    <% if (brandLinks.length) { %>
+    <div class='container main__top--block'>
+        <h2>Марки в наличии <%= prepositional %></h2>
+        <div class='list_brands'>
+            <% brandLinks.forEach(function(brand) { %>
+            <div>
+                <a href='<%= brand.href %>'>
+                    <span class='icon' style="width: 37px;height: 29px"></span>
+                    <span class='text'><%= brand.name.toUpperCase() %></span>
+                    <span class='total'><%= brand.count %></span>
+                </a>
+            </div>
+            <% }); %>
+        </div>
+    </div>
+    <% } %>
+
+    <% if (carsView.length) { %>
+    <div class='container'>
+        <div class="car_vitrina">
+            <h2><%= vitrinaName %></h2>
+            <a href='/cars/<%= citySlug %>' class='page__link'>
+                <img src='/st/red_arrow.svg' loading='lazy' alt=''>
+                <span>Все предложения</span>
+            </a>
+        </div>
+        <cards class='cards dot4' data-col='dot4'>
+            <% carsView.forEach(function(car, i) { %>
+            <%- include('partials/car_card', {car: car, idx: i + 1}) %>
+            <% }); %>
+        </cards>
+        <br><br>
+    </div>
+    <% } %>
+
+    <% if (dealerViews.length) { %>
+    <section class='container city-page__dealer'>
+        <% if (dealerViews.length > 1) { %>
+        <h2>Адреса дилерских центров Автосеть.РФ</h2>
+        <% } else { %>
+        <h2>Дилерский центр Автосеть.РФ <%= prepositional %></h2>
+        <% } %>
+        <% dealerViews.forEach(function(view) { %>
+        <%- include('partials/dealer_card', view) %>
+        <% }); %>
+    </section>
+    <% } %>
+
+    <% if (cityReviews.length) { %>
+    <section class="reviews-block container">
+        <div class="reviews-block__head">
+            <h2>Отзывы <%= prepositional %></h2>
+            <a href="/reviews/" class="page__link">
+                <img src="/st/red_arrow.svg" loading="lazy" alt="">
+                <span>Все отзывы</span>
+            </a>
+        </div>
+        <div class="reviews-block__grid">
+            <% cityReviews.forEach(review => { %>
+            <article class="review-card review-card--short">
+                <div class="review-card__head">
+                    <span class="review-card__author"><%= review.author %></span>
+                    <span class="review-card__date"><%= review.dateText %></span>
+                </div>
+                <div class="review-card__meta">
+                    <span class="review-stars" aria-label="Оценка <%= review.rating %> из 5"
+                    ><%- '★'.repeat(review.rating) %></span>
+                </div>
+                <p class="review-card__text"><%= review.text %></p>
+                <% if (review.platformHref) { %>
+                <a class="review-card__source" href="<%= review.platformHref %>" target="_blank"
+                   rel="noopener noreferrer nofollow"><%= review.platformLabel %></a>
+                <% } else { %>
+                <span class="review-card__source"><%= review.platformLabel %></span>
+                <% } %>
+            </article>
+            <% }); %>
+        </div>
+    </section>
+    <% } %>
+
+    <div class='container city-page__text'>
+        <h2>Автосалон Автосеть.РФ <%= prepositional %></h2>
+        <p><%= seoText1 %></p>
+        <p><%= seoText2 %></p>
+    </div>
+
+    <% if (otherCities.length) { %>
+    <div class='container city-page__links'>
+        <div class='vitrina_links'>
+            <div class='vitrina_links__block'>
+                <h2>Автосалоны Автосеть.РФ в других городах</h2>
+                <div class='vitrina_links__list'>
+                    <% otherCities.forEach(function(link) { %>
+                    <a href='/<%= link.slug %>'><%= link.name %> <span class='total'><%= link.count %></span></a>
+                    <% }); %>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+</main>
+
+<%- include('partials/footer') %>
+
+<script type="module" crossorigin src="/assets/<%- js3 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js4 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js5 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js6 %>"></script>
+<script type="module" crossorigin src="/assets/<%- js7 %>"></script>
+<script defer src='/st/swiper-bundle.min.js'></script>
+
+<script type="application/ld+json"><%- breadcrumbSchemaJson %></script>
+<% if (carsSchemaJson) { %>
+<script type="application/ld+json"><%- carsSchemaJson %></script>
+<% } %>
+<% dealerSchemas.forEach(function(schema) { %>
+<script type="application/ld+json"><%- schema %></script>
+<% }); %>
+
+</body>
+</html>

@@ -274,6 +274,8 @@ async function addLandingPages() {
         for (const row of cityRows) {
             const citySlug = citySlugOf(row.city)
             if (!citySlug || row.count < LANDING_MIN_CARS) continue
+            // личная страница города /<city> — витрина и дилеры этого города
+            addLink(`${SITE_ORIGIN}/${citySlug}`)
             addLink(`${SITE_ORIGIN}/cars/${citySlug}`)
             for (const bucket of PRICE_BUCKETS) {
                 if ((row[bucketCountKey(bucket)] || 0) < LANDING_MIN_CARS) continue
