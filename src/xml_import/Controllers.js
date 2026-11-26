@@ -156,6 +156,20 @@ class Controllers {
         }
     }
 
+    // какие авто из списка сравнения ещё есть в каталоге, остальные считаем удалёнными
+    async getExistingCarIds(req, res) {
+        try {
+            const ids = String(req.query.ids || '')
+                .split(',')
+                .map((value) => value.trim())
+                .filter((value) => /^[0-9a-z-]{8,64}$/i.test(value))
+            res.json({ids: await A_car.getExistingCarIds([...new Set(ids)].slice(0, 50))});
+        } catch (error) {
+            console.error('Error getExistingCarIds:', error);
+            res.status(500).json({error: error.message});
+        }
+    }
+
 
     // async getBrandList(req, res) {
     //     try {

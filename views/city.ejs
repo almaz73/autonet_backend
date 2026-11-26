@@ -160,6 +160,7 @@
     </section>
     <% } %>
 
+    <br>
     <div class='container city-page__text'>
         <h2>Автосалон Автосеть.РФ <%= prepositional %></h2>
         <p><%= seoText1 %></p>
@@ -168,9 +169,9 @@
 
     <% if (otherCities.length) { %>
     <div class='container city-page__links'>
+        <h2>Автосалоны Автосеть.РФ в других городах</h2>
         <div class='vitrina_links'>
             <div class='vitrina_links__block'>
-                <h2>Автосалоны Автосеть.РФ в других городах</h2>
                 <div class='vitrina_links__list'>
                     <% otherCities.forEach(function(link) { %>
                     <a href='/<%= link.slug %>'><%= link.name %> <span class='total'><%= link.count %></span></a>

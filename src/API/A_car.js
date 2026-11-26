@@ -241,6 +241,23 @@ class CityListService {
         }
     }
 
+    // какие записи каталога ещё существуют: в списке сравнения могут быть удалённые авто
+    async getExistingCarIds(ids) {
+        if (!Array.isArray(ids) || !ids.length) return []
+        const db = global.db
+        try {
+            // language=SQLite
+            const rows = await db.all(
+                `SELECT id FROM a_car WHERE id IN (${ids.map(() => '?').join(',')})`,
+                ids
+            )
+            return rows.map((row) => row.id)
+        } catch (error) {
+            console.error('Error retrieving existing car ids:', error.message)
+            throw error
+        }
+    }
+
     // общие цифры каталога для description: сколько авто, марок, городов и диапазон цен.
     // считаем всю таблицу — это ровно тот список, что отдаёт /api/getList без фильтров
     async getCatalogStats() {

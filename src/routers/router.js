@@ -56,6 +56,7 @@ router.get('/getWheelTypes', Controllers.getWheelTypes)
 router.get('/getBodyTypes', Controllers.getBodyTypes)
 router.get('/getColorList', Controllers.getColorList)
 router.get('/getYearGap', Controllers.getYearGap)
+router.get('/getExistingCarIds', Controllers.getExistingCarIds) // живые авто из списка сравнения
 
 // Почтовые формы: лимит по IP ставим до multer, чтобы спам не занимал память загрузкой файла
 // капча серверная: сдвиг выдаёт /api/captcha, без токена письмо не уходит
