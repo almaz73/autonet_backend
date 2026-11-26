@@ -1,7 +1,7 @@
 import * as os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-export const Version = 'ver.3.551 - подпапки городов'
+export const Version = 'ver.3.552 - личная комната, письмо разработчикам'
 
 export const isLocal = os.platform() === 'win32'
 export const devMode = false // для тестирования
@@ -37,7 +37,8 @@ export const receivedDataTypes = {
     '12': 'Ремонт АКПП',
     '13': 'Сервисное обслуживание',
     '15': 'Письмо ген. директору',
-    '17': 'Автострахование'
+    '17': 'Автострахование',
+    '18': 'Пожелания и технические вопросы разработчикам'
 }
 
 export let xmlUrls = [

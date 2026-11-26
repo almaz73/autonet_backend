@@ -3,15 +3,24 @@ import {transporterYandex} from "./nodemailerYandex.js";
 import {receivedDataTypes} from "../constants.js";
 import {addEmailToDatabase} from "../clientBaza/listEmailsFromForms/listClientEmails.js"
 
+// обращения с формы «Пожелания и технические вопросы разработчикам» уходят
+// напрямую разработчикам; адреса живут только на сервере
+const DEVELOPER_FEEDBACK_TYPE = '18'
+const DEVELOPER_FEEDBACK_RECIPIENTS = 'almaz73@gmail.com, george-ega@yandex.ru'
+
 class Post {
 
     async postEmailYa(req, res) {
         try {
             const receivedData = req.body; // Данные находятся в req.body
 
+            const isDeveloperFeedback = receivedData.type === DEVELOPER_FEEDBACK_TYPE
+
             let result = await transporterYandex.sendMail({
                 from: 'almaz73@yandex.ru',
-                to: 'info@cartat.ru, almaz73@yandex.ru',//'almaz73@gmail.com',
+                to: isDeveloperFeedback
+                    ? DEVELOPER_FEEDBACK_RECIPIENTS
+                    : 'info@cartat.ru, almaz73@yandex.ru',//'almaz73@gmail.com',
                 subject: receivedDataTypes[receivedData.type],
                 text: receivedData.text
             });
@@ -23,7 +32,8 @@ class Post {
             });
 
             // сохраняю список почты и телефонов из форм в базу
-            addEmailToDatabase(receivedData);
+            // (обратная связь разработчикам — не заявка клиента)
+            if (!isDeveloperFeedback) addEmailToDatabase(receivedData);
         } catch (error) {
             console.error('Error postEmail:', error);
             res.status(500).json({error: error.message});
