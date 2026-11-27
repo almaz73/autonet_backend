@@ -74,6 +74,8 @@ function carDescription(car) {
 
 function carParams(car) {
     return [
+        // обязательный для категории «Транспортные средства»: число, чем больше — тем лучше
+        ['Конверсия', 1],
         ['Год выпуска', car.year],
         ['Пробег', car.mileage, 'км'],
         ['Двигатель', engineVolume(car.engineCapacity), 'л'],
@@ -102,6 +104,9 @@ function offerXml(car) {
         `        <price>${Math.round(Number(car.price))}</price>`,
         '        <currencyId>RUR</currencyId>',
         '        <categoryId>1</categoryId>',
+        // обязательный для «Транспортных средств» идентификатор сета;
+        // каждая машина продаётся одним предложением, поэтому сет — сам оффер
+        `        <set-ids>${esc(car.id)}</set-ids>`,
         ...carPictures(car.images).map(picture => `        <picture>${esc(picture)}</picture>`),
         `        <name>${esc(`${car.brand} ${car.model}, ${car.year}`)}</name>`,
         `        <vendor>${esc(car.brand)}</vendor>`,
